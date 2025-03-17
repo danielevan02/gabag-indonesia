@@ -20,7 +20,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   slug,
 }) => {
   return (
-    <Link href={`/products/${slug}`} className="flex flex-col shadow-2xs hover:shadow min-w-72 md:min-w-96 overflow-hidden group">
+    <Link href={`/products/${slug}`} className="flex flex-col shadow-2xs hover:shadow min-w-72 max-w-72 md:min-w-96 md:max-w-96 overflow-hidden group">
       <div className="overflow-hidden min-h-80 max-h-80 md:min-h-[500px] md:max-h-[500px] w-full">
         <Image
           src={image}
