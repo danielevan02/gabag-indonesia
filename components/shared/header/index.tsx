@@ -6,8 +6,9 @@ import Logo from "./logo";
 import Link from "next/link";
 import { AlignJustify, ShoppingBag } from "lucide-react";
 import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
+import SearchBar from "./search-bar";
 
-const Header = () => {
+const Header = async () => {
   return (
     <div className="z-50 bg-background px-5 pt-5 pb-2 md:px-10 md:py-5 flex items-center justify-between gap-10 fixed w-full top-0 left-0">
       <Link href="/">
@@ -15,11 +16,12 @@ const Header = () => {
       </Link>
 
       <NavLinks device="desktop"/>
-
+      
       <div className="hidden md:flex gap-5">
-        <Link href='/cart' className="hover:bg-neutral-300 relative rounded-lg w-10 h-10 flex items-center justify-center transition-all group">
+        <SearchBar/>  
+        <Link href='/cart' className="hover:bg-accent relative rounded-lg w-10 h-10 flex items-center justify-center transition-all group">
           <div className="absolute bg-red-700 rounded-full text-white px-1 text-xs -top-0.5 -right-px">0</div>
-          <ShoppingBag className="group-hover:text-white transition-all" />
+          <ShoppingBag/>
         </Link>
         <ModeToggle />
         <Button>Login</Button>
@@ -27,9 +29,10 @@ const Header = () => {
       </div>
 
       <div className="flex md:hidden gap-4 items-center">
+        
         <Link href='/cart' className="hover:bg-neutral-300 relative rounded-lg w-10 h-10 flex items-center justify-center transition-all group">
           <div className="absolute bg-red-700 rounded-full text-white px-1 text-xs -top-0.5 -right-px">0</div>
-          <ShoppingBag className="group-hover:text-white transition-all" />
+          <ShoppingBag/>
         </Link>
 
         <Drawer>

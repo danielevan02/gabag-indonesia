@@ -1,35 +1,87 @@
 import ProductCard from "@/components/shared/product/product-card";
 import HomeCarousel from "./components/home-carousel";
-import { products } from "@/lib/data";
 import { Metadata } from "next";
 import Image from "next/image";
+import { getAllCategories, getAllProducts, getNewArrivalProduct } from "@/lib/actions/product.action";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: 'Home',
   description: 'Temukan Gabag! pompa ASI dan tas cooler premium untuk ibu modern. Praktis, stylish, dan sempurna untuk kebutuhan menyusui di mana saja!'
 }
 
-const HomePage = () => {
+const HomePage = async () => {
+  const categories = await getAllCategories()
+  const products = await getAllProducts() || []
+  const beauty = await getAllProducts("Beauty") || []
+  const newArrival = await getNewArrivalProduct()
   return (
-    <div className="flex flex-col mx-5 mt-32">
+    <div className="flex flex-col mx-5 ">
       <HomeCarousel slideDuration={5000} />
+
+      <section className="mt-20">
+        <h2 className="text-2xl font-bold text-center mb-2">Shop by Categories</h2>
+        <div className="hidden lg:grid grid-cols-12 w-[50%] mx-auto gap-4">
+          {categories.filter((val) => !val.isEventCategory).map((category, index) => (
+            <Link href='/' key={category.id} className={cn("flex flex-col gap-2 group", 
+              (index === 0 || index === 1) ? "col-span-6" : "col-span-4"
+            )}>
+              <div className="w-full min-h-72 max-h-72 overflow-hidden">
+                <Image
+                  src={category.image!}
+                  alt={category.name}
+                  width={500}
+                  height={500}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-all object-center"
+                  priority
+                />
+              </div>
+              <h3 className="text-center font-bold">{category.name}</h3>
+            </Link>
+          ))}
+        </div>
+
+        {/* MOBILE VIEW */}
+        <div className="flex lg:hidden gap-1 md:gap-5 overflow-scroll no-scrollbar px-1 py-px">
+          {categories.map((category) => (
+            <Link href='/' key={category.id} className="flex flex-col gap-2">
+              <div className="min-w-56 min-h-56 max-h-56 overflow-hidden">
+                <Image
+                  src={category.image!}
+                  alt={category.name}
+                  width={500}
+                  height={500}
+                  className="w-full h-full object-cover object-center"
+                  priority
+                />
+              </div>
+              <h3 className="text-center font-bold text-sm">{category.name}</h3>
+            </Link>
+          ))}
+        </div>
+      </section>
       
       <section className="mt-20">
         <h3 className="text-2xl font-bold text-center md:text-start">Flash Sale Products</h3>
         <hr className="mb-5 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-900 to-transparent opacity-25 dark:via-white" />
         <div className="flex gap-1 md:gap-5 overflow-scroll no-scrollbar px-1 py-px">
-          {products.map((product) => (
-            <ProductCard
-              key={product.slug}
-              category={product.category}
-              discount={product.discount}
-              image={product.image}
-              name={product.name}
-              price={product.price}
-              rating={product.rating}
-              slug={product.slug}
-            />
-          ))}
+          {products.map((product) => {
+            return(
+              <ProductCard
+                key={product.slug}
+                categoryName={product.categories[0].name}
+                discount={product.discount}
+                image={product.images[0]}
+                name={product.name}
+                price={product.price}
+                rating={product.rating}
+                slug={product.slug}
+                banner={product.banner!}
+                category={product.categories}
+              />
+            )
+          })}
         </div>
       </section>
       
@@ -51,13 +103,15 @@ const HomePage = () => {
           {products.map((product) => (
             <ProductCard
               key={product.slug}
-              category={product.category}
+              categoryName={product.categories[0].name}
               discount={product.discount}
-              image={product.image}
+              image={product.images[0]}
               name={product.name}
               price={product.price}
               rating={product.rating}
               slug={product.slug}
+              banner={product.banner!}
+              category={product.categories}
             />
           ))}
         </div>
@@ -67,18 +121,18 @@ const HomePage = () => {
         <h3 className="md:text-2xl text-xl font-bold text-center md:text-start">Shop by New Arrival Products</h3>
         <hr className="mb-2 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-900 to-transparent opacity-25 dark:via-white" />
         <div className="flex flex-col md:flex-row gap-10 md:gap-2">
-          {products.slice(0, 2).map((product) => (
-            <div key={product.slug} className="w-full">
+          {newArrival.map((product) => (
+            <Link href={`/products/${product.slug}`} key={product.slug} className="w-full">
               <Image
-                src={product.image}
+                src={product.images[0]}
                 alt={product.name}
                 width={500}
                 height={500}
-                className="w-full"
+                className="w-full min-h-[700px] max-h-[700px] object-cover"
               />
               <h2 className="text-center mt-2 text-xl">{product.name}</h2>
               <h3 className="text-center">Rp{product.price.toLocaleString()}</h3>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
@@ -90,19 +144,25 @@ const HomePage = () => {
         </div>
         <hr className="mb-5 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-900 to-transparent opacity-25 dark:via-white" />
         <div className="flex gap-1 md:gap-5 overflow-scroll no-scrollbar px-1">
-          {products.map((product) => (
+          {beauty.map((product) => (
             <ProductCard
               key={product.slug}
-              category={product.category}
+              categoryName={product.categories[0].name}
               discount={product.discount}
-              image={product.image}
+              image={product.images[0]}
               name={product.name}
               price={product.price}
               rating={product.rating}
               slug={product.slug}
+              banner={product.banner!}
+              category={product.categories}
             />
           ))}
         </div>
+      </section>
+
+      <section>
+
       </section>
     </div>
   );

@@ -9,44 +9,45 @@ datasource db {
 }
 
 model Category {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name String
-  discount Int? @default(0)
-  productId String
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  discount        Int?     @default(0)
+  image           String?
+  isEventCategory Boolean  @default(false)
+  createdAt       DateTime @default(now()) @db.Timestamp(6)
 
-  product Product[]
+  products Product[]
 }
 
 model Product {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String
-  categoryId String @db.Uuid
-  slug        String   @unique(map: "product_slug_idx")
-  description String
-  images      String[]
-  stock       Int  @default(0)
-  price       BigInt  @default(0)
-  rating      Int  @default(0)
-  discount    Int  @default(0)
-  numReviews  Int      @default(0)
-  isFeatured  Boolean  @default(false)
-  banner      String?
-  hasDifferentVariantPrice Boolean @default(false)
-  hasVariant  Boolean @default(false)
-  createdAt   DateTime @default(now()) @db.Timestamp(6)
+  id                       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                     String
+  slug                     String   @unique(map: "product_slug_idx")
+  description              String
+  images                   String[]
+  stock                    Int      @default(0)
+  price                    BigInt   @default(0)
+  rating                   Int      @default(0)
+  discount                 Int      @default(0)
+  numReviews               Int      @default(0)
+  isFeatured               Boolean  @default(false)
+  banner                   String?
+  hasDifferentVariantPrice Boolean  @default(false)
+  hasVariant               Boolean  @default(false)
+  createdAt                DateTime @default(now()) @db.Timestamp(6)
 
-  variant Variant[]
-  orderItem OrderItem[]
-  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  variant           Variant[]
+  orderItem         OrderItem[]
+  categories        Category[]
 }
 
 model Variant {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  productId String @db.Uuid
-  name  String
-  discount Int? @default(0)
-  stock Int @default(0)
-  price BigInt @default(0)
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId String   @db.Uuid
+  name      String
+  discount  Int?     @default(0)
+  stock     Int      @default(0)
+  price     BigInt   @default(0)
   createdAt DateTime @default(now()) @db.Timestamp(6)
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -115,10 +116,10 @@ model Cart {
   userId        String?  @db.Uuid
   sessionCartId String
   items         Json[]   @default([]) @db.Json
-  itemsPrice    BigInt @default(0)
-  totalPrice    BigInt @default(0)
-  shippingPrice BigInt @default(0)
-  taxPrice     BigInt @default(0)
+  itemsPrice    BigInt   @default(0)
+  totalPrice    BigInt   @default(0)
+  shippingPrice BigInt   @default(0)
+  taxPrice      BigInt   @default(0)
   createdAt     DateTime @default(now()) @db.Timestamp(6)
   user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -129,23 +130,23 @@ model Order {
   shippingAddress Json      @db.Json
   paymentMethod   String
   paymentResult   Json?     @db.Json
-  itemsPrice    BigInt @default(0)
-  totalPrice    BigInt @default(0)
-  shippingPrice BigInt @default(0)
-  taxPrice     BigInt @default(0)
+  itemsPrice      BigInt    @default(0)
+  totalPrice      BigInt    @default(0)
+  shippingPrice   BigInt    @default(0)
+  taxPrice        BigInt    @default(0)
   isPaid          Boolean   @default(false)
   isDelivered     Boolean   @default(false)
   deliveredAt     DateTime? @db.Timestamp(6)
   paidAt          DateTime? @db.Timestamp(6)
   createdAt       DateTime  @default(now()) @db.Timestamp(6)
 
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderItems OrderItem[]
 }
 
 model OrderItem {
-  orderId   String  @db.Uuid
-  productId String  @db.Uuid
+  orderId   String @db.Uuid
+  productId String @db.Uuid
   qty       Int
   price     BigInt @default(0)
   name      String

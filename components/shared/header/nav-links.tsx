@@ -15,7 +15,7 @@ const NavLinks = ({device}: {device: string}) => {
   const path = usePathname();
   const links: LinkType[] = [
     { label: "Home", link: "/", icon: HomeIcon },
-    { label: "Product", link: "/product", icon: Boxes },
+    { label: "Product", link: "/products", icon: Boxes },
     { label: "About", link: "/about", icon: Info },
     { label: "Profile", link: "/profile", icon: User },
   ];
@@ -27,13 +27,15 @@ const NavLinks = ({device}: {device: string}) => {
             <Icon
               className={cn(
                 "absolute opacity-0 group-hover:opacity-100 transition-all",
-                path.startsWith(link) && "opacity-100"
+                (path === link || (link !== "/" && path.startsWith(link))) && "opacity-100"
               )}
             />
             <Link
               key={link}
               href={link}
-              className={cn("group-hover:opacity-0 transition-all", path.startsWith(link) && "opacity-0")}
+              className={cn("group-hover:opacity-0 transition-all", 
+                (path === link || (link !== "/" && path.startsWith(link))) && "opacity-0",
+              )}
             >
               {label}
             </Link>
