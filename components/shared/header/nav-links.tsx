@@ -21,7 +21,7 @@ const NavLinks = ({device}: {device: string}) => {
   ];
   if(device === 'desktop'){
     return (
-      <div className="justify-between gap-5 hidden md:flex">
+      <div className="justify-between gap-5 hidden lg:flex">
         {links.map(({ icon: Icon, label, link }) => (
           <div key={link} className="relative flex justify-center group">
             <Icon

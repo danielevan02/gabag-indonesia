@@ -65,17 +65,17 @@ export default function SearchBar() {
   };
 
   return (
-    <div className="relative" ref={searchContainerRef}>
-      <div className="relative flex items-center">
+    <div className="relative w-full" ref={searchContainerRef}>
+      <div className="relative flex items-center w-full">
         <Input
           type="text"
           value={query}
           onChange={handleInputChange}
           onFocus={() => setShowDropdown(query.length > 0)}
           placeholder="Search product..."
-          className="py-2 w-40 focus:w-72 transition-all px-4 border border-accent rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="py-2 text-sm md:text-base w-full lg:w-52 lg:focus:w-72 transition-all px-4 border border-accent rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <Search className='absolute right-2 top0 text-neutral-300'/>
+        <Search className='absolute right-5 top0 text-neutral-300'/>
       </div>
 
       {showDropdown && (

@@ -93,7 +93,7 @@ const HomePage = async () => {
         <hr className="mb-3 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-900 to-transparent opacity-25 dark:via-white" />
 
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background"/>
+          <div className="absolute inset-0 -bottom-1 bg-gradient-to-b from-transparent via-transparent to-background"/>
           <video autoPlay loop muted playsInline className="w-full h-auto">
             <source src="/home-video.mp4" type="video/mp4"/>
           </video>

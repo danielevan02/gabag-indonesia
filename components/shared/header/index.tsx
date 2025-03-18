@@ -17,7 +17,7 @@ const Header = async () => {
 
       <NavLinks device="desktop"/>
       
-      <div className="hidden md:flex gap-5">
+      <div className="hidden lg:flex gap-5">
         <SearchBar/>  
         <Link href='/cart' className="hover:bg-accent relative rounded-lg w-10 h-10 flex items-center justify-center transition-all group">
           <div className="absolute bg-red-700 rounded-full text-white px-1 text-xs -top-0.5 -right-px">0</div>
@@ -28,15 +28,21 @@ const Header = async () => {
         <Button variant="secondary">Sign Up</Button>
       </div>
 
-      <div className="flex md:hidden gap-4 items-center">
-        
+      <div className="block md:hidden absolute top-[85px] inset-x-4 bg-background pb-3">
+        <SearchBar/>
+      </div>
+
+      <div className="flex lg:hidden gap-4 items-center">
+        <div className="hidden md:block lg:hidden">
+          <SearchBar/>
+        </div>
         <Link href='/cart' className="hover:bg-neutral-300 relative rounded-lg w-10 h-10 flex items-center justify-center transition-all group">
           <div className="absolute bg-red-700 rounded-full text-white px-1 text-xs -top-0.5 -right-px">0</div>
           <ShoppingBag/>
         </Link>
 
         <Drawer>
-          <DrawerTrigger className="md:hidden">
+          <DrawerTrigger className="lg:hidden">
             <div className="border p-2 rounded-md">
               <AlignJustify />
             </div>
