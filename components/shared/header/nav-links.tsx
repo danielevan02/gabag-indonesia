@@ -48,7 +48,7 @@ const NavLinks = ({device}: {device: string}) => {
       <div className="flex flex-col gap-2">
         {links.map(({icon: Icon, label, link})=>(
           <Link href={link} key={link} className={cn("flex gap-3 rounded-lg p-2", 
-            path.startsWith(link) && 'bg-neutral-100 dark:bg-neutral-800'
+            (path === link || (link !== "/" && path.startsWith(link))) && 'bg-neutral-100 dark:bg-neutral-800'
           )}>
             <Icon/>
             {label}

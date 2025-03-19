@@ -134,6 +134,7 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -145,12 +146,14 @@ body {
 
 /* Hide scrollbar for IE, Edge and Firefox */
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 /* LOADING STYLE */
-/* From Uiverse.io by Shoh2008 */ 
+/* From Uiverse.io by Shoh2008 */
 .loader {
   display: block;
   width: 84px;
@@ -158,7 +161,8 @@ body {
   position: relative;
 }
 
-.loader:before , .loader:after {
+.loader:before,
+.loader:after {
   content: "";
   position: absolute;
   left: 50%;
@@ -167,7 +171,7 @@ body {
   height: 84px;
   border-radius: 50%;
   background: black;
-  transform: translate(-50% , -100%)  scale(0);
+  transform: translate(-50%, -100%) scale(0);
   animation: push_401 2s infinite linear;
 }
 
@@ -176,8 +180,10 @@ body {
 }
 
 @keyframes push_401 {
-  0% , 50% {
-    transform: translate(-50% , 0%)  scale(1)
+
+  0%,
+  50% {
+    transform: translate(-50%, 0%) scale(1)
   }
 
   100% {

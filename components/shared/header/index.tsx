@@ -28,11 +28,14 @@ const Header = async () => {
         <Button variant="secondary">Sign Up</Button>
       </div>
 
-      <div className="block md:hidden absolute top-[85px] inset-x-4 bg-background pb-3">
+
+      {/* Searchbar for mobile */}
+      <div className="block md:hidden absolute top-20 inset-x-0 px-4 pt-4 bg-background pb-3">
         <SearchBar/>
       </div>
 
       <div className="flex lg:hidden gap-4 items-center">
+        {/* Searchbar for tablet */}
         <div className="hidden md:block lg:hidden">
           <SearchBar/>
         </div>
