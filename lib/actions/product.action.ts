@@ -13,7 +13,6 @@ export async function getAllProducts(
   banner?: string,
   price?: { min?: number; max?: number }
 ) {
-  console.log(category, search, categoriesId, banner, price)
   return await prisma.product.findMany({
     where: {
       AND: [
