@@ -2,11 +2,13 @@
 
 import { Input } from '@/components/ui/input';
 import { searchProduct } from '@/lib/actions/product.action';
+import { updateQueryParams } from '@/lib/utils';
 import { Product } from '@prisma/client';
 import { Search } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useEffect, useRef, useTransition, ChangeEvent } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect, useRef, useTransition, ChangeEvent, KeyboardEvent } from 'react';
 
 export default function SearchBar() {
   const [query, setQuery] = useState('');
@@ -14,6 +16,8 @@ export default function SearchBar() {
   const [isLoading, startTransition] = useTransition()
   const [showDropdown, setShowDropdown] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
   // Fungsi untuk mencari produk berdasarkan keyword
   const searchProducts = async (keyword: string) => {
@@ -64,6 +68,12 @@ export default function SearchBar() {
     setShowDropdown(true);
   };
 
+  const handleEnter = (e: KeyboardEvent<HTMLInputElement>) => {
+    if(e.key === "Enter"){
+      updateQueryParams({search: query}, searchParams, router)
+    }
+  }
+
   return (
     <div className="relative w-full" ref={searchContainerRef}>
       <div className="relative flex items-center w-full">
@@ -72,6 +82,7 @@ export default function SearchBar() {
           value={query}
           onChange={handleInputChange}
           onFocus={() => setShowDropdown(query.length > 0)}
+          onKeyDown={(e) => handleEnter(e)}
           placeholder="Search product..."
           className="py-2 text-sm md:text-base w-full lg:w-52 lg:focus:w-72 transition-all px-4 border border-accent rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />

@@ -10,9 +10,14 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { Filter } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Category } from "@prisma/client";
-
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { updateQueryParams } from "@/lib/utils";
 
 const MobileFilterProduct= ({categories}:{categories?: Category[]}) => {
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+    const searchParams = useSearchParams()
+    const router = useRouter()
   const sort = [
     {
       label: "Newest to Oldest",
@@ -62,6 +67,22 @@ const MobileFilterProduct= ({categories}:{categories?: Category[]}) => {
       },
     },
   ];
+    useEffect(()=>{
+      const categoriesQuery = searchParams.get('categories');
+      if (categoriesQuery) {
+        setSelectedCategories(categoriesQuery.split(','));
+      }
+    }, [searchParams])
+  
+    const handleCategory = (categoryId: string) => {
+      const updatedCategories = selectedCategories.includes(categoryId)
+        ? selectedCategories.filter((item) => item !== categoryId)
+        : [...selectedCategories, categoryId];
+      setSelectedCategories(updatedCategories);
+  
+      const queryValue = updatedCategories.length > 0 ? updatedCategories.join(",") : undefined;
+      updateQueryParams({ categories: queryValue }, searchParams, router);
+    }
   return (
     <>
       <Sheet>
@@ -76,7 +97,10 @@ const MobileFilterProduct= ({categories}:{categories?: Category[]}) => {
               <AccordionContent className="flex flex-col gap-3">
                 {categories && categories.map((category) => (
                   <div key={category.id} className="flex gap-2 items-center">
-                    <Checkbox value={category.name} />
+                    <Checkbox value={category.name} 
+                      onCheckedChange={() => handleCategory(category.id)}
+                      checked={selectedCategories.includes(category.id)}
+                    />
                     <p className="font-bold text-sm text-neutral-500 dark:text-neutral-300">{category.name}</p>
                   </div>
                 ))}

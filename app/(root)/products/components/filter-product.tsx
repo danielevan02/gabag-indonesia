@@ -2,10 +2,11 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/lib/utils";
+import { cn, updateQueryParams } from "@/lib/utils";
 import { Category } from "@prisma/client";
 import { Filter, X } from "lucide-react";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export interface FilterProductProps {
   categories: Category[]
@@ -13,6 +14,9 @@ export interface FilterProductProps {
 
 const FilterProduct: React.FC<FilterProductProps> = ({categories}) => {
   const [showDialog, setShowDialog] = useState(true)
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const sort = [
     {
       label: "Newest to Oldest",
@@ -62,6 +66,23 @@ const FilterProduct: React.FC<FilterProductProps> = ({categories}) => {
       },
     },
   ]
+
+  useEffect(()=>{
+    const categoriesQuery = searchParams.get('categories');
+    if (categoriesQuery) {
+      setSelectedCategories(categoriesQuery.split(','));
+    }
+  }, [searchParams])
+
+  const handleCategory = (categoryId: string) => {
+    const updatedCategories = selectedCategories.includes(categoryId)
+      ? selectedCategories.filter((item) => item !== categoryId)
+      : [...selectedCategories, categoryId];
+    setSelectedCategories(updatedCategories);
+
+    const queryValue = updatedCategories.length > 0 ? updatedCategories.join(",") : undefined;
+    updateQueryParams({ categories: queryValue }, searchParams, router);
+  }
   return (
     <div className={cn("w-96 hidden md:block md:sticky top-32 transition-all duration-300 z-10", 
       !showDialog && "w-0"
@@ -81,7 +102,10 @@ const FilterProduct: React.FC<FilterProductProps> = ({categories}) => {
             <AccordionContent className="flex flex-col gap-3">
               {categories.map((category) => (
                 <div key={category.id} className="flex gap-2 items-center">
-                  <Checkbox value={category.name} />
+                  <Checkbox value={category.name}
+                    onCheckedChange={() => handleCategory(category.id)}
+                    checked={selectedCategories.includes(category.id)}
+                  />
                   <p className="font-bold text-sm text-neutral-500 dark:text-neutral-300">{category.name}</p>
                 </div>
               ))}

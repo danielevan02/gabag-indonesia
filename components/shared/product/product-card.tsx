@@ -31,7 +31,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <Link 
       href={`/products/${slug}`} 
-      className={cn("relative flex flex-col shadow-2xs hover:shadow min-w-72 flex-1 max-w-72 md:max-w-2xl md:min-w-96 overflow-hidden group", className)}>
+      className={cn("relative flex flex-col shadow-2xs hover:shadow min-w-72 flex-1 max-w-72 md:max-w-2xl md:min-w-96 overflow-hidden group max-h-fit", className)}>
       {banner && <p className="absolute bg-red-700 top-3 px-1 py-1 capitalize right-0 z-10 text-white text-sm font-bold">{banner}</p>}
       <div className="overflow-hidden min-h-52 max-h-52 md:min-h-[500px] md:max-h-[500px] w-full">
         <Image
