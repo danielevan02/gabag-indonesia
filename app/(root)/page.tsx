@@ -120,7 +120,7 @@ const HomePage = async () => {
       <section className="mt-20">
         <h3 className="md:text-2xl text-xl font-bold text-center md:text-start">Shop by New Arrival Products</h3>
         <hr className="mb-2 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-900 to-transparent opacity-25 dark:via-white" />
-        <div className="flex flex-col md:flex-row gap-10 md:gap-2">
+        <div className="flex flex-col md:flex-row gap-10">
           {newArrival.map((product) => (
             <Link href={`/products/${product.slug}`} key={product.slug} className="w-full">
               <Image

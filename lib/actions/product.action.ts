@@ -11,8 +11,10 @@ export async function getAllProducts(
   search?: string,
   categoriesId?: string[],
   banner?: string,
-  price?: { min?: number; max?: number }
+  sort?: string,
+  price?: { min?: string; max?: string }
 ) {
+  
   return await prisma.product.findMany({
     where: {
       AND: [
@@ -37,21 +39,30 @@ export async function getAllProducts(
             }
           : {},
         // Filter berdasarkan banner
-        banner ? { banner: { equals: banner } } : {},
+        banner ? { 
+          banner: { 
+            equals: banner === "exclusive" ? "Exclusive": banner === "best-seller" ? "Best Seller" : "New Arrival"
+          } 
+        } : {},
         // Filter berdasarkan harga (min dan max)
         price?.min || price?.max
           ? {
-              price: {
-                gte: price?.min ?? undefined,
-                lte: price?.max ?? undefined,
-              },
+            price: {
+              gte: price?.min ? BigInt(price.min) : undefined,
+              lte: price?.max ? BigInt(price.max) : undefined,
+            },
             }
           : {},
       ],
     },
     include: {
-      categories: true, // Jika ingin mendapatkan data kategori bersama produknya
+      categories: true,
     },
+    orderBy: sort ? {
+      createdAt: 'desc'
+    } : {
+      name: 'asc'
+    }
   });
 }
 

@@ -31,9 +31,27 @@ const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <Link 
       href={`/products/${slug}`} 
-      className={cn("relative flex flex-col shadow-2xs hover:shadow min-w-72 flex-1 max-w-72 md:max-w-2xl md:min-w-96 overflow-hidden group max-h-fit", className)}>
+      className={cn(`
+        relative 
+        flex 
+        flex-col 
+        shadow-0 
+        hover:shadow 
+        flex-1 
+        min-w-72 
+        max-w-72 
+        md:max-w-96 
+        md:min-w-96 
+        overflow-hidden 
+        group 
+        lg:max-h-[750px] 
+        lg:min-h-[750px]
+        `, 
+        className
+      )}
+    >
       {banner && <p className="absolute bg-red-700 top-3 px-1 py-1 capitalize right-0 z-10 text-white text-sm font-bold">{banner}</p>}
-      <div className="overflow-hidden min-h-52 max-h-52 md:min-h-[500px] md:max-h-[500px] w-full">
+      <div className="overflow-hidden min-h-52 max-h-52 md:min-h-[600px] md:max-h-[600px] w-full">
         <Image
           src={image}
           className="w-full object-cover h-full group-hover:scale-110 transition-all"
@@ -47,12 +65,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <h4 className="text-neutral-500">{categoryName}</h4>
           <h3 className="font-bold line-clamp-2">{name}</h3>
         </div>
-        {discount !== 0 || categoryDiscount !==0 ? (
-          <div className="bg-red-600 text-white px-2 py-px text-xs font-bold relative w-min my-1">{discount || categoryDiscount}%</div>
-        ) : (
-          <div className="h-6" />
-        )}
-        <PriceTag price={Number(price)} discount={discount || categoryDiscount}/>
+        <div>
+          {discount !== 0 || categoryDiscount !==0 ? (
+            <div className="bg-red-600 text-white px-2 py-px text-xs font-bold relative w-min my-1">{discount || categoryDiscount}%</div>
+          ) : (
+            <div className="h-6" />
+          )}
+          <PriceTag price={Number(price)} discount={discount || categoryDiscount}/>
+        </div>
       </div>
     </Link>
   );
