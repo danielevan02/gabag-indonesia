@@ -84,7 +84,7 @@ export default function SearchBar() {
           onFocus={() => setShowDropdown(query.length > 0)}
           onKeyDown={(e) => handleEnter(e)}
           placeholder="Search product..."
-          className="py-2 relative text-sm md:text-base w-32 lg:w-52 lg:focus:w-72 transition-all px-4 border border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="py-2 relative text-sm md:text-base w-44 lg:w-52 lg:focus:w-72 transition-all px-4 border border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <Search className='absolute right-2 text-neutral-500 z-10'/>
       </div>
