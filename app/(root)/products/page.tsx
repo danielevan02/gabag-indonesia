@@ -23,7 +23,7 @@ const ProductPage = async ({searchParams}: {
   const products = await getAllProducts(undefined, search, categoryIds, banner, sort, {max, min})
   const categoryList = await getAllCategories()
   return (
-    <div className="flex items-start relative flex-col md:flex-row justify-between mx-3 lg:mx-10 gap-5 min-h-screen h-full">
+    <div className="flex items-start relative flex-col md:flex-row justify-between mx-3 lg:mx-10 lg:gap-5">
       <FilterProduct categories={categoryList}/>
       
       <MobileFilterProduct categories={categoryList}/>
@@ -34,7 +34,17 @@ const ProductPage = async ({searchParams}: {
             Showing results for <span className="font-bold">&quot;{search}&quot;</span>
           </p>
         )}
-        <div className="grid w-full gap-2 md:gap-5 md:grid-cols-3 grid-cols-2 h-full">
+        <div 
+          className={`
+            grid 
+            w-full 
+            gap-2 
+            md:gap-5 
+            grid-cols-2 
+            lg:grid-cols-3
+            h-full
+            `}
+        >
           { products && (products?.length !== 0) ? products.map((product) => (
             <ProductCard
               key={product.slug}
@@ -47,10 +57,10 @@ const ProductPage = async ({searchParams}: {
               slug={product.slug}
               banner={product.banner!}
               category={product.categories}
-              className="col-span-1 md:max-w-xl min-w-40"
+              className="col-span-1"
             />
             )):(
-              <p className="font-bold text-lg text-neutral-500 m-auto my-auto">There is no products.</p>
+              <p className="text-lg text-neutral-500 text-center mt-36 col-span-3">There is no products.</p>
             )
           }
         </div>

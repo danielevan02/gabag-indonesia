@@ -37,7 +37,7 @@ const HomeCarousel = ({slideDuration}: {slideDuration?: number}) => {
     {desktop: 'dummy3.jpg', mobile: 'mobiledummy3.jpg'},
   ]
   return (
-    <div className="w-[85%] m-auto">
+    <div className="w-[85%] m-auto mt-2">
       <Carousel
         plugins={[
           Autoplay({

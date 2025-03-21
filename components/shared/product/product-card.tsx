@@ -38,20 +38,24 @@ const ProductCard: React.FC<ProductCardProps> = ({
         shadow-0 
         hover:shadow 
         flex-1 
-        min-w-72 
-        max-w-72 
-        md:max-w-96 
-        md:min-w-96 
         overflow-hidden 
         group 
-        lg:max-h-[750px] 
-        lg:min-h-[750px]
         `, 
         className
       )}
     >
       {banner && <p className="absolute bg-red-700 top-3 px-1 py-1 capitalize right-0 z-10 text-white text-sm font-bold">{banner}</p>}
-      <div className="overflow-hidden min-h-52 max-h-52 md:min-h-[600px] md:max-h-[600px] w-full">
+      <div className={`
+          overflow-hidden 
+          min-h-64 
+          max-h-64 
+          md:min-h-96
+          md:max-h-96
+          lg:min-h-[600px]
+          lg:mx-h-[600px]
+          w-full`
+        }
+      >
         <Image
           src={image}
           className="w-full object-cover h-full group-hover:scale-110 transition-all"
@@ -62,8 +66,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
       </div>
       <div className="p-1 md:p-3 flex-1 flex flex-col justify-between h-auto">
         <div className="flex flex-col">
-          <h4 className="text-neutral-500">{categoryName}</h4>
-          <h3 className="font-bold line-clamp-2">{name}</h3>
+          <h4 className="text-neutral-500 uppercase">{categoryName}</h4>
+          <h3 className="line-clamp-2 text-neutral-600 font-semibold tracking-wider">{name}</h3>
         </div>
         <div>
           {discount !== 0 || categoryDiscount !==0 ? (
@@ -86,12 +90,12 @@ const PriceTag = ({price, discount}:{price: number; discount?: number;}) => {
   return(
     <>
       {discount ? (
-        <div className="flex flex-col">
+        <div className="flex flex-col md:flex-row gap-1">
           <h4 className="line-through text-neutral-400 text-sm">Rp{price.toLocaleString()}</h4>
-          <h4 className="font-bold">Rp{lastPrice.toLocaleString()}</h4>
+          <h4>Rp{lastPrice.toLocaleString()}</h4>
         </div>
       ):(
-        <h4 className="font-bold">Rp{lastPrice.toLocaleString()}</h4>
+        <h4>Rp{lastPrice.toLocaleString()}</h4>
       )}
     </>
   )

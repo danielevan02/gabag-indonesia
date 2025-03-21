@@ -25,7 +25,7 @@ const Logo = () => {
     <Image
       src={`/images/${theme === 'light' ? 'black-logo.svg':'white-logo.svg'}`}
       alt="Gabag Indonesia Logo"
-      className="w-44 md:w-64"
+      className="w-32 lg:w-52"
       width={1000}
       height={1000}
       priority

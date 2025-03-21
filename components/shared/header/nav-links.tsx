@@ -21,9 +21,9 @@ const NavLinks = ({device}: {device: string}) => {
   ];
   if(device === 'desktop'){
     return (
-      <div className="justify-between gap-5 hidden lg:flex">
+      <div className="justify-between gap-5 hidden lg:flex items-center">
         {links.map(({ icon: Icon, label, link }) => (
-          <div key={link} className="relative flex justify-center group">
+          <div key={link} className="relative flex justify-center items-center group">
             <Icon
               className={cn(
                 "absolute opacity-0 group-hover:opacity-100 transition-all",
@@ -33,7 +33,7 @@ const NavLinks = ({device}: {device: string}) => {
             <Link
               key={link}
               href={link}
-              className={cn("group-hover:opacity-0 transition-all", 
+              className={cn("group-hover:opacity-0 transition-all uppercase text-xs tracking-widest", 
                 (path === link || (link !== "/" && path.startsWith(link))) && "opacity-0",
               )}
             >
@@ -47,11 +47,13 @@ const NavLinks = ({device}: {device: string}) => {
     return(
       <div className="flex flex-col gap-2">
         {links.map(({icon: Icon, label, link})=>(
-          <Link href={link} key={link} className={cn("flex gap-3 rounded-lg p-2", 
+          <Link href={link} key={link} className={cn("flex gap-3 rounded-lg p-2 items-center uppercase", 
             (path === link || (link !== "/" && path.startsWith(link))) && 'bg-neutral-100 dark:bg-neutral-800'
           )}>
             <Icon/>
-            {label}
+            <span className="text-xs">
+              {label}
+            </span>
           </Link>
         ))}
       </div>

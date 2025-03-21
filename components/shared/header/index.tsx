@@ -5,63 +5,84 @@ import { ModeToggle } from "./mode-toggle";
 import Logo from "./logo";
 import Link from "next/link";
 import { AlignJustify, ShoppingBag } from "lucide-react";
-import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import SearchBar from "./search-bar";
 
 const Header = async () => {
   return (
-    <div className="z-50 bg-background px-5 pt-5 pb-2 md:px-10 md:py-5 flex items-center justify-between gap-10 fixed w-full top-0 left-0">
-      <Link href="/">
+    <div
+      className={`
+      sticky 
+      flex 
+      flex-col
+      items-center 
+      justify-between 
+      w-screen
+      top-0 
+      left-0
+      bg-background 
+      z-50
+      `}
+    >
+      <Link href="/" className="py-2">
         <Logo />
       </Link>
 
-      <NavLinks device="desktop"/>
-      
-      <div className="hidden lg:flex gap-5">
-        <SearchBar/>  
-        <Link href='/cart' className="hover:bg-accent relative rounded-lg w-10 h-10 flex items-center justify-center transition-all group">
-          <div className="absolute bg-red-700 rounded-full text-white px-1 text-xs -top-0.5 -right-px">0</div>
-          <ShoppingBag/>
-        </Link>
-        <ModeToggle />
-        <Button>Login</Button>
-        <Button variant="secondary">Sign Up</Button>
-      </div>
-
-
-      {/* Searchbar for mobile */}
-      <div className="block md:hidden absolute top-20 inset-x-0 px-4 pt-4 bg-background pb-3">
-        <SearchBar/>
-      </div>
-
-      <div className="flex lg:hidden gap-4 items-center">
-        {/* Searchbar for tablet */}
-        <div className="hidden md:block lg:hidden">
-          <SearchBar/>
-        </div>
-        <Link href='/cart' className="hover:bg-neutral-300 relative rounded-lg w-10 h-10 flex items-center justify-center transition-all group">
-          <div className="absolute bg-red-700 rounded-full text-white px-1 text-xs -top-0.5 -right-px">0</div>
-          <ShoppingBag/>
-        </Link>
-
+      <div className="flex w-full justify-between px-5 lg:px-10 pb-2">
         <Drawer>
           <DrawerTrigger className="lg:hidden">
-            <div className="border p-2 rounded-md">
-              <AlignJustify />
-            </div>
+            <AlignJustify />
           </DrawerTrigger>
           <DrawerContent className="px-10">
             <DrawerHeader className="flex-row items-center justify-between">
               <DrawerTitle className="w-min">Menu</DrawerTitle>
-              <ModeToggle/>
+              <ModeToggle />
             </DrawerHeader>
-            <NavLinks device="mobile"/>
+            <NavLinks device="mobile" />
             <DrawerFooter>
               <Button>Login</Button>
               <Button variant="secondary">Sign Up</Button>
             </DrawerFooter>
           </DrawerContent>
         </Drawer>
+
+        <SearchBar />
+
+        <NavLinks device="desktop" />
+
+        <div className="hidden lg:flex gap-5">
+          <Link
+            href="/cart"
+            className="hover:bg-accent relative rounded-lg w-10 h-10 flex items-center justify-center transition-all group"
+          >
+            <div className="absolute bg-red-700 rounded-full text-white px-1 text-xs -top-0.5 -right-px">
+              0
+            </div>
+            <ShoppingBag />
+          </Link>
+          <ModeToggle />
+          <Button>Login</Button>
+          <Button variant="secondary">Sign Up</Button>
+        </div>
+
+        {/* MOBILE CART BUTTON */}
+        <Link
+          href="/cart"
+          className="hover:bg-neutral-300 relative rounded-lg w-10 h-10 flex items-center justify-center transition-all group lg:hidden"
+        >
+          <div className="absolute bg-red-700 rounded-full text-white px-1 text-xs -top-0.5 -right-px">
+            0
+          </div>
+          <ShoppingBag />
+        </Link>
+
       </div>
     </div>
   );

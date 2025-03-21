@@ -1,12 +1,23 @@
 import type { Metadata } from "next";
-import { Nunito_Sans } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import { APP_DESCRIPTION, APP_NAME, SERVER_URL } from "@/lib/constants";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "@/components/theme-provider";
 
-const nunitoSans = Nunito_Sans({
+const outift = Poppins({
   subsets: ['latin'],
+  weight: [
+    '100',
+    '200',
+    '300',
+    '400',
+    '500',
+    '600',
+    '700',
+    '800',
+    '900',
+  ]
 })
 
 export const metadata: Metadata = {
@@ -26,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${nunitoSans.className} antialiased`}
+        className={`${outift.className} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           {children}

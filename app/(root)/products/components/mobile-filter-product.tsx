@@ -7,7 +7,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Filter } from "lucide-react";
+import { Settings2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Category } from "@prisma/client";
 import { useEffect, useState } from "react";
@@ -79,14 +79,15 @@ const MobileFilterProduct = ({ categories }: { categories?: Category[] }) => {
   return (
     <>
       <Sheet>
-        <SheetTrigger className="sticky md:hidden top-36 left-0 z-10 bg-secondary border rounded-lg p-2">
-          <Filter />
+        <SheetTrigger className="sticky md:hidden top-24 flex left-0 z-20 bg-background justify-center items-center gap-2 w-full p-2">
+          Filter
+          <Settings2 className="w-5 h-5" />
         </SheetTrigger>
         <SheetContent className="p-5" side="left">
-          <SheetTitle className="font-bold text-lg">Filter by:</SheetTitle>
+          <SheetTitle className="font-normal uppercase">Filter by:</SheetTitle>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
-              <AccordionTrigger className="text-base">Categories</AccordionTrigger>
+              <AccordionTrigger className="font-normal">Category</AccordionTrigger>
               <AccordionContent className="flex flex-col gap-3">
                 {categories &&
                   categories.map((category) => (
@@ -96,7 +97,7 @@ const MobileFilterProduct = ({ categories }: { categories?: Category[] }) => {
                         onCheckedChange={() => handleCategory(category.id)}
                         checked={selectedCategories.includes(category.id)}
                       />
-                      <p className="font-bold text-sm text-neutral-500 dark:text-neutral-300">
+                      <p className="text-sm text-neutral-600 dark:text-neutral-300">
                         {category.name}
                       </p>
                     </div>
@@ -104,7 +105,7 @@ const MobileFilterProduct = ({ categories }: { categories?: Category[] }) => {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-2">
-              <AccordionTrigger className="text-base">Sort by</AccordionTrigger>
+              <AccordionTrigger className="font-normal">Sort by</AccordionTrigger>
               <AccordionContent className="flex flex-col gap-3">
                 {sort.map((item) => (
                   <div key={item.value} className="flex gap-2 items-center">
@@ -116,7 +117,7 @@ const MobileFilterProduct = ({ categories }: { categories?: Category[] }) => {
                     />
                     <p
                       className={cn(
-                        "font-bold text-sm text-neutral-500 dark:text-neutral-300 transition-all",
+                        "text-sm text-neutral-600 dark:text-neutral-300 transition-all",
                         selectedSort !== null &&
                           selectedSort !== item.value &&
                           "text-neutral-300 dark:text-neutral-500"
@@ -129,7 +130,7 @@ const MobileFilterProduct = ({ categories }: { categories?: Category[] }) => {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-3">
-              <AccordionTrigger className="text-base">Price</AccordionTrigger>
+              <AccordionTrigger className="font-normal">Price</AccordionTrigger>
               <AccordionContent className="flex flex-col gap-3">
                 {priceFilter.map((item) => (
                   <div key={item.label} className="flex gap-2 items-center">
@@ -140,7 +141,7 @@ const MobileFilterProduct = ({ categories }: { categories?: Category[] }) => {
                     />
                     <p
                       className={cn(
-                        "font-bold text-sm text-neutral-500 dark:text-neutral-300 transition-all",
+                        "text-sm text-neutral-600 dark:text-neutral-300 transition-all",
                         selectedPrice !== null &&
                           selectedPrice !== item.value &&
                           "text-neutral-300 dark:text-neutral-500"

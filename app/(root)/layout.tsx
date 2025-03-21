@@ -6,9 +6,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="flex h-screen flex-col mt-36">
-      <Header />
-      <main className="flex-1">{children}</main>
+    <div className="flex flex-col items-center">
+      <div className="relative max-w-[2500px]">
+        <Header />
+        <main className="flex-1">{children}</main>
+      </div>
     </div>
   );
 }
