@@ -23,7 +23,7 @@ const ProductPage = async ({searchParams}: {
   const products = await getAllProducts(undefined, search, categoryIds, banner, sort, {max, min})
   const categoryList = await getAllCategories()
   return (
-    <div className="flex items-start relative flex-col md:flex-row justify-between mx-3 lg:mx-10 lg:gap-5">
+    <div className="flex items-start relative flex-col md:flex-row justify-between mx-3 xl:mx-10 lg:gap-5">
       <FilterProduct categories={categoryList}/>
       
       <MobileFilterProduct categories={categoryList}/>

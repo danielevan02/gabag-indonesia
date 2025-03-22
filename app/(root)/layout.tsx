@@ -1,3 +1,4 @@
+import Footer from "@/components/shared/footer";
 import Header from "@/components/shared/header";
 
 export default function RootLayout({
@@ -10,6 +11,7 @@ export default function RootLayout({
       <div className="relative max-w-[2500px]">
         <Header />
         <main className="flex-1">{children}</main>
+        <Footer/>
       </div>
     </div>
   );

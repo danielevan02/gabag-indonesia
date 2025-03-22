@@ -45,14 +45,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
       )}
     >
       {banner && <p className="absolute bg-red-700 top-3 px-1 py-1 capitalize right-0 z-10 text-white text-sm font-bold">{banner}</p>}
+      {/* IMAGE CONTAINER */}
       <div className={`
           overflow-hidden 
           min-h-64 
           max-h-64 
           md:min-h-96
           md:max-h-96
-          lg:min-h-[600px]
-          lg:mx-h-[600px]
+          xl:min-h-[600px]
+          xl:mx-h-[600px]
           w-full`
         }
       >
@@ -64,9 +65,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
           width={500}
         />
       </div>
+
       <div className="p-1 md:p-3 flex-1 flex flex-col justify-between h-auto">
         <div className="flex flex-col">
-          <h4 className="text-neutral-500 uppercase">{categoryName}</h4>
+          <h4 className="text-neutral-500 uppercase text-xs md:text-sm">{categoryName}</h4>
           <h3 className="line-clamp-2 text-neutral-600 font-semibold tracking-wider">{name}</h3>
         </div>
         <div>

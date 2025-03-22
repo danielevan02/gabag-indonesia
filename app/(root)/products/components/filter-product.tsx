@@ -80,7 +80,7 @@ const FilterProduct: React.FC<FilterProductProps> = ({ categories }) => {
     <div
       className={cn(`
         w-56 
-        lg:w-96
+        xl:w-96
         hidden 
         md:block 
         sticky 
@@ -95,7 +95,7 @@ const FilterProduct: React.FC<FilterProductProps> = ({ categories }) => {
       )}
     >
       <Button
-        className={cn("rounded-full absolute -right-10 lg:-right-3 z-50 transition-all duration-500", showDialog && "right-3")}
+        className={cn("rounded-full absolute -right-10 lg:-right-10 xl:-right-3 z-50 transition-all duration-500", showDialog && "lg:-right-1 xl:right-3")}
         variant="secondary"
         onClick={() => setShowDialog((prev) => !prev)}
       >

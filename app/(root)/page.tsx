@@ -22,7 +22,7 @@ const HomePage = async () => {
 
       <section className="mt-20">
         <h2 className="text-2xl font-bold text-center mb-2">Shop by Categories</h2>
-        <div className="hidden lg:grid grid-cols-12 w-[50%] mx-auto gap-4">
+        <div className="hidden lg:grid grid-cols-12 w-3xl xl:w-4xl mx-auto gap-4">
           {categories.filter((val) => !val.isEventCategory).map((category, index) => (
             <Link href='/' key={category.id} className={cn("flex flex-col gap-2 group", 
               (index === 0 || index === 1) ? "col-span-6" : "col-span-4"
@@ -37,7 +37,7 @@ const HomePage = async () => {
                   priority
                 />
               </div>
-              <h3 className="text-center font-bold">{category.name}</h3>
+              <h3 className="text-center font-semibold">{category.name}</h3>
             </Link>
           ))}
         </div>
