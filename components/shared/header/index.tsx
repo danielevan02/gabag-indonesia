@@ -68,8 +68,12 @@ const Header = async () => {
             <ShoppingBag />
           </Link>
           <ModeToggle />
-          <Button>Login</Button>
-          <Button variant="secondary">Sign Up</Button>
+          <Button asChild className="tracking-widest">
+            <Link href={'/sign-in'}>Login</Link>
+          </Button>
+          <Button variant="outline" asChild className="tracking-widest">
+            <Link href={'/sign-up'}>Sign Up</Link>
+          </Button>
         </div>
 
         {/* MOBILE CART BUTTON */}
