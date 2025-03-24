@@ -6,11 +6,10 @@ export async function generateStaticParams() {
   return products.map((product) => ({ slug: product.slug }));
 }
 
-// Menambahkan tipe eksplisit untuk mencegah kesalahan Promise
-type ProductDetailsPageProps = Awaited<{ params: { slug: string } }>;
+type tParams = Promise<{ slug: string }>;
 
-const ProductDetailsPage = async ({ params }: ProductDetailsPageProps) => {
-  const { slug } = params;
+const ProductDetailsPage = async ({ params }: {params: tParams}) => {
+  const { slug }: {slug: string} = await params;
   const product = await getProductBySlug(slug);
 
   if (!product) {
