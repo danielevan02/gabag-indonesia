@@ -1,25 +1,29 @@
 import { getAllProducts, getProductBySlug } from "@/lib/actions/product.action"
 import ProductDetailSection from "./components/product-detail-section";
 
-export async function generateStaticParams(){
-  const products = await getAllProducts()
+export async function generateStaticParams() {
+  const products = await getAllProducts();
 
-  return products.map((product)=>({slug: product.slug}))
+  return products.map((product) => ({ slug: product.slug }));
 }
 
-const ProductDetailsPage = async ({params}:{params: {slug: string;}}) => {
-  const slug = params.slug
-  const product = await getProductBySlug(slug)
-  
-  return(
+interface ProductDetailsPageProps {
+  params: { slug: string };
+}
+
+const ProductDetailsPage = async ({ params }: ProductDetailsPageProps) => {
+  const { slug } = params;
+  const product = await getProductBySlug(slug);
+
+  if (!product) {
+    return <div>Product not found</div>;
+  }
+
+  return (
     <div className="flex flex-col px-5 w-full max-w-screen">
-      <ProductDetailSection product={product!} />
-
-      <div>
-
-      </div>
+      <ProductDetailSection product={product} />
     </div>
-  )
-}
+  );
+};
 
-export default ProductDetailsPage
+export default ProductDetailsPage;
