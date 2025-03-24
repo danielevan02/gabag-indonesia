@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+
 import React from "react";
 import NavLinks from "./nav-links";
 import { ModeToggle } from "./mode-toggle";
@@ -14,8 +14,12 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import SearchBar from "./search-bar";
+import { auth } from "@/auth";
+import CredentialsButton from "./credentials-button";
 
 const Header = async () => {
+  const session = await auth()
+  const user = session?.user
   return (
     <div
       className={`
@@ -47,8 +51,7 @@ const Header = async () => {
             </DrawerHeader>
             <NavLinks device="mobile" />
             <DrawerFooter>
-              <Button>Login</Button>
-              <Button variant="secondary">Sign Up</Button>
+              <CredentialsButton user={user!} />
             </DrawerFooter>
           </DrawerContent>
         </Drawer>
@@ -68,12 +71,8 @@ const Header = async () => {
             <ShoppingBag />
           </Link>
           <ModeToggle />
-          <Button asChild className="tracking-widest">
-            <Link href={'/sign-in'}>Login</Link>
-          </Button>
-          <Button variant="outline" asChild className="tracking-widest">
-            <Link href={'/sign-up'}>Sign Up</Link>
-          </Button>
+          
+          <CredentialsButton user={user!}/>
         </div>
 
         {/* MOBILE CART BUTTON */}
