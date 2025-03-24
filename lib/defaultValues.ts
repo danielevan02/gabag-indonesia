@@ -1,4 +1,4 @@
 export const defaultLogin = {
-  email: 'daniel@gmail.com',
-  password: '123456'
+  email: '',
+  password: ''
 }

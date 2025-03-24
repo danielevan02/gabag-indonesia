@@ -2,6 +2,7 @@
 
 import { signIn, signOut } from "@/auth"
 import { isRedirectError } from "next/dist/client/components/redirect-error";
+import { redirect } from "next/navigation";
 
 export async function signInWithCredetials(data: {email: string; password: string;}){
   try {
@@ -17,4 +18,5 @@ export async function signInWithCredetials(data: {email: string; password: strin
 
 export async function signOutUser(){
   await signOut()
+  redirect('/')
 }
