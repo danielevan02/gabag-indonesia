@@ -1,15 +1,13 @@
-import { getAllProducts, getProductBySlug } from "@/lib/actions/product.action"
+import { getAllProducts, getProductBySlug } from "@/lib/actions/product.action";
 import ProductDetailSection from "./components/product-detail-section";
 
 export async function generateStaticParams() {
   const products = await getAllProducts();
-
   return products.map((product) => ({ slug: product.slug }));
 }
 
-interface ProductDetailsPageProps {
-  params: { slug: string };
-}
+// Menambahkan tipe eksplisit untuk mencegah kesalahan Promise
+type ProductDetailsPageProps = Awaited<{ params: { slug: string } }>;
 
 const ProductDetailsPage = async ({ params }: ProductDetailsPageProps) => {
   const { slug } = params;
