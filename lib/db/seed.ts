@@ -18,7 +18,7 @@ async function main() {
     data: sample.product
   })
   
-  console.log('Database seeded successfully!')  
+  console.log("Database seeded successfully")  
 }
 
 main();

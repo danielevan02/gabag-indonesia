@@ -24,7 +24,7 @@ const Header = async () => {
       flex-col
       items-center 
       justify-between 
-      w-screen
+      w-full
       top-0 
       left-0
       bg-background 

@@ -17,7 +17,7 @@ const HomePage = async () => {
   const beauty = await getAllProducts("Beauty") || []
   const newArrival = await getNewArrivalProduct()
   return (
-    <div className="flex flex-col w-screen px-2 md:px-5 lg:px-10">
+    <div className="flex flex-col w-full max-w-screen px-2 md:px-5 lg:px-10">
       <HomeCarousel slideDuration={5000} />
 
       <section className="mt-20">
@@ -65,7 +65,7 @@ const HomePage = async () => {
       <section className="mt-20">
         <h3 className="text-2xl text-center md:text-start">Flash Sale Products</h3>
         <hr className="mb-5 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-900 to-transparent opacity-25 dark:via-white" />
-        <div className="flex gap-1 md:gap-5 overflow-scroll no-scrollbar px-1 py-px">
+        <div className="flex gap-1 md:gap-5 overflow-scroll no-scrollbar snap-x snap-mandatory px-1 py-px ">
           {products.map((product) => {
             return(
               <ProductCard
@@ -75,7 +75,15 @@ const HomePage = async () => {
                 image={product.images[0]}
                 category={product.categories}
                 banner={product.banner!}
-                className="min-w-56 md:min-w-80 lg:min-w-96"
+                className={`
+                  min-w-56 
+                  max-w-56 
+                  md:min-w-80 
+                  md:max-w-80 
+                  lg:min-w-96
+                  lg:max-w-96
+                  snap-start
+                `}
               />
             )
           })}
@@ -96,7 +104,7 @@ const HomePage = async () => {
           </video>
         </div>
 
-        <div className="flex gap-1 mt-10 md:gap-5 overflow-scroll no-scrollbar">
+        <div className="flex gap-1 mt-10 md:gap-5 overflow-scroll no-scrollbar snap-x snap-mandatory">
           {products.map((product) => (
             <ProductCard
               key={product.slug}
@@ -105,7 +113,15 @@ const HomePage = async () => {
               image={product.images[0]}
               category={product.categories}
               banner={product.banner!}
-              className="min-w-56 md:min-w-80 lg:min-w-96"
+              className={`
+                min-w-56 
+                max-w-56 
+                md:min-w-80 
+                md:max-w-80 
+                lg:min-w-96
+                lg:max-w-96
+                snap-start
+              `}
             />
           ))}
         </div>
@@ -131,7 +147,6 @@ const HomePage = async () => {
                   lg:min-h-[600px]
                   lg:max-h-[600px]
                   object-cover
-
                 `}
               />
               <h2 className="text-center mt-2 lg:text-xl font-bold">{product.name}</h2>
@@ -147,7 +162,7 @@ const HomePage = async () => {
           <p className="text-center w-full text-sm text-neutral-400">A stylish storage solution for your beauty essentials! Practical, elegant, and ready to accompany your daily routine.</p>
         </div>
         <hr className="mb-5 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-900 to-transparent opacity-25 dark:via-white" />
-        <div className="flex gap-1 md:gap-5 overflow-scroll no-scrollbar px-1">
+        <div className="flex gap-1 md:gap-5 overflow-scroll no-scrollbar px-1 snap-x snap-mandatory">
           {beauty.map((product) => (
             <ProductCard
               key={product.slug}
@@ -163,6 +178,7 @@ const HomePage = async () => {
                 md:max-w-80 
                 lg:min-w-96
                 lg:max-w-96
+                snap-start
               `}
             />
           ))}

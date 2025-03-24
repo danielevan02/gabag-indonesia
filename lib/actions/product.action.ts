@@ -83,6 +83,10 @@ export async function getProductBySlug(slug:string) {
   return await prisma.product.findFirst({
     where: {
       slug
+    },
+    include: {
+      categories: true,
+      variant: true
     }
   })
 }

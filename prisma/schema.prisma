@@ -45,6 +45,7 @@ model Variant {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   productId String   @db.Uuid
   name      String
+  image     String   @default("")
   discount  Int?     @default(0)
   stock     Int      @default(0)
   price     BigInt   @default(0)

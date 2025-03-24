@@ -19,7 +19,7 @@ import Link from "next/link";
 
 const Footer = () => {
   return (
-    <div className="w-screen relative mt-5 ">
+    <div className="w-full relative mt-5">
       <div className="bg-black flex justify-evenly lg:px-14">
         {footerAdvantage.map((item) => (
           <div
@@ -130,7 +130,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-10">
             <div className="flex flex-col gap-5 justify-center">
               <p className="text-center tracking-widest">FOLLOW US</p>
               <div className="flex gap-5 items-center justify-center">
@@ -170,7 +170,7 @@ const Footer = () => {
           </div>
         </div>
         
-        <div className="flex flex-col gap-5 mt-10 justify-center">
+        <div className="flex flex-col gap-5 mt-10 justify-center lg:mb-10">
           <p className="text-center tracking-widest">OUR PAYMENT METHOD</p>
           <div className="grid grid-cols-4 lg:grid-cols-8 gap-3 mx-20 items-center">
             {paymentIcon.map((item) => (
@@ -198,7 +198,7 @@ const Footer = () => {
 
       </div>
 
-      <div className="flex sticky bottom-0 inset-x-0 border p-2 bg-background justify-center lg:mt-10">
+      <div className="flex sticky bottom-0 inset-x-0 border p-2 bg-background justify-center">
         <p className="text-xs text-center text-neutral-500">
           &copy; {new Date().getFullYear()} {APP_NAME}, All rights reserved
         </p>

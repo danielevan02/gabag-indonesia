@@ -5,7 +5,8 @@ import MobileFilterProduct from "./components/mobile-filter-product";
 import { Metadata } from "next";
 
 export const metadata: Metadata={
-  title: 'Products'
+  title: 'Products',
+  description: "Discover GabaG's complete product collection, including ASI cooler bags, multifunctional bags, ice gel packs, and breastfeeding accessories. Get the best deals now!"
 }
 
 const ProductPage = async ({searchParams}: {
@@ -19,7 +20,7 @@ const ProductPage = async ({searchParams}: {
   }>
 }) => {
   const {categories, search, banner, max, min, sort} = await searchParams
-  const categoryIds = await categories?.split(',')
+  const categoryIds = categories?.split(',')
   const products = await getAllProducts(undefined, search, categoryIds, banner, sort, {max, min})
   const categoryList = await getAllCategories()
   return (

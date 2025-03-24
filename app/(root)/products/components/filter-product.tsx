@@ -91,7 +91,7 @@ const FilterProduct: React.FC<FilterProductProps> = ({ categories }) => {
         duration-300
         z-10
         `,
-        !showDialog && "w-0 lg:w-0 px-0"
+        !showDialog && "w-0 xl:w-0 px-0"
       )}
     >
       <Button
