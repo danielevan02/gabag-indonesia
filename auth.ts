@@ -60,7 +60,6 @@ export const config: NextAuthConfig = {
       return session
     },
     async jwt({token, user, trigger, session}: any){
-      console.log('halo')
       if(user){
         token.role = user.role
         token.id = user.id
