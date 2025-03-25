@@ -8,6 +8,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
 export const config: NextAuthConfig = {
+  trustHost: true,
   pages: {
     signIn: '/sign-in',
     error: '/sign-in',
