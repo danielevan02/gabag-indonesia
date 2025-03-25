@@ -1,21 +1,59 @@
 'use client'
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
+import { addToCart } from "@/lib/actions/cart.action"
 import { cn } from "@/lib/utils"
 import { FullProductType } from "@/types"
 import { Variant } from "@prisma/client"
+import { Loader, Minus, Plus } from "lucide-react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { Suspense, useState } from "react"
+import { toast } from "sonner"
+import { toast as hotToast } from 'react-hot-toast'
 
 const ProductDetailSection = ({product}: {product: FullProductType}) => {
   const [variant, setVariant] = useState<Variant>()
+  const [quantity, setQuantity] = useState(1)
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+  
   const lowestPrice = Math.min(...product.variant.map((v) => Number(v.price)))
-  const [price, setPrice] = useState(lowestPrice||product.price)
+  const [price, setPrice] = useState(lowestPrice === Infinity ? product.price : lowestPrice)
+
   const imagesList = [...product?.images || [], ...product?.variant.map(v => v.image) || []]
   const [mainImage, setMainImage] = useState(imagesList[0])
+
   const categoryDiscount = product?.categories.reduce((prev, curr) => prev + (curr.discount??0), 0)
+  const discount = variant?.discount || product?.discount || categoryDiscount || 0
+  const stock = product.variant.reduce((curr, v) => curr + v.stock, 0) || product.stock
+
+  const handleAddToCart = async () => {
+    if(product.hasVariant && !variant){
+      return hotToast.error("Please select one variant")
+    }
+    setIsLoading(true)
+    const res = await addToCart({
+      image: variant?.image || product.images[0] || '/images/placeholder-product.png', 
+      name: variant ? product.name+" - "+variant?.name : product.name, 
+      price: Number(price) - (Number(price)*discount/100),
+      productId: product.id,
+      variantId: variant?.id,
+      qty: quantity,
+      slug: product.slug
+    })
+    setIsLoading(false)
+    console.log(res.message, res.success)
+    return toast(res.message, {
+      description: 'Check out your cart to see the product',
+      action: {
+        label: "Go to Cart",
+        onClick: ()=>router.push('/cart')
+      },
+      duration: 5000
+    })
+  }
   return (
     <div className="relative flex flex-col md:flex-row md:gap-5 justify-center items-start w-full">
       {/* IMAGE SECTION */}
@@ -87,6 +125,10 @@ const ProductDetailSection = ({product}: {product: FullProductType}) => {
               className={`
               w-full
               h-full
+              max-h-[400px]
+              min-h-[400px]
+              md:max-h-full
+              md:min-h-full
               object-cover 
               rounded-md
             `}
@@ -96,12 +138,12 @@ const ProductDetailSection = ({product}: {product: FullProductType}) => {
       </div>
 
       {/* PRODUCT DETAILS */}
-      <div className="mt-5 max-w-80 xl:max-w-96">
+      <div className="mt-5 min-w-80 flex-1 lg:max-w-96">
         <h2 className="uppercase tracking-wider text-foreground/60 text-sm md:text-base">
           {product?.categories[0].name}
         </h2>
         <h1 className="md:text-xl font-medium tracking-wider mb-5">{product?.name}</h1>
-        <PriceTag price={Number(price)} discount={ variant?.discount || product?.discount || categoryDiscount} variant={variant} />
+        <PriceTag price={Number(price)} discount={discount} variant={variant} hasVariant={product.hasVariant} />
 
         {product?.hasVariant && (
           <>
@@ -111,11 +153,13 @@ const ProductDetailSection = ({product}: {product: FullProductType}) => {
                 <div 
                   key={item.id} 
                   onClick={()=> {
-                    setVariant(item)
-                    setMainImage(item.image)
-                    setPrice(item.price)
+                    if(item.stock > 0){
+                      setVariant(item)
+                      setMainImage(item.image)
+                      setPrice(item.price)
+                    }
                   }} 
-                  className="flex flex-col items-center gap-1 rounded-lg" 
+                  className="relative flex flex-col items-center gap-1 rounded-lg" 
                 >
                   <Suspense fallback={<Skeleton className="w-20 h-20 rounded-md" />}>
                     <Image
@@ -123,10 +167,14 @@ const ProductDetailSection = ({product}: {product: FullProductType}) => {
                       alt={item.name}
                       width={200}
                       height={200}
-                      className={cn("w-20 h-20 object-cover rounded-md hover:border-2 hover:border-black", variant === item && "border-2 border-black")}
+                      className={cn("w-20 h-20 object-cover rounded-md hover:border-2 hover:border-black", 
+                        variant === item && "border-2 border-black",
+                        true && ""
+                      )}
                     />
                   </Suspense>
                   <h3 className="text-xs text-neutral-500 dark:text-neutral-300">{item.name}</h3>
+                  {item.stock < 1 && <div className="absolute inset-0 rounded-md bg-white/50"/>}
                 </div>
               ))}
             </div>
@@ -134,26 +182,47 @@ const ProductDetailSection = ({product}: {product: FullProductType}) => {
         )}
 
         <div className="flex flex-col gap-3 mt-5 mb-10">
-          <p className="">
-            Stock: <span className="font-medium">{product?.stock}</span>
-          </p>
-          <div className="flex items-center gap-2">
-            <p>Quantity:</p>
-            {product?.stock ? (
-              <Input type="number" className="w-20" min={1} max={product?.stock} />
-            ) : (
-              <span className="text-red-600 tracking-wider">Out of stock!</span>
-            )}
-          </div>
-          <Button className="uppercase tracking-widest rounded-full py-7 w-full mt-5">
-            add to cart
+          {product.stock > 0 ? (
+            <>
+              <p>
+                Stock: <span className="font-medium">{stock}</span>
+              </p>
+              <div className="flex items-center">
+                <Button 
+                  className="rounded-l-full"
+                  onClick={()=>{
+                    if(quantity > 1) {
+                      setQuantity((prev)=>prev-1)
+                    }
+                  }}
+                >
+                  <Minus/>
+                </Button>
+                <div className="py-1 border-2 border-foreground w-16 text-center">{quantity}</div>
+                <Button 
+                  className="rounded-r-full"
+                  onClick={()=>{
+                    if(quantity < product.stock){
+                      setQuantity((prev) => prev+1)
+                    }
+                  }}
+                >
+                  <Plus/>
+                </Button>
+              </div>
+            </>
+          ):(
+            <p className="text-red-600 tracking-wider">Out of stock!</p>
+          )}
+          <Button className="uppercase tracking-widest rounded-full py-7 w-full mt-5" onClick={handleAddToCart} disabled={isLoading}>
+            {isLoading ? <Loader className="animate-spin"/> : "add to cart"}
           </Button>
           <Button className="uppercase tracking-widest rounded-full py-7 w-full" variant="outline">
             favourite
           </Button>
         </div>
 
-        <pre className="whitespace-pre-wrap text-neutral-700" style={{ fontFamily: "inherit" }}>
+        <pre className="whitespace-pre-wrap text-neutral-700 dark:text-neutral-300 text-justify" style={{ fontFamily: "inherit" }}>
           {product?.description}
         </pre>
       </div>
@@ -163,7 +232,7 @@ const ProductDetailSection = ({product}: {product: FullProductType}) => {
 
 export default ProductDetailSection;
 
-const PriceTag = ({price, discount, variant}:{price: number; discount?: number; variant?: Variant;}) => {
+const PriceTag = ({price, discount, variant, hasVariant}:{price: number; discount?: number; variant?: Variant; hasVariant: boolean}) => {
   let lastPrice = price;
   if(discount){
     lastPrice = Number(price) - Number(price)*(discount/100)
@@ -171,10 +240,10 @@ const PriceTag = ({price, discount, variant}:{price: number; discount?: number; 
   return(
     <>
       {discount ? (
-        <div className="flex flex-row gap-3 mb-5 items-center">
-          <h3 className="font-semibold text-lg tracking-wider"> {!variant && <span className="font-normal">From</span>} Rp {lastPrice.toLocaleString()}</h3>
-          <h3 className="line-through text-neutral-400 text-base">Rp {price.toLocaleString()}</h3>
-          <p className="text-green-700 font-medium">{discount}% off</p>
+        <div className="flex flex-row md:flex-col lg:flex-row gap-3 md:gap-0 lg:gap-3 mb-5 items-center md:items-start lg:items-center">
+          <h3 className="font-semibold md:text-lg tracking-wider"> {(!variant && hasVariant) && <span className="font-normal">From</span>} Rp {lastPrice.toLocaleString()}</h3>
+          <h3 className="line-through text-neutral-400 text-sm md:text-base">Rp {price.toLocaleString()}</h3>
+          <p className="text-green-700 font-medium text-sm md:text-base">{discount}% off</p>
         </div>
       ):(
         <h4 className="font-semibold text-lg tracking-wider">Rp {lastPrice.toLocaleString()}</h4>

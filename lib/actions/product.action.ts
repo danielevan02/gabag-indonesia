@@ -99,3 +99,4 @@ export async function getNewArrivalProduct() {
     take: 2
   })
 }
+

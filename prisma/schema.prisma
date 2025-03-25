@@ -119,7 +119,6 @@ model Cart {
   items         Json[]   @default([]) @db.Json
   itemsPrice    BigInt   @default(0)
   totalPrice    BigInt   @default(0)
-  shippingPrice BigInt   @default(0)
   taxPrice      BigInt   @default(0)
   createdAt     DateTime @default(now()) @db.Timestamp(6)
   user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)

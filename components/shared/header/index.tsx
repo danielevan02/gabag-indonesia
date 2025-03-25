@@ -16,10 +16,12 @@ import {
 import SearchBar from "./search-bar";
 import { auth } from "@/auth";
 import CredentialsButton from "./credentials-button";
+import { getMyCart } from "@/lib/actions/cart.action";
 
 const Header = async () => {
   const session = await auth()
   const user = session?.user
+  const cart = await getMyCart()
   return (
     <div
       className={`
@@ -66,7 +68,7 @@ const Header = async () => {
             className="hover:bg-accent relative rounded-lg w-10 h-10 flex items-center justify-center transition-all group"
           >
             <div className="absolute bg-red-700 rounded-full text-white px-1 text-xs -top-0.5 -right-px">
-              0
+              {cart?.items.length}
             </div>
             <ShoppingBag />
           </Link>
@@ -81,7 +83,7 @@ const Header = async () => {
           className="hover:bg-neutral-300 relative rounded-lg w-10 h-10 flex items-center justify-center transition-all group lg:hidden"
         >
           <div className="absolute bg-red-700 rounded-full text-white px-1 text-xs -top-0.5 -right-px">
-            0
+            {cart?.items.length}
           </div>
           <ShoppingBag />
         </Link>

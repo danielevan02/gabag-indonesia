@@ -185,6 +185,7 @@ const Footer = () => {
                   (item === "/images/payment/qris.png" || item === "/images/payment/gopay.png") &&
                     "bg-white rounded-md p-px"
                 )}
+                style={{height: 'auto', width: 'auto'}}
               />
             ))}
           </div>
