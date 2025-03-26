@@ -35,6 +35,11 @@ model Product {
   hasDifferentVariantPrice Boolean  @default(false)
   hasVariant               Boolean  @default(false)
   createdAt                DateTime @default(now()) @db.Timestamp(6)
+  height       Decimal   @db.Decimal(12, 2) @default(0)
+  width       Decimal   @db.Decimal(12, 2) @default(0)
+  length       Decimal   @db.Decimal(12, 2) @default(0)
+  weight       Decimal   @db.Decimal(12, 2) @default(0)
+  sku         String?
 
   variant           Variant[]
   orderItem         OrderItem[]
@@ -50,6 +55,7 @@ model Variant {
   stock     Int      @default(0)
   price     BigInt   @default(0)
   createdAt DateTime @default(now()) @db.Timestamp(6)
+  sku String?
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
@@ -120,7 +126,9 @@ model Cart {
   itemsPrice    BigInt   @default(0)
   totalPrice    BigInt   @default(0)
   taxPrice      BigInt   @default(0)
+  shippingPrice BigInt?  @default(0)    
   createdAt     DateTime @default(now()) @db.Timestamp(6)
+  weight        Decimal   @db.Decimal(12, 2) @default(0)
   user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 

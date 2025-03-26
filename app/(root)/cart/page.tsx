@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 import { getMyCart } from "@/lib/actions/cart.action";
 
 import { Metadata } from "next";
-import CartTable from "./components/cart-table";
+import CartContent from "./components/cart-content";
 import Link from "next/link";
 import { auth } from "@/auth";
-
+import { getAllCouriers } from "@/lib/actions/courier.action";
 
 export const metadata: Metadata = {
   title: 'Cart',
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 const CartPage = async () => {
   const cart = await getMyCart()
   const session = await auth()
-
+  const couriers = await getAllCouriers()
   if(!cart){
     return (
       <div className="w-full max-w-screen px-5">
@@ -32,15 +32,14 @@ const CartPage = async () => {
 
   return (
     <div className="w-full max-w-screen px-5">
-
-      <h1 className="text-3xl md:text-5xl my-5 lg:my-10 w-full text-center">My Cart</h1>
-      <CartTable 
+      <CartContent 
+        couriers={couriers!}
         cart={{
           ...cart,
           userId: session?.user?.id as string, 
           itemsPrice: BigInt(cart.itemsPrice), 
           taxPrice: BigInt(cart.taxPrice),
-          totalPrice: BigInt(cart.totalPrice)
+          totalPrice: BigInt(cart.totalPrice),
         }}/>
 
     </div>

@@ -7,7 +7,9 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function convertToPlainObject<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value));
+  return JSON.parse(
+    JSON.stringify(value, (_, v) => (typeof v === "bigint" ? v.toString() : v))
+  );
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -41,10 +41,10 @@ const ProductDetailSection = ({product}: {product: FullProductType}) => {
       productId: product.id,
       variantId: variant?.id,
       qty: quantity,
-      slug: product.slug
+      slug: product.slug,
+      weight: product.weight || 0
     })
     setIsLoading(false)
-    console.log(res.message, res.success)
     return toast(res.message, {
       description: 'Check out your cart to see the product',
       action: {

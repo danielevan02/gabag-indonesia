@@ -11,12 +11,14 @@ import { Prisma } from "@prisma/client";
 const calcPrice = (items: CartItem[]) => {
   const itemsPrice = items.reduce((acc, item) => acc + Number(item.price)*item.qty, 0),
   taxPrice = 0.10 * itemsPrice,
-  totalPrice = itemsPrice+taxPrice
-
+  totalPrice = itemsPrice+taxPrice,
+  weight = items.reduce((curr, item) => curr + Number(item.weight), 0)
   return {
     itemsPrice: itemsPrice,
     taxPrice: taxPrice,
     totalPrice: totalPrice,
+    shippingPrice: 0,
+    weight: weight
   }
 }
 
@@ -43,6 +45,7 @@ export async function getMyCart() {
     itemsPrice: cart.itemsPrice.toString(),
     totalPrice: cart.totalPrice.toString(),
     taxPrice: cart.taxPrice.toString(),
+    weight: (cart.weight||0).toString(),
     userId
   })
 }

@@ -7,7 +7,6 @@ import { compareSync } from 'bcrypt-ts-edge'
 import { cookies } from 'next/headers'
 
 export const config: NextAuthConfig = {
-  trustHost: true,
   pages: {
     signIn: '/sign-in',
     error: '/sign-in',

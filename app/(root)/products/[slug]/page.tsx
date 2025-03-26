@@ -18,7 +18,15 @@ const ProductDetailsPage = async ({ params }: {params: tParams}) => {
 
   return (
     <div className="flex flex-col px-5 w-full max-w-screen">
-      <ProductDetailSection product={product} />
+      <ProductDetailSection 
+        product={{
+          ...product, 
+          weight: Number(product.weight),
+          length: Number(product.length),
+          width: Number(product.width),
+          height: Number(product.height),
+        }} 
+      />
     </div>
   );
 };
