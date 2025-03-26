@@ -7,6 +7,7 @@ import CartContent from "./components/cart-content";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { getAllCouriers } from "@/lib/actions/courier.action";
+import { getUserById } from "@/lib/actions/user.action";
 
 export const metadata: Metadata = {
   title: 'Cart',
@@ -17,6 +18,8 @@ const CartPage = async () => {
   const cart = await getMyCart()
   const session = await auth()
   const couriers = await getAllCouriers()
+  const user = await getUserById(session?.user?.id)
+
   if(!cart){
     return (
       <div className="w-full max-w-screen px-5">
@@ -33,6 +36,7 @@ const CartPage = async () => {
   return (
     <div className="w-full max-w-screen px-5">
       <CartContent 
+        user={user!}
         couriers={couriers!}
         cart={{
           ...cart,

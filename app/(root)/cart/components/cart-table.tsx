@@ -12,7 +12,7 @@ import { Cart, CartItem } from "@/types";
 import { Minus, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import React, { useMemo } from "react";
 
 const CartTable = React.memo(({ cart, handleQuantity }: {
   cart: Cart;
@@ -23,7 +23,7 @@ const CartTable = React.memo(({ cart, handleQuantity }: {
   ) => void;
 }) => {
   console.log("CartTable rendered");
-
+  const cartItems = useMemo(()=>cart.items as CartItem[], [cart.items])
   return (
     <div className="flex flex-col">
       <h1 className="text-xl tracking-widest mb-5">Your Cart</h1>
@@ -37,8 +37,8 @@ const CartTable = React.memo(({ cart, handleQuantity }: {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {cart.items.length > 0 
-            ? (cart.items as CartItem[]).map((item, i) => (
+          {cartItems.length > 0 
+            ? cartItems.map((item, i) => (
               <TableRow key={i}>
                 <TableCell className="flex gap-2 mr-5 items-center">
                   <Image

@@ -3,6 +3,7 @@
 import { signIn, signOut } from "@/auth"
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { redirect } from "next/navigation";
+import { prisma } from "../db/prisma";
 
 export async function signInWithCredetials(data: {email: string; password: string;}){
   try {
@@ -20,3 +21,12 @@ export async function signOutUser(){
   await signOut()
   redirect('/')
 }
+
+export async function getUserById(id?: string){
+  return await prisma.user.findFirst({
+    where: {
+      id
+    }
+  })
+}
+
