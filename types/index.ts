@@ -1,4 +1,6 @@
-import { Category, Product as ProductPrisma, Variant, Cart as CartPrisma } from "@prisma/client";
+import { addressSchema } from "@/lib/schema";
+import { Category, Product as ProductPrisma, Variant, Cart as CartPrisma, User as UserPrisma } from "@prisma/client";
+import { z } from "zod";
 
 export type Product = Omit<ProductPrisma, "weight"|"length"|"width"|"height"> & {
   weight: number;
@@ -6,15 +8,19 @@ export type Product = Omit<ProductPrisma, "weight"|"length"|"width"|"height"> & 
   width: number;
   height: number;
 }
+export type Cart = Omit<CartPrisma, "weight"> & {
+  weight: string
+}
+
+export type User = Omit<UserPrisma, "address"> & {
+  address: Address
+}
 
 export type FullProductType = Product & {
   variant: Variant[];
   categories: Category[]
 }
 
-export type Cart = Omit<CartPrisma, "weight"> & {
-  weight: string
-}
 
 export type CartItem = {
   productId: string
@@ -27,14 +33,7 @@ export type CartItem = {
   image: string
 }
 
-export type CustomerAddress = {
-  province: string;
-  city: string;
-  district: string;
-  sub_district: string;
-  specific_address: string;
-  postal_code: string;
-}
+export type Address = z.infer<typeof addressSchema>
 
 export type Courier = {
   available_for_cash_on_delivery: boolean;

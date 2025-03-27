@@ -41,12 +41,12 @@ export function AddressDropdown
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild disabled={disabled}>
-        <Button variant="outline" role="combobox" aria-expanded={open} className="w-[250px] justify-between">
+        <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between">
           {selectedItem ? selectedItem.name : `Choose ${label}`}
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[250px] p-0">
+      <PopoverContent className="w-full p-0">
         <Command>
           <CommandInput placeholder={`Cari ${label}...`} className="h-9" />
           <CommandList>

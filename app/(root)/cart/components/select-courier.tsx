@@ -23,7 +23,7 @@ const SelectCourier = ({couriers}: {couriers: Courier[]}) => {
     (courier) => `${courier.courier_code}-${courier.courier_service_code}` === selectedCourier
   );
   return (
-    <div className="flex flex-col gap-3 md:w-3xl h-96 items-center justify-center lg:-translate-y-20">
+    <div className="flex flex-col gap-3 items-center">
       <p>Choose a courier for your delivery</p>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>

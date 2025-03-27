@@ -34,7 +34,7 @@ const CartPage = async () => {
   } 
 
   return (
-    <div className="w-full max-w-screen px-5">
+    <div className="w-full max-w-screen px-5 mt-10">
       <CartContent 
         user={user!}
         couriers={couriers!}

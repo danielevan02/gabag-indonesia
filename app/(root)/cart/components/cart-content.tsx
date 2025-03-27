@@ -3,12 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { updateCartItem } from "@/lib/actions/cart.action";
-import { Cart, Courier } from "@/types";
+import { Cart, Courier, User } from "@/types";
 import { Loader } from "lucide-react";
 import { useCallback, useState, useTransition } from "react";
 import CartTable from "./cart-table";
 import SelectCourier from "./select-courier";
-import { User } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import AddressForm from "@/components/address-form";
 
@@ -50,23 +49,32 @@ const CartContent: React.FC<CartContentProps> = ({ cart, couriers, user }) => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row justify-center gap-10">
+    <div className={`
+        flex 
+        flex-col 
+        lg:flex-row 
+        justify-center 
+        lg:gap-10 
+        lg:max-h-[500px] 
+        lg:min-h-[500px]
+        `}
+    >
       <Tabs value={tab}>
-        <TabsContent value="cart">
+        <TabsContent value="cart" className="max-h-full">
           <CartTable cart={cart} handleQuantity={handleQuantity} />
         </TabsContent>
 
-        <TabsContent value="address">
+        <TabsContent value="address" className="md:flex md:justify-center">
           <AddressForm user={user} />
         </TabsContent>
 
-        <TabsContent value="courier">
+        <TabsContent value="courier" className="flex pt-20">
           <SelectCourier couriers={couriers} />
         </TabsContent>
       </Tabs>
 
       {/* SUMMARY SECTION */}
-      <div className="flex flex-col min-w-72">
+      <div className="flex flex-col lg:max-w-72 md:w-full mt-10 lg:mt-0">
         <h4 className="text-xl mb-5">Summary</h4>
         <div className="flex flex-col gap-2">
           <div className="flex w-full justify-between">

@@ -25,10 +25,10 @@ const CartTable = React.memo(({ cart, handleQuantity }: {
   console.log("CartTable rendered");
   const cartItems = useMemo(()=>cart.items as CartItem[], [cart.items])
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col lg:max-h-full md:max-h-96 max-h-80 overflow-scroll">
       <h1 className="text-xl tracking-widest mb-5">Your Cart</h1>
-      <Table>
-        <TableHeader>
+      <Table className="relative">
+        <TableHeader className="sticky top-0 bg-background">
           <TableRow>
             <TableHead className="min-w-60 lg:w-80 uppercase text-xs">Product</TableHead>
             <TableHead className="w-32 uppercase text-xs">Price</TableHead>
@@ -36,7 +36,7 @@ const CartTable = React.memo(({ cart, handleQuantity }: {
             <TableHead className="uppercase text-xs text-right">Total Price</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody className="max-h-16 lg:max-h-24 overflow-scroll">
           {cartItems.length > 0 
             ? cartItems.map((item, i) => (
               <TableRow key={i}>
