@@ -37,7 +37,7 @@ const ProductDetailSection = ({product}: {product: FullProductType}) => {
     const res = await addToCart({
       image: variant?.image || product.images[0] || '/images/placeholder-product.png', 
       name: variant ? product.name+" - "+variant?.name : product.name, 
-      price: Number(price) - (Number(price)*discount/100),
+      price: Number(price) - (Number(price)*Number(discount/100)),
       productId: product.id,
       variantId: variant?.id,
       qty: quantity,
@@ -187,9 +187,9 @@ const ProductDetailSection = ({product}: {product: FullProductType}) => {
               <p>
                 Stock: <span className="font-medium">{stock}</span>
               </p>
-              <div className="flex items-center">
+              <div className="flex items-center rounded-md border border-black w-fit py-1">
                 <Button 
-                  className="rounded-l-full"
+                  variant='ghost'
                   onClick={()=>{
                     if(quantity > 1) {
                       setQuantity((prev)=>prev-1)
@@ -198,9 +198,9 @@ const ProductDetailSection = ({product}: {product: FullProductType}) => {
                 >
                   <Minus/>
                 </Button>
-                <div className="py-1 border-2 border-foreground w-16 text-center">{quantity}</div>
+                <div className="py-1 w-16 text-center">{quantity}</div>
                 <Button 
-                  className="rounded-r-full"
+                  variant='ghost'
                   onClick={()=>{
                     if(quantity < product.stock){
                       setQuantity((prev) => prev+1)

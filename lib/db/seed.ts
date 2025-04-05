@@ -19,12 +19,24 @@ async function main() {
     data: sample.product
   })
 
+  await prisma.variant.createMany({
+    data: sample.variant
+  })
+
   await prisma.user.create({
     data: {
       email: "daniel@gmail.com",
       password: hashSync("123456", 10),
       name: "Daniel Laventiza",
-      role: "user"
+      role: "user",
+      address: {
+        "province": "BANTEN",
+        "city": "KABUPATEN TANGERANG",
+        "district": "PASAR KEMIS",
+        "village": "KUTA BUMI",
+        "address": "Taman Kutabumi Blok D 10 no. 25",
+        "postalCode": "15561"
+      }      
     }
   })
   

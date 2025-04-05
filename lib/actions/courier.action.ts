@@ -1,6 +1,6 @@
 'use server'
 
-import { Courier } from "@/types"
+import { Courier, Rates } from "@/types"
 
 export async function getAllCouriers(){
   try {
@@ -20,4 +20,40 @@ export async function getAllCouriers(){
   } catch (error) {
     console.log(error)
   }
+}
+
+type CourierRatesReq = {
+  destination_postal_code: string
+  destination_area_id: string
+  items: {
+    name: string
+    value: number
+    quantity: number
+    weight: number
+  }[]
+}
+
+export async function getCourierRates({destination_area_id, destination_postal_code, items}: CourierRatesReq) {
+  try {
+    const res = await fetch("https://api.biteship.com/v1/rates/couriers", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.TEST_BITESHIP_API_KEY}`
+      },
+      body: JSON.stringify({
+        origin_postal_code: process.env.ORIGIN_POSTAL_CODE,
+        destination_area_id,
+        destination_postal_code,
+        origin_area_id: process.env.ORIGIN_AREA_ID,
+        couriers: process.env.COURIERS,
+        items
+      })
+    })
+    const data = await res.json()
+    return data?.pricing as Rates[] 
+  } catch (error) {
+    console.log(error)
+  }
+
 }

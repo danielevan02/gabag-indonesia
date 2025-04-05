@@ -6,18 +6,15 @@ import { Metadata } from "next";
 import CartContent from "./components/cart-content";
 import Link from "next/link";
 import { auth } from "@/auth";
-import { getAllCouriers } from "@/lib/actions/courier.action";
 import { getUserById } from "@/lib/actions/user.action";
 
 export const metadata: Metadata = {
   title: 'Cart',
-
 }
 
 const CartPage = async () => {
   const cart = await getMyCart()
   const session = await auth()
-  const couriers = await getAllCouriers()
   const user = await getUserById(session?.user?.id)
 
   if(!cart){
@@ -36,8 +33,7 @@ const CartPage = async () => {
   return (
     <div className="w-full max-w-screen px-5 mt-10">
       <CartContent 
-        user={user!}
-        couriers={couriers!}
+        userId={user?.id}
         cart={{
           ...cart,
           userId: session?.user?.id as string, 

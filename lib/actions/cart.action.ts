@@ -10,7 +10,7 @@ import { Prisma } from "@prisma/client";
 
 const calcPrice = (items: CartItem[]) => {
   const itemsPrice = items.reduce((acc, item) => acc + Number(item.price)*item.qty, 0),
-  taxPrice = 0.10 * itemsPrice,
+  taxPrice = Math.round(0.01 * itemsPrice),
   totalPrice = itemsPrice+taxPrice,
   weight = items.reduce((curr, item) => curr + Number(item.weight)*item.qty, 0)
   return {

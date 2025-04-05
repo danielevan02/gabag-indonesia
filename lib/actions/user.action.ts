@@ -1,6 +1,6 @@
 'use server'
 
-import { signIn, signOut } from "@/auth"
+import { auth, signIn, signOut } from "@/auth"
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { redirect } from "next/navigation";
 import { prisma } from "../db/prisma";
@@ -39,7 +39,21 @@ export async function getUserById(id?: string){
   } else {
     return user
   }
+}
 
+export async function getCurrentUser(){
+  const session = await auth()
+  if(!session) throw new Error("User is not authenticated!")
+  const user = await prisma.user.findFirst({
+    where: {id: session?.user?.id}
+  })
+
+  if(user){
+    return convertToPlainObject({
+      ...user,
+      address: user.address as Address
+    })
+  }
 }
 
 export async function updateUserData(userId?: string ,address?: Address) {
