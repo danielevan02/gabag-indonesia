@@ -1,5 +1,5 @@
 import { addressSchema, orderSchema } from "@/lib/schema";
-import { Category, Product as ProductPrisma, Variant, Cart as CartPrisma, User as UserPrisma } from "@prisma/client";
+import { Category, Product as ProductPrisma, Variant, User as UserPrisma } from "@prisma/client";
 import { z } from "zod";
 
 export type Product = Omit<ProductPrisma, "weight"|"length"|"width"|"height"> & {
@@ -7,9 +7,6 @@ export type Product = Omit<ProductPrisma, "weight"|"length"|"width"|"height"> & 
   length: number;
   width: number;
   height: number;
-}
-export type Cart = Omit<CartPrisma, "weight"> & {
-  weight: string
 }
 
 export type User = Omit<UserPrisma, "address"> & {
@@ -105,10 +102,6 @@ export type TransactionDetails = {
   gross_amount: number;
 };
 
-export type CreditCard = {
-  secure: boolean;
-};
-
 export type ItemDetail = {
   id: string;
   price: number;
@@ -141,3 +134,24 @@ export type TransactionParams = {
   item_details: ItemDetail[];
   customer_details: CustomerDetails;
 }
+
+type VANumber = {
+  bank: string;
+  va_number: string;
+};
+
+export type MidtransTransactionResult = {
+  bca_va_number: string;
+  finish_redirect_url: string;
+  fraud_status: string;
+  gross_amount: string;
+  order_id: string;
+  payment_type: string;
+  pdf_url: string;
+  status_code: string;
+  status_message: string;
+  transaction_id: string;
+  transaction_status: string;
+  transaction_time: string;
+  va_numbers: VANumber[];
+};

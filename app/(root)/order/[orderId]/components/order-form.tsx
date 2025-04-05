@@ -5,33 +5,23 @@
 
 import Image from "next/image";
 import "react-phone-number-input/style.css";
-import PhoneInput from "react-phone-number-input";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { orderSchema } from "@/lib/schema";
-import { Address, Areas, CartItem, Rates } from "@/types";
+import { Address, Areas, CartItem, MidtransTransactionResult, Rates } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { User } from "@prisma/client";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import {
-  SubmitHandler,
-  useForm,
-  UseFormRegisterReturn,
-  Controller,
-  Control,
-  FieldError,
-  UseFormTrigger,
-} from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
 import lodash from "lodash";
-import { finalizeOrder, getMapsId, makePayment } from "@/lib/actions/order.action";
-import { getCourierRates } from "@/lib/actions/courier.action";
+import { finalizeOrder, makePayment } from "@/lib/actions/order.action";
+import { getCourierRates, getMapsId } from "@/lib/actions/courier.action";
 import { CircleAlert, Loader } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import Script from "next/script";
+import InputForm from "./input-form";
 
 declare global {
   interface Window{
@@ -39,7 +29,7 @@ declare global {
   }
 }
 
-type OrderFormType = z.infer<typeof orderSchema>;
+export type OrderFormType = z.infer<typeof orderSchema>;
 
 interface OrderFormProps {
   user?: User;
@@ -150,54 +140,37 @@ const OrderForm: React.FC<OrderFormProps> = ({
     if (area) fetchCourierRates();
   }, [area]);
 
-  // FOR MIDTRANS VIEW
-  useEffect(() => {
-    const midtransScriptUrl = "https://app.sandbox.midtrans.com/snap/snap.js";
-    const clientKey = process.env.MIDTRANS_CLIENT_KEY || "";
-
-    const script = document.createElement("script");
-    script.src = midtransScriptUrl;
-    script.setAttribute("data-client-key", clientKey);
-    script.async = true;
-
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
   const onSubmit: SubmitHandler<OrderFormType> = async (data) => {
     if (!shipping || shipping.price === 0) {
       return toast.error("Please choose a courier for your delivery");
     }
     startTransition(async () => {
-      const token = await makePayment({
+      const res = await makePayment({
         email: data.email || user?.email || "placeholder@mail.com",
         name: data.name || user?.name || "NO_NAME",
         phone: data.phone || user?.phone || "0888888888",
         subTotal: totalPrice,
         userId: user?.id || "",
+        shippingPrice: shipping.price,
         orderId,
         taxPrice,
         cartItem,
-        shippingPrice: shipping.price
       });
 
-      if (token) {
-        window.snap.pay(token, {
-          onSuccess: async () => {
-            toast.success("Payment successful");
+      if (res.token) {
+        window.snap.pay(res.token, {
+          onSuccess: async (result: MidtransTransactionResult) => {
+            toast.success(res.message);
             await finalizeOrder({
               courier: shipping.courier,
               isPaid: true,
+              paymentStatus: result.transaction_status,
+              shippingPrice: shipping.price,
+              totalPrice: totalPrice + shipping.price,
+              token: res.token,
               itemsPrice,
               orderId,
-              paymentStatus: 'success',
-              shippingPrice: shipping.price,
               taxPrice,
-              token,
-              totalPrice: totalPrice + shipping.price,
               shippingInfo: {
                 postal_code: data.postal_code,
                 area_id: area?.id||"",
@@ -218,6 +191,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
 
   return (
     <>
+      <Script src={process.env.NEXT_PUBLIC_MIDTRANS_SNAP_UI} data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY} strategy="lazyOnload"/>
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex-1 p-5 overflow-hidden lg:max-w-xl flex flex-col gap-4 lg:border-r-1"
@@ -413,73 +387,3 @@ const OrderForm: React.FC<OrderFormProps> = ({
 };
 
 export default OrderForm;
-
-interface InputFormProps {
-  label: string;
-  placeholder: string;
-  htmlFor: keyof OrderFormType;
-  type?: React.HTMLInputTypeAttribute;
-  register: UseFormRegisterReturn;
-  control?: Control<OrderFormType>;
-  errors?: FieldError;
-  trigger: UseFormTrigger<OrderFormType>;
-}
-
-const InputForm = ({
-  label,
-  placeholder,
-  type,
-  htmlFor,
-  register,
-  control,
-  errors,
-  trigger,
-}: InputFormProps) => {
-  return (
-    <div className="flex flex-col gap-1 w-full">
-      <Label className="text-xs uppercase" htmlFor={htmlFor}>
-        {label}
-      </Label>
-      {type === "textarea" ? (
-        <Textarea
-          id={htmlFor}
-          placeholder={placeholder}
-          className="shadow-none"
-          {...register}
-          onBlur={() => trigger(htmlFor)}
-        />
-      ) : type === "phone" ? (
-        <Controller
-          control={control}
-          name="phone"
-          render={({ field }) => (
-            <PhoneInput
-              international
-              className="border rounded-md p-2 dark:bg-neutral-900"
-              defaultCountry="ID"
-              autoComplete="phone"
-              value={field.value}
-              onChange={field.onChange}
-              onBlur={() => trigger(htmlFor)}
-            />
-          )}
-        />
-      ) : (
-        <Input
-          id={htmlFor}
-          placeholder={placeholder}
-          className="shadow-none p-5"
-          type={type}
-          {...register}
-          onBlur={() => trigger(htmlFor)}
-        />
-      )}
-      {errors?.message && (
-        <p className="text-xs text-red-400 flex items-center gap-1">
-          <CircleAlert className="w-4 h-4" />
-          {errors.message}
-        </p>
-      )}
-    </div>
-  );
-};

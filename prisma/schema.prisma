@@ -45,18 +45,17 @@ model Product {
 }
 
 model Variant {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  productId String   @db.Uuid
+  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId String      @db.Uuid
   name      String
-  discount  Int?     @default(0)
-  stock     Int      @default(0)
-  price     BigInt   @default(0)
-  createdAt DateTime @default(now()) @db.Timestamp(6)
-  image     String   @default("")
+  discount  Int?        @default(0)
+  stock     Int         @default(0)
+  price     BigInt      @default(0)
+  createdAt DateTime    @default(now()) @db.Timestamp(6)
+  image     String      @default("")
   sku       String?
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-
   orderItem OrderItem[]
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model User {
@@ -123,7 +122,6 @@ model Cart {
   totalPrice    BigInt   @default(0)
   taxPrice      BigInt   @default(0)
   createdAt     DateTime @default(now()) @db.Timestamp(6)
-  weight        Decimal  @default(0) @db.Decimal(12, 2)
   shippingPrice BigInt?  @default(0)
   notes         String?
   orderId       String?  @unique @default(uuid())
@@ -154,18 +152,18 @@ model Order {
 }
 
 model OrderItem {
-  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orderId   String  @default(uuid())
-  productId String  @db.Uuid
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId   String   @default(uuid())
+  productId String   @db.Uuid
   qty       Int
-  price     BigInt  @default(0)
+  price     BigInt   @default(0)
   name      String
   slug      String
   image     String
-  variantId String? @db.Uuid
-  weight    Decimal @default(0) @db.Decimal(12, 2)
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId String?  @db.Uuid
+  weight    Decimal  @default(0) @db.Decimal(12, 2)
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   variant   Variant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
   @@unique([orderId, productId, variantId], map: "orderitems_orderId_productId_variantId_unique")

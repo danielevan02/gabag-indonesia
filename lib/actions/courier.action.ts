@@ -1,6 +1,6 @@
 'use server'
 
-import { Courier, Rates } from "@/types"
+import { Areas, Courier, Rates } from "@/types"
 
 export async function getAllCouriers(){
   try {
@@ -55,5 +55,25 @@ export async function getCourierRates({destination_area_id, destination_postal_c
   } catch (error) {
     console.log(error)
   }
+}
 
+export async function getMapsId(inputSearch: string) {
+  const url = new URL("https://api.biteship.com/v1/maps/areas");
+  const searchParams = new URLSearchParams({
+    countries: "ID",
+    input: inputSearch,
+    type: "single",
+  });
+
+  const newUrl = `${url.origin}${url.pathname}?${searchParams.toString()}`;
+
+  const res = await fetch(newUrl, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.TEST_BITESHIP_API_KEY}`,
+    },
+  });
+  const data = await res.json();
+  return data?.areas as Areas[];
 }

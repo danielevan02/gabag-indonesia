@@ -152,14 +152,15 @@ const ProductDetailSection = ({product}: {product: FullProductType}) => {
               {product?.variant.map((item) => (
                 <div 
                   key={item.id} 
+                  className="relative flex flex-col items-center gap-1 rounded-lg" 
                   onClick={()=> {
                     if(item.stock > 0){
                       setVariant(item)
                       setMainImage(item.image)
                       setPrice(item.price)
+                      setQuantity(1)
                     }
                   }} 
-                  className="relative flex flex-col items-center gap-1 rounded-lg" 
                 >
                   <Suspense fallback={<Skeleton className="w-20 h-20 rounded-md" />}>
                     <Image
@@ -190,6 +191,11 @@ const ProductDetailSection = ({product}: {product: FullProductType}) => {
               <div className="flex items-center rounded-md border border-black w-fit py-1">
                 <Button 
                   variant='ghost'
+                  disabled={
+                    (product.hasVariant && !variant) || 
+                    isLoading || 
+                    quantity === 1
+                  }
                   onClick={()=>{
                     if(quantity > 1) {
                       setQuantity((prev)=>prev-1)
@@ -201,9 +207,23 @@ const ProductDetailSection = ({product}: {product: FullProductType}) => {
                 <div className="py-1 w-16 text-center">{quantity}</div>
                 <Button 
                   variant='ghost'
+                  disabled={
+                    (product.hasVariant && !variant) || 
+                    isLoading || 
+                    (product.hasVariant 
+                      ? variant?.stock === quantity 
+                      : product.stock === quantity
+                    )
+                  }
                   onClick={()=>{
-                    if(quantity < product.stock){
-                      setQuantity((prev) => prev+1)
+                    if(product.hasVariant){
+                      if(variant && quantity < variant.stock){
+                        setQuantity((prev)=>prev+1)
+                      }
+                    } else {
+                      if(quantity < product.stock) {
+                        setQuantity((prev)=>prev+1)
+                      }
                     }
                   }}
                 >
@@ -214,11 +234,18 @@ const ProductDetailSection = ({product}: {product: FullProductType}) => {
           ):(
             <p className="text-red-600 tracking-wider">Out of stock!</p>
           )}
-          <Button className="uppercase tracking-widest rounded-full py-7 w-full mt-5" onClick={handleAddToCart} disabled={isLoading}>
+          <Button 
+            className="uppercase tracking-widest rounded-full py-7 w-full mt-5" 
+            onClick={handleAddToCart} 
+            disabled={
+              isLoading ||
+              (product.hasVariant 
+                ? !variant || variant.stock < 1 
+                : product.stock < 1
+              )
+            }
+          >
             {isLoading ? <Loader className="animate-spin"/> : "add to cart"}
-          </Button>
-          <Button className="uppercase tracking-widest rounded-full py-7 w-full" variant="outline">
-            favourite
           </Button>
         </div>
 

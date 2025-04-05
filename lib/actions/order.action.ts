@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { getMyCart } from "./cart.action";
 import { prisma } from "../db/prisma";
 import { formatError } from "../utils";
-import { Areas, CartItem, ItemDetail, ShippingInfo } from "@/types";
+import { CartItem, ItemDetail, ShippingInfo } from "@/types";
 import { revalidatePath } from "next/cache";
 import { createTransaction } from "../midtrans/transaction";
 
@@ -69,27 +69,6 @@ export async function createOrder(notes?: string) {
   }
 }
 
-export async function getMapsId(inputSearch: string) {
-  const url = new URL("https://api.biteship.com/v1/maps/areas");
-  const searchParams = new URLSearchParams({
-    countries: "ID",
-    input: inputSearch,
-    type: "single",
-  });
-
-  const newUrl = `${url.origin}${url.pathname}?${searchParams.toString()}`;
-
-  const res = await fetch(newUrl, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.TEST_BITESHIP_API_KEY}`,
-    },
-  });
-  const data = await res.json();
-  return data?.areas as Areas[];
-}
-
 type PaymentProps = {
   subTotal: number;
   taxPrice: number;
@@ -119,27 +98,8 @@ export async function makePayment({ email, name, phone, subTotal, userId, orderI
   try {
     const firstName = name.split(" ")[0];
     const lastName = name.split(" ")[name.split(" ").length - 1];
-    // const response = await fetch("https://app.sandbox.midtrans.com/snap/v1/transactions", {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     Accept: "application/json",
-    //     Authorization: `Basic ${process.env.MIDTRANS_AUTH_STRING}`,
-    //   },
-    //   body: JSON.stringify({
-    //     transaction_details: {
-    //       order_id: orderId,
-    //       gross_amount: totalPrice,
-    //     },
-    //     customer_details: {
-    //       first_name: firstName,
-    //       last_name: lastName,
-    //       email: email,
-    //       phone: phone,
-    //     },
-    //   }),
-    // });
-    const res = await createTransaction({
+
+    const token = await createTransaction({
       transaction_details: {
         order_id: orderId,
         gross_amount: subTotal + shippingPrice
@@ -165,11 +125,20 @@ export async function makePayment({ email, name, phone, subTotal, userId, orderI
           quantity: 1
         }
       ]
-    }).catch((e) => console.log("MIDTRANS_ERROR_CREATE_TRANSACTION:",e))
+    })
 
-    return res
+    return {
+      success: true,
+      message: "Payment Successful",
+      token: token as string
+    }
   } catch (error) {
-    console.log(formatError(error));
+    console.log(formatError(error))
+    return {
+      success: false,
+      message: "Payment Failed",
+      token: ""
+    }
   }
 }
 
@@ -181,7 +150,7 @@ type FinalizeOrderType = {
   taxPrice: number;
   shippingPrice: number;
   totalPrice: number;
-  paymentStatus: "expired" | "success" | "failed" | "waiting for payment";
+  paymentStatus: string;
   courier: string
   shippingInfo: ShippingInfo
 };
@@ -229,7 +198,7 @@ export async function finalizeOrder({
 
       const orderItem = await tx.orderItem.findMany({where: {orderId}})
 
-      if(updatedOrder.paymentStatus === 'success'){
+      if(updatedOrder.paymentStatus === 'settlement'){
         for(const item of orderItem){
           if(item.variantId){
             await tx.variant.update({
@@ -260,15 +229,23 @@ export async function finalizeOrder({
             itemsPrice: 0, 
             taxPrice: 0,
             totalPrice: 0,
-            weight: 0,
             shippingPrice: 0
           }
         })
-
       }
-    }).catch((e)=>console.log("ERRORNYA DISINI BOSSS",e));
+    }).catch((e)=>console.log("ORDER_FINALIZE_ERROR:",e));
+
     revalidatePath('/order')
+
+    return{
+      success: true,
+      message: "Order Updated"
+    }
   } catch (error) {
     console.log(formatError(error));
+    return {
+      success: false,
+      message: "Order failed to update"
+    }
   }
 }

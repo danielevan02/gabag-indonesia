@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { updateCartItem } from "@/lib/actions/cart.action";
-import { Cart, CartItem } from "@/types";
+import { CartItem } from "@/types";
 import { Loader, Minus, Plus } from "lucide-react";
 import { useCallback, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import toast from "react-hot-toast";
 import { createOrder } from "@/lib/actions/order.action";
+import { Cart } from "@prisma/client";
 
 interface CartContentProps {
   cart: Cart;
