@@ -1,5 +1,5 @@
 import { addressSchema, orderSchema } from "@/lib/schema";
-import { Category, Product as ProductPrisma, Variant, User as UserPrisma } from "@prisma/client";
+import { Category, Product as ProductPrisma, Variant, User as UserPrisma, Order, OrderItem as PrismaOrderItem } from "@prisma/client";
 import { z } from "zod";
 
 export type Product = Omit<ProductPrisma, "weight"|"length"|"width"|"height"> & {
@@ -16,6 +16,14 @@ export type User = Omit<UserPrisma, "address"> & {
 export type FullProductType = Product & {
   variant: Variant[];
   categories: Category[]
+}
+
+type OrderItem = Omit<PrismaOrderItem, "weight"> & {
+  weight: number
+}
+
+export type FullOrderType = Order & {
+  orderItems: OrderItem[]
 }
 
 export type CartItem = {

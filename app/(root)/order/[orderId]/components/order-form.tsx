@@ -24,8 +24,8 @@ import Script from "next/script";
 import InputForm from "./input-form";
 
 declare global {
-  interface Window{
-    snap: any
+  interface Window {
+    snap: any;
   }
 }
 
@@ -37,7 +37,7 @@ interface OrderFormProps {
   itemsPrice: number;
   taxPrice: number;
   totalPrice: number;
-  orderId: string;
+  orderId: string
 }
 
 const OrderForm: React.FC<OrderFormProps> = ({
@@ -86,10 +86,8 @@ const OrderForm: React.FC<OrderFormProps> = ({
   const debouncedFetch = useMemo(
     () =>
       lodash.debounce(async () => {
-        const res = await getMapsId(
-          // this is the input for searching location by city and district
-          watch("city") + " " + watch("district")
-        );
+        // this is the input for searching location by city and district
+        const res = await getMapsId(`${watch("city")} ${watch("district")}`);
         setArea((prev) => (prev === res[0] ? prev : res[0]));
       }, 1000),
     [watch("city"), watch("district")]
@@ -97,17 +95,20 @@ const OrderForm: React.FC<OrderFormProps> = ({
 
   // FOR SEARCHING AREA
   useEffect(() => {
-    if (
-      getValues("address").length !== 0 &&
-      getValues("city").length !== 0 &&
-      getValues("district").length !== 0 &&
-      getValues("name").length !== 0 &&
-      getValues("postal_code").length !== 0 &&
-      getValues("province").length !== 0 &&
-      getValues("village").length !== 0
-    ) {
-      debouncedFetch();
+    const requiredFields: (keyof OrderFormType)[] = [
+      "address",
+      "city",
+      "district",
+      "name",
+      "postal_code",
+      "province",
+      "village",
+    ];
 
+    const allFilled = requiredFields.every((field) => getValues(field)?.length);
+
+    if (allFilled) {
+      debouncedFetch();
       return () => debouncedFetch.cancel();
     }
   }, [watch("city"), watch("district")]);
@@ -158,30 +159,52 @@ const OrderForm: React.FC<OrderFormProps> = ({
       });
 
       if (res.token) {
+        const orderValues = {
+          courier: shipping.courier,
+          shippingPrice: shipping.price,
+          totalPrice: totalPrice + shipping.price,
+          token: res.token,
+          isPaid: false,
+          itemsPrice,
+          orderId,
+          taxPrice,
+          shippingInfo: {
+            postal_code: data.postal_code,
+            area_id: area?.id || "",
+            email: data.email,
+            name: data.name,
+            phone: data.phone,
+            address: `${data.address}, ${data.village}, ${data.district}, ${data.city}, ${data.province}, ${data.postal_code}`,
+          },
+        };
         window.snap.pay(res.token, {
           onSuccess: async (result: MidtransTransactionResult) => {
             toast.success(res.message);
             await finalizeOrder({
-              courier: shipping.courier,
-              isPaid: true,
+              ...orderValues,
               paymentStatus: result.transaction_status,
-              shippingPrice: shipping.price,
-              totalPrice: totalPrice + shipping.price,
-              token: res.token,
-              itemsPrice,
-              orderId,
-              taxPrice,
-              shippingInfo: {
-                postal_code: data.postal_code,
-                area_id: area?.id||"",
-                email: data.email,
-                name: data.name,
-                phone: data.phone,
-                address: `${data.address}, ${data.village}, ${data.district}, ${data.city}, ${data.province}, ${data.postal_code}`
-              }
-            })
+              isPaid: true
+            });
             router.push("/order");
           },
+          onPending: async (result: MidtransTransactionResult) => {
+            await finalizeOrder({
+              ...orderValues,
+              paymentStatus: result.transaction_status,
+            })
+          },
+          onError: async (result: MidtransTransactionResult) => {
+            await finalizeOrder({
+              ...orderValues,
+              paymentStatus: result.transaction_status
+            })
+          },
+          onClose: async () => {
+            await finalizeOrder({
+              ...orderValues,
+              paymentStatus: "pending"
+            })
+          }
         });
       } else {
         toast.error("Payment failed, there is no token");
@@ -191,106 +214,118 @@ const OrderForm: React.FC<OrderFormProps> = ({
 
   return (
     <>
-      <Script src={process.env.NEXT_PUBLIC_MIDTRANS_SNAP_UI} data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY} strategy="lazyOnload"/>
+      <Script
+        src={process.env.NEXT_PUBLIC_MIDTRANS_SNAP_UI}
+        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+        strategy="lazyOnload"
+      />
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex-1 p-5 overflow-hidden lg:max-w-xl flex flex-col gap-4 lg:border-r-1"
       >
         <div className="flex flex-col gap-5 ">
           <h3 className="text-lg font-semibold">Delivery</h3>
-          <InputForm
-            label="Email"
-            placeholder="enter your email..."
-            htmlFor="email"
-            register={register("email")}
-            errors={errors.email}
-            trigger={trigger}
-          />
-          <InputForm
-            label="Full Name"
-            placeholder="enter your full name..."
-            htmlFor="name"
-            register={register("name")}
-            errors={errors.name}
-            trigger={trigger}
-          />
-          <InputForm
-            label="Province"
-            placeholder="enter your province..."
-            htmlFor="province"
-            register={register("province")}
-            errors={errors.province}
-            trigger={trigger}
-          />
-          <InputForm
-            label="Village (Kelurahan)"
-            placeholder="enter your village..."
-            htmlFor="village"
-            register={register("village")}
-            errors={errors.village}
-            trigger={trigger}
-          />
-          <div className="flex gap-5 flex-col md:flex-row">
             <InputForm
-              label="postal code"
-              placeholder="enter your postal code..."
-              htmlFor="postal_code"
-              register={register("postal_code")}
-              errors={errors.postal_code}
+              label="Email"
+              placeholder="enter your email..."
+              htmlFor="email"
+              register={register("email")}
+              errors={errors.email}
               trigger={trigger}
             />
             <InputForm
-              label="phone"
-              placeholder="enter your phone..."
-              htmlFor="phone"
-              type="phone"
-              register={register("phone")}
-              control={control}
-              errors={errors.phone}
+              label="Full Name"
+              placeholder="enter your full name..."
+              htmlFor="name"
+              register={register("name")}
+              errors={errors.name}
               trigger={trigger}
             />
-          </div>
-          <InputForm
-            label="Address"
-            placeholder="Enter your address"
-            htmlFor="address"
-            type="textarea"
-            register={register("address")}
-            errors={errors.address}
-            trigger={trigger}
-          />
-          <InputForm
-            label="City"
-            placeholder="enter your city..."
-            htmlFor="city"
-            register={register("city")}
-            errors={errors.city}
-            trigger={trigger}
-          />
-          <InputForm
-            label="District (Kecamatan)"
-            placeholder="enter your district..."
-            htmlFor="district"
-            register={register("district")}
-            errors={errors.district}
-            trigger={trigger}
-          />
+            <InputForm
+              label="Province"
+              placeholder="enter your province..."
+              htmlFor="province"
+              register={register("province")}
+              errors={errors.province}
+              trigger={trigger}
+            />
+            <InputForm
+              label="Village (Kelurahan)"
+              placeholder="enter your village..."
+              htmlFor="village"
+              register={register("village")}
+              errors={errors.village}
+              trigger={trigger}
+            />
+            <div className="flex gap-5 flex-col md:flex-row">
+              <InputForm
+                label="postal code"
+                placeholder="enter your postal code..."
+                htmlFor="postal_code"
+                register={register("postal_code")}
+                errors={errors.postal_code}
+                trigger={trigger}
+              />
+              <InputForm
+                label="phone"
+                placeholder="enter your phone..."
+                htmlFor="phone"
+                type="phone"
+                register={register("phone")}
+                control={control}
+                errors={errors.phone}
+                trigger={trigger}
+              />
+            </div>
+            <InputForm
+              label="Address"
+              placeholder="Enter your address"
+              htmlFor="address"
+              type="textarea"
+              register={register("address")}
+              errors={errors.address}
+              trigger={trigger}
+            />
+            <InputForm
+              label="City"
+              placeholder="enter your city..."
+              htmlFor="city"
+              register={register("city")}
+              errors={errors.city}
+              trigger={trigger}
+            />
+            <InputForm
+              label="District (Kecamatan)"
+              placeholder="enter your district..."
+              htmlFor="district"
+              register={register("district")}
+              errors={errors.district}
+              trigger={trigger}
+            />
         </div>
         <div className="flex flex-col">
           <h3 className="text-lg font-semibold mb-3">Shipping Method</h3>
           {rateList ? (
-            rateList.length !== 0 ? (
+            rateList.length !== 0 && area ? (
               <div className="rounded-md border max-h-60 overflow-scroll">
                 {rateList.map((rate) => {
                   const rateId = `${rate.company}-${rate.type}`;
                   return (
                     <div
-                      className={cn("flex justify-between py-3 px-4 border-b hover:bg-neutral-100 transition-all cursor-pointer", rateId === shipping?.courier && "bg-neutral-200")}
+                      className={cn(
+                        "flex justify-between py-3 px-4 border-b hover:bg-neutral-100 transition-all cursor-pointer",
+                        rateId === shipping?.courier && "bg-neutral-200"
+                      )}
                       key={rateId}
                       onClick={() => setShipping({ price: rate.price, courier: rateId })}
                     >
                       <div className="flex gap-3">
-                        <div className={cn("w-4 h-4 rounded-full border transition", rateId === shipping?.courier && "border-4 border-foreground")}/>
+                        <div
+                          className={cn(
+                            "w-4 h-4 rounded-full border transition",
+                            rateId === shipping?.courier && "border-4 border-foreground"
+                          )}
+                        />
                         <div className="flex flex-col">
                           <p className="text-sm">
                             {rate.courier_name} - {rate.courier_service_name}

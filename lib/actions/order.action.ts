@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { getMyCart } from "./cart.action";
 import { prisma } from "../db/prisma";
-import { formatError } from "../utils";
+import { convertToPlainObject, formatError } from "../utils";
 import { CartItem, ItemDetail, ShippingInfo } from "@/types";
 import { revalidatePath } from "next/cache";
 import { createTransaction } from "../midtrans/transaction";
@@ -16,6 +16,9 @@ export async function getAllOrders(userId?: string) {
       },
       include: {
         orderItems: true
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     });
   } else {
@@ -25,6 +28,19 @@ export async function getAllOrders(userId?: string) {
       }
     });
   }
+}
+
+export async function getOrderById(orderId: string){
+  const order = await prisma.order.findFirst({
+    where: {id: orderId},
+    include: {orderItems: true}
+  })
+
+  return convertToPlainObject({
+    ...order,
+    orderItems: order?.orderItems.map((item)=>({...item, weight: Number(item.weight)})),
+    shippingInfo: order?.shippingInfo as ShippingInfo
+  })
 }
 
 export async function createOrder(notes?: string) {
@@ -187,16 +203,32 @@ export async function finalizeOrder({
         },
       });
 
-      for(const item of cart?.items as CartItem[]){
-        await tx.orderItem.create({
-          data: {
-            orderId,
-            ...item
-          }
-        })
+      const order = await tx.order.findFirst({where: {id: orderId}, include: {orderItems: true}})
+
+      if(order?.orderItems.length===0){
+        for(const item of cart?.items as CartItem[]){
+          await tx.orderItem.create({
+            data: {
+              orderId,
+              ...item
+            }
+          })
+        }
       }
 
-      const orderItem = await tx.orderItem.findMany({where: {orderId}})
+      await tx.cart.update({
+        where: {id: cart?.id},
+        data: {
+          items: [],
+          orderId: null,
+          itemsPrice: 0, 
+          taxPrice: 0,
+          totalPrice: 0,
+          shippingPrice: 0
+        }
+      })
+
+      const orderItem = order?.orderItems.length===0 ? await tx.orderItem.findMany({where: {orderId}}) : order!.orderItems 
 
       if(updatedOrder.paymentStatus === 'settlement'){
         for(const item of orderItem){
@@ -220,18 +252,6 @@ export async function finalizeOrder({
             })
           }
         }
-
-        await tx.cart.update({
-          where: {id: cart?.id},
-          data: {
-            items: [],
-            orderId: null,
-            itemsPrice: 0, 
-            taxPrice: 0,
-            totalPrice: 0,
-            shippingPrice: 0
-          }
-        })
       }
     }).catch((e)=>console.log("ORDER_FINALIZE_ERROR:",e));
 

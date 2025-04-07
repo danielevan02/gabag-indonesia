@@ -1,8 +1,10 @@
 import { auth } from "@/auth";
+import StatusBadge from "@/components/shared/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getAllOrders } from "@/lib/actions/order.action";
 import { format } from "date-fns"
+import Link from "next/link";
 
 const OrderPage = async () => {
   const session = await auth()
@@ -20,7 +22,8 @@ const OrderPage = async () => {
               <TableHead>Payment Status</TableHead>
               <TableHead>Paid At</TableHead>
               <TableHead>Delivery Status</TableHead>
-              <TableHead className="text-end">Order Date</TableHead>
+              <TableHead>Order Date</TableHead>
+              <TableHead className="text-end">Details</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -32,10 +35,15 @@ const OrderPage = async () => {
                   <TableCell className="truncate max-w-32">{order.id}</TableCell>
                   <TableCell>{order.orderItems.length} Item(s)</TableCell>
                   <TableCell>Rp{order.totalPrice.toLocaleString()}</TableCell>
-                  <TableCell> <Badge color="green">{order.paymentStatus}</Badge></TableCell>
+                  <TableCell>
+                    <StatusBadge status={order.paymentStatus||""}/>
+                  </TableCell>
                   <TableCell>{order.paidAt ? format(order.paidAt, "dd/MM/yyyy HH:mm:ss"):"Not Paid"}</TableCell>
                   <TableCell> <Badge>{order.isDelivered ? "delivered" : "not delivered"}</Badge></TableCell>
-                  <TableCell className="text-end">{orderDate}</TableCell>
+                  <TableCell>{orderDate}</TableCell>
+                  <TableCell className="text-end">
+                    <Link href={`/order/${order.id}`} className="underline">{order.isPaid ? "See Details" : "Pay Now"}</Link>
+                  </TableCell>
                 </TableRow>
               )
             })}

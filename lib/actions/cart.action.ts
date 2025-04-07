@@ -128,7 +128,6 @@ export async function addToCart(item: CartItem) {
       message: `${error}`
     }
   }
-  
 }
 
 export async function updateCartItem(
