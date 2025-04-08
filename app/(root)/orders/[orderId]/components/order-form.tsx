@@ -7,7 +7,7 @@ import Image from "next/image";
 import "react-phone-number-input/style.css";
 import { Button } from "@/components/ui/button";
 import { orderSchema } from "@/lib/schema";
-import { Address, Areas, CartItem, MidtransTransactionResult, Rates } from "@/types";
+import { Address, Areas, CartItem, Rates } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { User } from "@prisma/client";
 import { useEffect, useMemo, useState, useTransition } from "react";
@@ -159,12 +159,11 @@ const OrderForm: React.FC<OrderFormProps> = ({
       });
 
       if (res.token) {
-        const orderValues = {
+        await finalizeOrder({
           courier: shipping.courier,
           shippingPrice: shipping.price,
           totalPrice: totalPrice + shipping.price,
           token: res.token,
-          isPaid: false,
           itemsPrice,
           orderId,
           taxPrice,
@@ -176,35 +175,9 @@ const OrderForm: React.FC<OrderFormProps> = ({
             phone: data.phone,
             address: `${data.address}, ${data.village}, ${data.district}, ${data.city}, ${data.province}, ${data.postal_code}`,
           },
-        };
+        })
         window.snap.pay(res.token, {
-          onSuccess: async (result: MidtransTransactionResult) => {
-            toast.success(res.message);
-            await finalizeOrder({
-              ...orderValues,
-              paymentStatus: result.transaction_status,
-              isPaid: true
-            });
-            router.push("/order");
-          },
-          onPending: async (result: MidtransTransactionResult) => {
-            await finalizeOrder({
-              ...orderValues,
-              paymentStatus: result.transaction_status,
-            })
-          },
-          onError: async (result: MidtransTransactionResult) => {
-            await finalizeOrder({
-              ...orderValues,
-              paymentStatus: result.transaction_status
-            })
-          },
-          onClose: async () => {
-            await finalizeOrder({
-              ...orderValues,
-              paymentStatus: "pending"
-            })
-          }
+          onSuccess: () => router.push('/orders')
         });
       } else {
         toast.error("Payment failed, there is no token");

@@ -171,12 +171,10 @@ export async function makePayment({
 type FinalizeOrderType = {
   token?: string;
   orderId: string;
-  isPaid?: boolean;
   itemsPrice?: number;
   taxPrice?: number;
   shippingPrice?: number;
   totalPrice?: number;
-  paymentStatus?: string;
   courier?: string;
   shippingInfo?: ShippingInfo;
 };
@@ -184,12 +182,10 @@ type FinalizeOrderType = {
 export async function finalizeOrder({
   orderId,
   token,
-  isPaid,
   itemsPrice,
   shippingPrice,
   taxPrice,
   totalPrice,
-  paymentStatus,
   courier,
   shippingInfo,
 }: FinalizeOrderType) {
@@ -201,84 +197,48 @@ export async function finalizeOrder({
           where: { id: orderId },
           data: {
             transactionToken: token,
-            isPaid,
-            paidAt: isPaid ? new Date() : undefined,
             itemsPrice,
             shippingPrice,
             taxPrice,
             totalPrice,
-            paymentStatus,
             shippingInfo: shippingInfo,
             courier,
           },
+          include: {
+            orderItems: true
+          }
         });
 
-        const order = await tx.order.findFirst({
-          where: { id: orderId },
-          include: { orderItems: true },
+        if (!updatedOrder) throw new Error("There is no order found");
+
+        
+        const cart = await getMyCart();
+        if (updatedOrder?.orderItems.length === 0) {
+          for (const item of cart?.items as CartItem[]) {
+            await tx.orderItem.create({
+              data: {
+                orderId,
+                ...item,
+              },
+            });
+          }
+        }
+
+        await tx.cart.update({
+          where: { id: cart?.id },
+          data: {
+            items: [],
+            orderId: null,
+            itemsPrice: 0,
+            taxPrice: 0,
+            totalPrice: 0,
+            shippingPrice: 0,
+          },
         });
-
-        if(!order) throw new Error("There is no order found")
-        
-        if(!['expire','deny','cancel'].includes(paymentStatus||'')){
-          const cart = await getMyCart();
-  
-          if (order?.orderItems.length === 0) {
-            for (const item of cart?.items as CartItem[]) {
-              await tx.orderItem.create({
-                data: {
-                  orderId,
-                  ...item,
-                },
-              });
-            }
-          }
-          
-          await tx.cart.update({
-            where: { id: cart?.id },
-            data: {
-              items: [],
-              orderId: null,
-              itemsPrice: 0,
-              taxPrice: 0,
-              totalPrice: 0,
-              shippingPrice: 0,
-            },
-          });
-        }
-        
-        const orderItem =
-          order?.orderItems.length === 0
-            ? await tx.orderItem.findMany({ where: { orderId } })
-            : order!.orderItems;
-
-        if (updatedOrder.paymentStatus === "settlement") {
-          for (const item of orderItem) {
-            if (item.variantId) {
-              await tx.variant.update({
-                where: { id: item.variantId },
-                data: {
-                  stock: {
-                    decrement: item.qty,
-                  },
-                },
-              });
-            } else {
-              await tx.product.update({
-                where: { id: item.productId },
-                data: {
-                  stock: {
-                    decrement: item.qty,
-                  },
-                },
-              });
-            }
-          }
-        }
       })
       .catch((e) => console.log("ORDER_FINALIZE_ERROR:", e));
 
-    revalidatePath("/order");
+    revalidatePath("/orders");
 
     return {
       success: true,
@@ -290,5 +250,56 @@ export async function finalizeOrder({
       success: false,
       message: "Order failed to update",
     };
+  }
+}
+
+type UpdatePaymentStatus = {
+  orderId: string,
+  paymentStatus: string
+}
+
+export async function updatePaymentStatus({orderId, paymentStatus}:UpdatePaymentStatus) {
+  try {
+    await prisma.$transaction(async (tx) => {
+      const order = await tx.order.update({
+        where: {id: orderId},
+        data: {
+          paymentStatus,
+          isPaid: ['capture', 'settlement'].includes(paymentStatus),
+          paidAt: ['capture', 'settlement'].includes(paymentStatus) ? new Date() : undefined,
+        },
+        include: {
+          orderItems: true
+        }
+      })
+
+      if (['capture', 'settlement'].includes(paymentStatus)) {
+        for (const item of order.orderItems) {
+          if (item.variantId) {
+            await tx.variant.update({
+              where: { id: item.variantId },
+              data: {
+                stock: {
+                  decrement: item.qty,
+                },
+              },
+            });
+          } else {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: {
+                stock: {
+                  decrement: item.qty,
+                },
+              },
+            });
+          }
+        }
+      }
+    })
+
+    revalidatePath('/orders')
+  } catch (error) {
+    console.log(formatError(error))
   }
 }

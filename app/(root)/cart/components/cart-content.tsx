@@ -47,10 +47,10 @@ const CartContent: React.FC<CartContentProps> = ({ cart, userId }) => {
     }
     startTransition(async () => {
       if (cart.orderId) {
-        router.push(`/order/${cart.orderId}`);
+        router.push(`/orders/${cart.orderId}`);
       } else {
         const orderId = await createOrder(notes);
-        router.push(`/order/${orderId}`);
+        router.push(`/orders/${orderId}`);
       }
     })
   };

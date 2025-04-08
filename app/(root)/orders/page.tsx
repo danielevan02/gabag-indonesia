@@ -42,7 +42,7 @@ const OrderPage = async () => {
                   <TableCell> <Badge>{order.isDelivered ? "delivered" : "not delivered"}</Badge></TableCell>
                   <TableCell>{orderDate}</TableCell>
                   <TableCell className="text-end">
-                    <Link href={`/order/${order.id}`} className="underline">{order.isPaid ? "See Details" : "Pay Now"}</Link>
+                    <Link href={`/orders/${order.id}`} className="underline">{order.isPaid ? "See Details" : "Pay Now"}</Link>
                   </TableCell>
                 </TableRow>
               )

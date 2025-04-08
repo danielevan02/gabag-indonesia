@@ -16,7 +16,7 @@ const NavLinks = ({device}: {device: string}) => {
   const links: LinkType[] = [
     { label: "Home", link: "/", icon: HomeIcon },
     { label: "Product", link: "/products", icon: Boxes },
-    { label: "Order", link: "/order", icon: ClipboardList },
+    { label: "Order", link: "/orders", icon: ClipboardList },
     { label: "About", link: "/about", icon: Info },
     { label: "Profile", link: "/profile", icon: User },
   ];
