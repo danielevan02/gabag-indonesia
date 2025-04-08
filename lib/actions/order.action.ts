@@ -15,32 +15,32 @@ export async function getAllOrders(userId?: string) {
         userId,
       },
       include: {
-        orderItems: true
+        orderItems: true,
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: "desc",
+      },
     });
   } else {
     return prisma.order.findMany({
       include: {
-        orderItems: true
-      }
+        orderItems: true,
+      },
     });
   }
 }
 
-export async function getOrderById(orderId: string){
+export async function getOrderById(orderId: string) {
   const order = await prisma.order.findFirst({
-    where: {id: orderId},
-    include: {orderItems: true}
-  })
+    where: { id: orderId },
+    include: { orderItems: true },
+  });
 
   return convertToPlainObject({
     ...order,
-    orderItems: order?.orderItems.map((item)=>({...item, weight: Number(item.weight)})),
-    shippingInfo: order?.shippingInfo as ShippingInfo
-  })
+    orderItems: order?.orderItems.map((item) => ({ ...item, weight: Number(item.weight) })),
+    shippingInfo: order?.shippingInfo as ShippingInfo,
+  });
 }
 
 export async function createOrder(notes?: string) {
@@ -97,19 +97,29 @@ type PaymentProps = {
   cartItem: CartItem[];
 };
 
-export async function makePayment({ email, name, phone, subTotal, userId, orderId, cartItem, shippingPrice, taxPrice }: PaymentProps) {
+export async function makePayment({
+  email,
+  name,
+  phone,
+  subTotal,
+  userId,
+  orderId,
+  cartItem,
+  shippingPrice,
+  taxPrice,
+}: PaymentProps) {
   if (!userId) throw new Error("You're not authenticated!");
   if (!email) throw new Error("You're not authenticated");
   if (!subTotal || subTotal <= 0) throw new Error("There is no product!");
   if (!phone) throw new Error("Please complete your identity (phone)");
   if (!name) throw new Error("Please complete your identity (name)");
 
-  const item_details = cartItem.map((item)=>({
+  const item_details = cartItem.map((item) => ({
     id: item.variantId ? item.variantId : item.productId,
     name: item.name,
     price: item.price,
-    quantity: item.qty
-  })) satisfies ItemDetail[]
+    quantity: item.qty,
+  })) satisfies ItemDetail[];
 
   try {
     const firstName = name.split(" ")[0];
@@ -118,7 +128,7 @@ export async function makePayment({ email, name, phone, subTotal, userId, orderI
     const token = await createTransaction({
       transaction_details: {
         order_id: orderId,
-        gross_amount: subTotal + shippingPrice
+        gross_amount: subTotal + shippingPrice,
       },
       customer_details: {
         first_name: firstName,
@@ -132,43 +142,43 @@ export async function makePayment({ email, name, phone, subTotal, userId, orderI
           id: Date.now().toString(),
           name: "Tax Price",
           price: taxPrice,
-          quantity: 1
+          quantity: 1,
         },
         {
-          id: (Date.now()+1).toString(),
+          id: (Date.now() + 1).toString(),
           name: "Shipping Price",
           price: shippingPrice,
-          quantity: 1
-        }
-      ]
-    })
+          quantity: 1,
+        },
+      ],
+    });
 
     return {
       success: true,
       message: "Payment Successful",
-      token: token as string
-    }
+      token: token as string,
+    };
   } catch (error) {
-    console.log(formatError(error))
+    console.log(formatError(error));
     return {
       success: false,
       message: "Payment Failed",
-      token: ""
-    }
+      token: "",
+    };
   }
 }
 
 type FinalizeOrderType = {
-  token: string;
+  token?: string;
   orderId: string;
-  isPaid: boolean;
-  itemsPrice: number;
-  taxPrice: number;
-  shippingPrice: number;
-  totalPrice: number;
-  paymentStatus: string;
-  courier: string
-  shippingInfo: ShippingInfo
+  isPaid?: boolean;
+  itemsPrice?: number;
+  taxPrice?: number;
+  shippingPrice?: number;
+  totalPrice?: number;
+  paymentStatus?: string;
+  courier?: string;
+  shippingInfo?: ShippingInfo;
 };
 
 export async function finalizeOrder({
@@ -181,91 +191,104 @@ export async function finalizeOrder({
   totalPrice,
   paymentStatus,
   courier,
-  shippingInfo
+  shippingInfo,
 }: FinalizeOrderType) {
-  const cart = await getMyCart()
-  if(!token)throw new Error("Your payment is not valid!")
+  if (!token) throw new Error("Your payment is not valid!");
   try {
-    await prisma.$transaction(async (tx) => {
-      const updatedOrder = await tx.order.update({
-        where: { id: orderId },
-        data: {
-          transactionToken: token,
-          isPaid,
-          paidAt: isPaid ? new Date() : undefined,
-          itemsPrice,
-          shippingPrice,
-          taxPrice,
-          totalPrice,
-          paymentStatus,
-          shippingInfo: shippingInfo,
-          courier
-        },
-      });
+    await prisma
+      .$transaction(async (tx) => {
+        const updatedOrder = await tx.order.update({
+          where: { id: orderId },
+          data: {
+            transactionToken: token,
+            isPaid,
+            paidAt: isPaid ? new Date() : undefined,
+            itemsPrice,
+            shippingPrice,
+            taxPrice,
+            totalPrice,
+            paymentStatus,
+            shippingInfo: shippingInfo,
+            courier,
+          },
+        });
 
-      const order = await tx.order.findFirst({where: {id: orderId}, include: {orderItems: true}})
+        const order = await tx.order.findFirst({
+          where: { id: orderId },
+          include: { orderItems: true },
+        });
 
-      if(order?.orderItems.length===0){
-        for(const item of cart?.items as CartItem[]){
-          await tx.orderItem.create({
-            data: {
-              orderId,
-              ...item
+        if(!order) throw new Error("There is no order found")
+        
+        if(!['expire','deny','cancel'].includes(paymentStatus||'')){
+          const cart = await getMyCart();
+  
+          if (order?.orderItems.length === 0) {
+            for (const item of cart?.items as CartItem[]) {
+              await tx.orderItem.create({
+                data: {
+                  orderId,
+                  ...item,
+                },
+              });
             }
-          })
+          }
+          
+          await tx.cart.update({
+            where: { id: cart?.id },
+            data: {
+              items: [],
+              orderId: null,
+              itemsPrice: 0,
+              taxPrice: 0,
+              totalPrice: 0,
+              shippingPrice: 0,
+            },
+          });
         }
-      }
+        
+        const orderItem =
+          order?.orderItems.length === 0
+            ? await tx.orderItem.findMany({ where: { orderId } })
+            : order!.orderItems;
 
-      await tx.cart.update({
-        where: {id: cart?.id},
-        data: {
-          items: [],
-          orderId: null,
-          itemsPrice: 0, 
-          taxPrice: 0,
-          totalPrice: 0,
-          shippingPrice: 0
-        }
-      })
-
-      const orderItem = order?.orderItems.length===0 ? await tx.orderItem.findMany({where: {orderId}}) : order!.orderItems 
-
-      if(updatedOrder.paymentStatus === 'settlement'){
-        for(const item of orderItem){
-          if(item.variantId){
-            await tx.variant.update({
-              where: {id: item.variantId},
-              data: {
-                stock: {
-                  decrement: item.qty
-                }
-              }
-            })
-          } else {
-            await tx.product.update({
-              where: {id: item.productId},
-              data: {
-                stock: {
-                  decrement: item.qty
-                }
-              }
-            })
+        if (updatedOrder.paymentStatus === "settlement") {
+          for (const item of orderItem) {
+            if (item.variantId) {
+              await tx.variant.update({
+                where: { id: item.variantId },
+                data: {
+                  stock: {
+                    decrement: item.qty,
+                  },
+                },
+              });
+            } else {
+              await tx.product.update({
+                where: { id: item.productId },
+                data: {
+                  stock: {
+                    decrement: item.qty,
+                  },
+                },
+              });
+            }
           }
         }
-      }
-    }).catch((e)=>console.log("ORDER_FINALIZE_ERROR:",e));
+      })
+      .catch((e) => console.log("ORDER_FINALIZE_ERROR:", e));
 
-    revalidatePath('/order')
+    revalidatePath("/order");
 
-    return{
+    return {
       success: true,
-      message: "Order Updated"
-    }
+      message: "Order Updated",
+    };
   } catch (error) {
     console.log(formatError(error));
     return {
       success: false,
-      message: "Order failed to update"
-    }
+      message: "Order failed to update",
+    };
   }
 }
