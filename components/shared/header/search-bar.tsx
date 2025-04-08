@@ -3,16 +3,23 @@
 import { Input } from '@/components/ui/input';
 import { searchProduct } from '@/lib/actions/product.action';
 import { updateQueryParams } from '@/lib/utils';
-import { Product } from '@prisma/client';
 import { Search } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useRef, useTransition, ChangeEvent, KeyboardEvent } from 'react';
 
+type ProductSearch = {
+  name: string;
+  price: bigint;
+  images: string[];
+  slug: string;
+  id: string;
+}
+
 export default function SearchBar() {
   const [query, setQuery] = useState('');
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductSearch[]>([]);
   const [isLoading, startTransition] = useTransition()
   const [showDropdown, setShowDropdown] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -84,13 +91,13 @@ export default function SearchBar() {
           onFocus={() => setShowDropdown(query.length > 0)}
           onKeyDown={(e) => handleEnter(e)}
           placeholder="Search product..."
-          className="py-2 relative text-sm md:text-base w-60 lg:w-52 lg:focus:w-72 transition-all px-4 border border-black dark:border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="py-2 relative text-sm md:text-base w-60 lg:w-52 lg:focus:w-72 transition-all px-4 border rounded-none border-black dark:border-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <Search className='absolute right-2 text-neutral-500 z-10'/>
       </div>
 
       {showDropdown && (
-        <div className="absolute mt-1 w-full bg-background border border-accent rounded-lg shadow-lg z-10 max-h-96 overflow-y-auto">
+        <div className="absolute mt-1 w-full bg-background border border-accent shadow-lg z-10 max-h-96 overflow-y-auto">
           {isLoading ? (
             <div className="p-4 text-center text-gray-500">Searching product...</div>
           ) : products.length > 0 ? (
@@ -108,7 +115,7 @@ export default function SearchBar() {
                       alt={product.name}
                       width={200}
                       height={200}
-                      className="min-w-12 max-w-12 h-12 object-cover rounded mr-3"
+                      className="min-w-12 max-w-12 h-12 object-cover rounded-md mr-3"
                     />
                   )}
                   <div>

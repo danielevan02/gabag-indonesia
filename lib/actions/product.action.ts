@@ -75,6 +75,13 @@ export async function searchProduct(keyword:string) {
         contains : keyword,
         mode: 'insensitive'
       },
+    },
+    select: {
+      name: true,
+      images: true,
+      price: true,
+      id: true,
+      slug: true,
     }
   })
 }

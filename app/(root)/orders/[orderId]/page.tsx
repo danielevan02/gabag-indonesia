@@ -4,6 +4,15 @@ import { getCurrentUser } from "@/lib/actions/user.action";
 import OrderForm from "./components/order-form";
 import OrderDetails from "./components/order-details";
 import { FullOrderType } from "@/types";
+import { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: { orderId: string } }): Promise<Metadata> {
+  const order = await getOrderById(params.orderId);
+
+  return {
+    title: `${order.id} - ${order.paymentStatus}` || "Product Details",
+  };
+}
 
 export async function generateStaticParams() {
   const orders = await getAllOrders();
