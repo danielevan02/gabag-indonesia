@@ -203,6 +203,7 @@ export async function finalizeOrder({
             totalPrice,
             shippingInfo: shippingInfo,
             courier,
+            paymentStatus: "pending"
           },
           include: {
             orderItems: true

@@ -1,5 +1,6 @@
 import { updatePaymentStatus } from "@/lib/actions/order.action";
 import { midtransNotification } from "@/lib/midtrans/transaction";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -11,8 +12,8 @@ export async function POST(req: NextRequest) {
     `🔔 Notifikasi diterima: Order ID: ${order_id}, Status: ${transaction_status}, Fraud: ${fraud_status}`
   );
 
-  // ✅ Contoh logika update status
   await updatePaymentStatus({orderId: order_id, paymentStatus: transaction_status})
 
+  revalidatePath('/orders')
   return new NextResponse(JSON.stringify({message: 'OK'}));
 }

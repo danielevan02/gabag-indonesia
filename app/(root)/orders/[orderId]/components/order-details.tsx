@@ -4,8 +4,7 @@
 import StatusBadge from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { finalizeOrder } from "@/lib/actions/order.action";
-import { FullOrderType, MidtransTransactionResult, ShippingInfo } from "@/types";
+import { FullOrderType, ShippingInfo } from "@/types";
 import { format } from "date-fns";
 import Image from "next/image";
 import Script from "next/script";
@@ -26,46 +25,7 @@ const OrderDetails = ({ order }: { order: FullOrderType }) => {
       return toast.error("Payment Error: There is no token");
     }
 
-    const orderValue = {
-      ...order,
-      orderId: order.id,
-      token: order.transactionToken || "",
-      itemsPrice: Number(order.itemsPrice),
-      shippingPrice: Number(order.shippingPrice),
-      totalPrice: Number(order.totalPrice),
-      taxPrice: Number(order.taxPrice),
-      courier: order.courier || "",
-      isPaid: false,
-      shippingInfo: order.shippingInfo as ShippingInfo,
-    };
-
-    window.snap.pay(order.transactionToken, {
-      onSuccess: async (result: MidtransTransactionResult) => {
-        await finalizeOrder({
-          ...orderValue,
-          paymentStatus: result.transaction_status,
-          isPaid: true,
-        });
-      },
-      onPending: async (result: MidtransTransactionResult) => {
-        await finalizeOrder({
-          ...orderValue,
-          paymentStatus: result.transaction_status,
-        })
-      },
-      onError: async (result: MidtransTransactionResult) => {
-        await finalizeOrder({
-          ...orderValue,
-          paymentStatus: result.transaction_status
-        })
-      },
-      onClose: async () => {
-        await finalizeOrder({
-          ...orderValue,
-          paymentStatus: "pending"
-        })
-      }
-    });
+    window.snap.pay(order.transactionToken);
   };
   return (
     <>
@@ -125,6 +85,13 @@ const OrderDetails = ({ order }: { order: FullOrderType }) => {
             <div className="bg-gradient-to-r from-transparent via-foreground to-transparent h-px" />
             <p className="uppercase tracking-widest absolute px-1 w-fit text-sm left-1/2 -translate-x-1/2 bg-background">
               Order Paid
+            </p>
+          </div>
+        ) : ['cancel', 'deny', 'cancel'].includes(order.paymentStatus!) ? (
+          <div className="relative my-7 flex flex-col justify-center">
+            <div className="bg-gradient-to-r from-transparent via-foreground to-transparent h-px" />
+            <p className="uppercase tracking-widest absolute px-1 w-fit text-sm left-1/2 -translate-x-1/2 bg-background text-red-600">
+              your order is cancelled
             </p>
           </div>
         ) : (
