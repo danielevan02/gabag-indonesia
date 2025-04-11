@@ -71,15 +71,15 @@ const OrderForm: React.FC<OrderFormProps> = ({
   } = useForm({
     resolver: zodResolver(orderSchema),
     defaultValues: {
-      name: user?.name ?? "",
-      address: userAddress.address ?? "",
-      city: userAddress.city ?? "",
-      district: userAddress.district ?? "",
-      phone: "",
-      postal_code: userAddress.postalCode || area?.postal_code || "",
-      province: userAddress.province,
-      village: userAddress.village ?? "",
-      email: user?.email ?? "",
+      name: user?.name || "",
+      address: userAddress?.address || "",
+      city: userAddress?.city || "",
+      district: userAddress?.district || "",
+      phone: user?.phone || "",
+      postal_code: userAddress?.postalCode || area?.postal_code || "",
+      province: userAddress?.province || "",
+      village: userAddress?.village || "",
+      email: user?.email || "",
     },
   });
 
