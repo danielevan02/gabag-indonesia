@@ -124,7 +124,7 @@ model Cart {
   createdAt     DateTime @default(now()) @db.Timestamp(6)
   shippingPrice BigInt?  @default(0)
   notes         String?
-  orderId       String?  @unique @default(uuid())
+  orderId       String?  @unique
   order         Order?   @relation(fields: [orderId], references: [id])
   user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
