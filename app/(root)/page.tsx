@@ -104,7 +104,7 @@ const HomePage = async () => {
           </video>
         </div>
 
-        <div className="flex gap-1 mt-10 md:gap-5 overflow-scroll no-scrollbar snap-x snap-mandatory">
+        <div className="flex gap-1 mt-10 md:gap-5 overflow-scroll no-scrollbar py-px snap-x snap-mandatory">
           {products.map((product) => (
             <ProductCard
               key={product.slug}
@@ -162,7 +162,7 @@ const HomePage = async () => {
           <p className="text-center w-full text-sm text-neutral-400">A stylish storage solution for your beauty essentials! Practical, elegant, and ready to accompany your daily routine.</p>
         </div>
         <hr className="mb-5 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-900 to-transparent opacity-25 dark:via-white" />
-        <div className="flex gap-1 md:gap-5 overflow-scroll no-scrollbar px-1 snap-x snap-mandatory">
+        <div className="flex gap-1 md:gap-5 overflow-scroll no-scrollbar px-1 py-px snap-x snap-mandatory">
           {beauty.map((product) => (
             <ProductCard
               key={product.slug}

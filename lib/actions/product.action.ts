@@ -66,7 +66,21 @@ export async function getAllProducts(
   });
 }
 
-
+export async function getProductByCategory(categoryName: string) {
+  return await prisma.product.findMany({
+    where: {
+      categories: {
+        some: {
+          name: categoryName,
+        }
+      },
+    },
+    include: {
+      categories: true,
+      variant: true
+    }
+  })
+}
 
 export async function searchProduct(keyword:string) {
   return await prisma.product.findMany({

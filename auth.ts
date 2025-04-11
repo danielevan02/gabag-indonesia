@@ -1,18 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import NextAuth, {type NextAuthConfig } from 'next-auth'
-import { PrismaAdapter } from '@auth/prisma-adapter'
-import { prisma } from './lib/db/prisma' 
-import CredentialsProvider from 'next-auth/providers/credentials'
-import { compareSync } from 'bcrypt-ts-edge'
-import { cookies } from 'next/headers'
+import NextAuth, { CredentialsSignin, type NextAuthConfig } from "next-auth";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prisma } from "./lib/db/prisma";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { compareSync } from "bcrypt-ts-edge";
+import { cookies } from "next/headers";
+import { getUserById } from "./lib/actions/user.action";
+
+class InvalidLoginError extends CredentialsSignin {
+  code: string;
+
+  constructor(message: string) {
+    super(message);        // ini akan menjadi isi `.message`
+    this.code = message;   // ini isi `.code`, bisa berbeda kalau mau
+    this.name = "InvalidLoginError";
+  }
+}
 
 export const config: NextAuthConfig = {
   pages: {
-    signIn: '/sign-in',
-    error: '/sign-in',
+    signIn: "/sign-in",
+    error: "/sign-in",
   },
   session: {
-    strategy: 'jwt',
+    strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
   },
   adapter: PrismaAdapter(prisma),
@@ -23,7 +34,7 @@ export const config: NextAuthConfig = {
         password: { type: 'password'},
       },
       async authorize(credentials){
-        if(credentials == null) return null
+        if(credentials == null) throw new InvalidLoginError("There is no credentials")
 
         const user = await prisma.user.findFirst({
           where: {
@@ -31,86 +42,99 @@ export const config: NextAuthConfig = {
           }
         })
 
-        if(user && user.password){
-          const isMatches = compareSync(credentials.password as string, user.password)
-          if(isMatches) {
-            return {
-              id: user.id,
-              name: user.name,
-              email: user.email,
-              role: user.role
-            }
-          }
-        } 
+        if(!user || !user.password) throw new InvalidLoginError("This user is not exist")
 
-        return null
+        const isMatches = compareSync(credentials.password as string, user.password)
+
+        if(!isMatches) throw new InvalidLoginError("Invalid password or email")
+
+        if(user.emailVerified == null) throw new InvalidLoginError("Please verify your email first")
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        }
       }
-    })
+    }),
   ],
   callbacks: {
-    async session({session, user, token, trigger}: any) {
-      session.user.id = token.sub
-      session.user.role = token.role
-      session.user.name = token.name
-
-      if(trigger === 'update'){
-        session.user.name = user.name
+    async signIn({ user, account }) {
+      if (account?.provider !== "credentials") {
+        return true;
       }
-      return session
+
+      const existingUser = await getUserById(user.id ?? "");
+
+      if (!existingUser?.emailVerified) {
+        return false;
+      }
+
+      return true;
     },
-    async jwt({token, user, trigger, session}: any){
-      if(user){
-        token.role = user.role
-        token.id = user.id
-        if(user.name === "NO_NAME"){
-          token.name = user.email!.split('@')[0]
+    async session({ session, user, token, trigger }: any) {
+      session.user.id = token.sub;
+      session.user.role = token.role;
+      session.user.name = token.name;
+
+      if (trigger === "update") {
+        session.user.name = user.name;
+      }
+      return session;
+    },
+    async jwt({ token, user, trigger, session }: any) {
+      if (user) {
+        token.role = user.role;
+        token.id = user.id;
+        if (user.name === "NO_NAME") {
+          token.name = user.email!.split("@")[0];
           await prisma.user.update({
             where: {
-              id: user.id
+              id: user.id,
             },
             data: {
-              name: token.name
-            }
-          })
+              name: token.name,
+            },
+          });
         }
-        if(trigger === 'signIn' || trigger === 'signUp') {
-          const cookiesObject = await cookies()
-          const sessionCartId = cookiesObject.get('sessionCartId')?.value
+        if (trigger === "signIn" || trigger === "signUp") {
+          const cookiesObject = await cookies();
+          const sessionCartId = cookiesObject.get("sessionCartId")?.value;
 
-          if(sessionCartId) {
+          if (sessionCartId) {
             const sessionCart = await prisma.cart.findFirst({
               where: {
-                sessionCartId
-              }
-            })
+                sessionCartId,
+              },
+            });
 
-            if(sessionCart){
+            if (sessionCart) {
               await prisma.cart.deleteMany({
                 where: {
-                  userId: user.id
-                }
-              })
+                  userId: user.id,
+                },
+              });
               await prisma.cart.update({
                 where: {
-                  id: sessionCart.id
+                  id: sessionCart.id,
                 },
                 data: {
-                  userId: user.id
-                }
-              })
+                  userId: user.id,
+                },
+              });
             }
           }
         }
       }
 
-      if(session?.user.name && trigger === 'update'){
-        token.name = session.user.name
+      if (session?.user.name && trigger === "update") {
+        token.name = session.user.name;
       }
 
-      return token
+      return token;
     },
-    
   },
-} satisfies NextAuthConfig
+} satisfies NextAuthConfig;
 
-export const {handlers, auth, signIn, signOut} = NextAuth(config)
+export const { handlers, auth, signIn, signOut } = NextAuth(config);

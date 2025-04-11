@@ -6,20 +6,21 @@ import OrderDetails from "./components/order-details";
 import { FullOrderType } from "@/types";
 import { Metadata } from "next";
 
-export async function generateMetadata({ params }: { params: { orderId: string } }): Promise<Metadata> {
-  const order = await getOrderById(params.orderId);
-
-  return {
-    title: `${order.id} - ${order.paymentStatus}` || "Product Details",
-  };
-}
+type tParams = Promise<{ orderId: string }>;
 
 export async function generateStaticParams() {
   const orders = await getAllOrders();
   return orders.map((order) => ({ orderId: order.id }));
 }
 
-type tParams = Promise<{ orderId: string }>;
+export async function generateMetadata({ params }: { params: tParams }): Promise<Metadata> {
+  const { orderId }: { orderId: string } = await params;
+  const order = await getOrderById(orderId);
+
+  return {
+    title: `${order.id} - ${order.paymentStatus}` || "Product Details",
+  };
+}
 
 const OrderDetailPage = async ({ params }: { params: tParams }) => {
   const { orderId }: { orderId: string } = await params;

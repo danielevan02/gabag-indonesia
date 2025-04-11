@@ -15,5 +15,5 @@ export async function POST(req: NextRequest) {
   await updatePaymentStatus({orderId: order_id, paymentStatus: transaction_status})
 
   revalidatePath('/orders')
-  return new NextResponse(JSON.stringify({message: 'OK'}));
+  return new NextResponse(JSON.stringify({message: 'OK'}), {status: 200});
 }

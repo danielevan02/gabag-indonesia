@@ -13,10 +13,12 @@ import { z } from "zod";
 import Link from "next/link";
 import { signInWithCredetials } from "@/lib/actions/user.action";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 type LoginType = z.infer<typeof loginSchema>
 
 const SignInForm = () => {
+  const router = useRouter()
   const [passShown, setPassShown] = useState(false)
   const [isLoading, startTransition] = useTransition()
   const {
@@ -31,12 +33,14 @@ const SignInForm = () => {
 
   const onSubmit: SubmitHandler<LoginType> = async (data) => {
     startTransition(async () => {
-      const response = await signInWithCredetials(data)
-      if(response.success){
-        toast.success(response.message)
+      const res = await signInWithCredetials(data)
+      
+      if(res.success){
+        toast.success(res.message)
       } else {
-        toast.error(response.message)
+        toast.error(res.message)
       }
+      router.push('/')
     })
   }
   return (

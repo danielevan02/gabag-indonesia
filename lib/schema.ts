@@ -5,6 +5,17 @@ export const loginSchema = z.object({
   password: z.string().min(5, "Password must be at least 6 characters"),
 })
 
+export const signUpSchema = z.object({
+  email: z.string().email('Please input a valid email').min(1, 'Email is required!'),
+  fullName: z.string().min(1, 'Please input your name'),
+  password: z.string().min(5, "Password must be at least 6 characters"),
+  phone: z.string().min(1, "Please enter the phone number"),
+  confirmPassword: z.string().min(1, 'Please re-input the password')
+}).refine((val) => val.confirmPassword === val.password, {
+  message: "Confirm password doesn't match the password",
+  path: ["confirmPassword"],
+})
+
 export const addressSchema = z.object({
   province: z.string().min(1, "Please choose your province"),
   city: z.string().min(1, "Please choose your city"),

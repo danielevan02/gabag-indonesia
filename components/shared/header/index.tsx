@@ -17,15 +17,27 @@ import SearchBar from "./search-bar";
 import { auth } from "@/auth";
 import CredentialsButton from "./credentials-button";
 import { getMyCart } from "@/lib/actions/cart.action";
-import HeaderAnimation from "./header-animation";
 
 const Header = async () => {
   const session = await auth()
   const user = session?.user
   const cart = await getMyCart()
-
+  
   return (
-    <HeaderAnimation>
+    <div
+      className={`
+      sticky 
+      flex 
+      flex-col
+      items-center 
+      justify-between 
+      w-full
+      top-0 
+      left-0
+      bg-background 
+      z-50
+      `}
+    >
       <Link href="/" className="py-2">
         <Logo />
       </Link>
@@ -79,7 +91,7 @@ const Header = async () => {
         </Link>
 
       </div>
-    </HeaderAnimation>
+    </div>
   );
 };
 
