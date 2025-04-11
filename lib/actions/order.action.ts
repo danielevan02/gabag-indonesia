@@ -62,6 +62,7 @@ export async function createOrder(notes?: string) {
         const newOrder = await tx.order.create({
           data: {
             id: `Gbg_Order-${Date.now()}`,
+            notes,
             userId,
           },
         });
