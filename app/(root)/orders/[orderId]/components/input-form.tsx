@@ -1,6 +1,7 @@
 'use client'
 
-import PhoneInput from "react-phone-number-input";
+import {PhoneInput} from "react-international-phone";
+import 'react-international-phone/style.css';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,6 +36,26 @@ const InputForm = ({
   errors,
   trigger,
 }: InputFormProps) => {
+
+  const phoneInputStyle = {
+    width: '100%', 
+    paddingTop: 20, 
+    paddingBottom: 20, 
+    borderTopRightRadius: 10,
+    borderBottomRightRadius: 10,
+  }
+
+  const countrySelectorStyle = {
+    buttonStyle: {
+      paddingTop: 20, 
+      paddingBottom: 20, 
+      paddingLeft: 10,
+      paddingRight: 10,
+      borderTopLeftRadius: 10,
+      borderBottomLeftRadius: 10,
+    }
+  }
+
   return (
     <div className="flex flex-col gap-1 w-full">
       <Label className="text-xs uppercase" htmlFor={htmlFor}>
@@ -54,10 +75,9 @@ const InputForm = ({
           name="phone"
           render={({ field }) => (
             <PhoneInput
-              international
-              className="border rounded-md p-2 dark:bg-neutral-900"
-              defaultCountry="ID"
-              autoComplete="phone"
+              inputStyle={phoneInputStyle}
+              countrySelectorStyleProps={countrySelectorStyle}
+              defaultCountry='id'
               value={field.value}
               onChange={field.onChange}
               onBlur={() => trigger(htmlFor)}

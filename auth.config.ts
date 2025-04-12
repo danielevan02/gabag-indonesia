@@ -1,21 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { NextAuthConfig } from 'next-auth';
-import { NextResponse } from 'next/server';
+import { type NextAuthConfig } from "next-auth";
+import { NextResponse } from "next/server";
 
 export const authConfig = {
-  providers: [], // Required by NextAuthConfig type
+  providers:[], // Required by NextAuthConfig type
   callbacks: {
-    authorized({ request, auth }: any) {
+    authorized({ request, auth }) {
       // Array of regex patterns of paths we want to protect
-      const protectedPaths = [
-        /\/shipping-address/,
-        /\/payment-method/,
-        /\/place-order/,
-        /\/profile/,
-        /\/user\/(.*)/,
-        /\/orders\/(.*)/,
-        /\/admin/,
-      ];
+      const protectedPaths = [/\/profile/, /\/orders(\/.*)?/, /\/admin/];
 
       // Get pathname from the req URL object
       const { pathname } = request.nextUrl;
@@ -23,7 +15,7 @@ export const authConfig = {
       if (!auth && protectedPaths.some((p) => p.test(pathname))) return false;
 
       // Check for session cart cookie
-      if (!request.cookies.get('sessionCartId')) {
+      if (!request.cookies.get("sessionCartId")) {
         // Generate new session cart id cookie
         const sessionCartId = crypto.randomUUID();
 
@@ -35,12 +27,24 @@ export const authConfig = {
         });
 
         // Set newly generated sessionCartId in the response cookies
-        response.cookies.set('sessionCartId', sessionCartId);
+        response.cookies.set("sessionCartId", sessionCartId);
 
         return response;
       }
 
       return true;
     },
+    
+    async session({ session, user, token, trigger }: any) {
+      session.user.id = token.sub;
+      session.user.role = token.role;
+      session.user.name = token.name;
+
+      if (trigger === "update") {
+        session.user.name = user.name;
+      }
+      return session;
+    },
+    
   },
 } satisfies NextAuthConfig;

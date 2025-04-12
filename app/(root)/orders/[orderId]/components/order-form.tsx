@@ -4,7 +4,7 @@
 "use client";
 
 import Image from "next/image";
-import "react-phone-number-input/style.css";
+import 'react-international-phone/style.css';
 import { Button } from "@/components/ui/button";
 import { orderSchema } from "@/lib/schema";
 import { Address, Areas, CartItem, Rates } from "@/types";
@@ -13,15 +13,16 @@ import { User } from "@prisma/client";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
-import lodash from "lodash";
+import debounce from "lodash/debounce";
 import { finalizeOrder, makePayment } from "@/lib/actions/order.action";
 import { getCourierRates, getMapsId } from "@/lib/actions/courier.action";
 import { CircleAlert, Loader } from "lucide-react";
-import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Script from "next/script";
 import InputForm from "./input-form";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 declare global {
   interface Window {
@@ -54,6 +55,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
   const userAddress = user?.address as Address;
   const [shipping, setShipping] = useState<{ price: number; courier: string }>();
   const [isLoading, startTransition] = useTransition();
+  const [courierLoading, courierTransition] = useTransition();
 
   let lastPrice = totalPrice;
   if (shipping) {
@@ -85,7 +87,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
 
   const debouncedFetch = useMemo(
     () =>
-      lodash.debounce(async () => {
+      debounce(async () => {
         // this is the input for searching location by city and district
         const res = await getMapsId(`${watch("city")} ${watch("district")}`);
         setArea((prev) => (prev === res[0] ? prev : res[0]));
@@ -117,24 +119,26 @@ const OrderForm: React.FC<OrderFormProps> = ({
   useEffect(() => {
     // Create the function to fetch
     const fetchCourierRates = async () => {
-      const items = cartItem.map((item) => ({
-        name: item.name,
-        value: item.price,
-        quantity: item.qty,
-        weight: item.weight || 0,
-      }));
-
-      try {
-        const res = await getCourierRates({
-          destination_area_id: area?.id || "",
-          destination_postal_code: getValues("postal_code"),
-          items,
-        });
-
-        setRateList(res);
-      } catch (error) {
-        console.error("Error fetching courier rates:", error);
-      }
+      courierTransition(async() => {
+        const items = cartItem.map((item) => ({
+          name: item.name,
+          value: item.price,
+          quantity: item.qty,
+          weight: item.weight || 0,
+        }));
+  
+        try {
+          const res = await getCourierRates({
+            destination_area_id: area?.id || "",
+            destination_postal_code: getValues("postal_code"),
+            items,
+          });
+  
+          setRateList(res);
+        } catch (error) {
+          console.error("Error fetching courier rates:", error);
+        }
+      })
     };
 
     // RUN THE FETCH FUNCTION IF THERE IS AREA
@@ -194,7 +198,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
       />
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex-1 p-5 overflow-hidden lg:max-w-xl flex flex-col gap-4 lg:border-r-1"
+        className="flex-1 py-5 px-1 md:px-5 overflow-hidden lg:max-w-xl flex flex-col gap-4 lg:border-r-1"
       >
         <div className="flex flex-col gap-5 ">
           <h3 className="text-lg font-semibold">Delivery</h3>
@@ -299,19 +303,19 @@ const OrderForm: React.FC<OrderFormProps> = ({
                             rateId === shipping?.courier && "border-4 border-foreground"
                           )}
                         />
-                        <div className="flex flex-col">
-                          <p className="text-sm">
+                        <div className="flex flex-col gap-1 w-40 md:w-auto">
+                          <p className="text-xs">
                             {rate.courier_name} - {rate.courier_service_name}
                           </p>
                           {rate.duration && (
-                            <p className="text-neutral-500 text-sm">{rate.duration}</p>
+                            <p className="text-neutral-500 text-xs">{rate.duration}</p>
                           )}
-                          <p className="text-sm text-neutral-500">
+                          <p className="text-xs text-neutral-500">
                             Sending from KALIDERES to {area?.administrative_division_level_2_name}
                           </p>
                         </div>
                       </div>
-                      <p className="font-semibold">Rp {rate.price.toLocaleString()}</p>
+                      <p className="font-semibold text-sm">Rp {rate.price.toLocaleString()}</p>
                     </div>
                   );
                 })}
@@ -328,6 +332,8 @@ const OrderForm: React.FC<OrderFormProps> = ({
                 </div>
               </div>
             )
+          ) : courierLoading ? (
+            <Skeleton className="rounded-md w-full h-14"/>
           ) : (
             <div className="py-5 bg-neutral-100 dark:bg-neutral-800 rounded-md text-xs text-center text-neutral-500 dark:text-neutral-300">
               Enter your shipping address to view available shipping methods.

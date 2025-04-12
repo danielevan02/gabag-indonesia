@@ -1,6 +1,5 @@
 "use client";
 
-import "react-phone-number-input/style.css";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signUpSchema } from "@/lib/schema";
@@ -9,10 +8,10 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { z } from "zod";
 import Link from "next/link";
-import { FormField } from "./form-field";
 import { registerUser } from "@/lib/actions/user.action";
 import { Loader } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
+import { FormField } from "@/components/shared/input/form-field";
 
 export type SignUpType = z.infer<typeof signUpSchema>;
 

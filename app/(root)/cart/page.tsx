@@ -1,7 +1,5 @@
 import { Button } from "@/components/ui/button";
-
 import { getMyCart } from "@/lib/actions/cart.action";
-
 import { Metadata } from "next";
 import CartContent from "./components/cart-content";
 import Link from "next/link";

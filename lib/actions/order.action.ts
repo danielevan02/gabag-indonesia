@@ -13,6 +13,9 @@ export async function getAllOrders(userId?: string) {
     return prisma.order.findMany({
       where: {
         userId,
+        orderItems: {
+          some: {}
+        }
       },
       include: {
         orderItems: true,

@@ -2,17 +2,18 @@
 import NextAuth, { CredentialsSignin, type NextAuthConfig } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./lib/db/prisma";
+import { authConfig } from "./auth.config";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compareSync } from "bcrypt-ts-edge";
-import { cookies } from "next/headers";
 import { getUserById } from "./lib/actions/user.action";
+import { cookies } from "next/headers";
 
 class InvalidLoginError extends CredentialsSignin {
   code: string;
 
   constructor(message: string) {
-    super(message);        // ini akan menjadi isi `.message`
-    this.code = message;   // ini isi `.code`, bisa berbeda kalau mau
+    super(message); // ini akan menjadi isi `.message`
+    this.code = message; // ini isi `.code`, bisa berbeda kalau mau
     this.name = "InvalidLoginError";
   }
 }
@@ -30,36 +31,38 @@ export const config: NextAuthConfig = {
   providers: [
     CredentialsProvider({
       credentials: {
-        email: { type: 'email' },
-        password: { type: 'password'},
+        email: { type: "email" },
+        password: { type: "password" },
       },
-      async authorize(credentials){
-        if(credentials == null) throw new InvalidLoginError("There is no credentials")
+      async authorize(credentials) {
+        if (credentials == null) throw new InvalidLoginError("There is no credentials");
 
         const user = await prisma.user.findFirst({
           where: {
-            email: credentials.email as string
-          }
-        })
+            email: credentials.email as string,
+          },
+        });
 
-        if(!user || !user.password) throw new InvalidLoginError("This user is not exist")
+        if (!user || !user.password) throw new InvalidLoginError("This user is not exist");
 
-        const isMatches = compareSync(credentials.password as string, user.password)
+        const isMatches = compareSync(credentials.password as string, user.password);
 
-        if(!isMatches) throw new InvalidLoginError("Invalid password or email")
+        if (!isMatches) throw new InvalidLoginError("Invalid password or email");
 
-        if(user.emailVerified == null) throw new InvalidLoginError("Please verify your email first")
+        if (user.emailVerified == null)
+          throw new InvalidLoginError("Please verify your email first");
 
         return {
           id: user.id,
           name: user.name,
           email: user.email,
-          role: user.role
-        }
-      }
+          role: user.role,
+        };
+      },
     }),
   ],
   callbacks: {
+    ...authConfig.callbacks,
     async signIn({ user, account }) {
       if (account?.provider !== "credentials") {
         return true;
@@ -73,17 +76,8 @@ export const config: NextAuthConfig = {
 
       return true;
     },
-    async session({ session, user, token, trigger }: any) {
-      session.user.id = token.sub;
-      session.user.role = token.role;
-      session.user.name = token.name;
-
-      if (trigger === "update") {
-        session.user.name = user.name;
-      }
-      return session;
-    },
-    async jwt({ token, user, trigger, session }: any) {
+    async jwt({ token, user, trigger, session }) {
+      console.log("this is the user")
       if (user) {
         token.role = user.role;
         token.id = user.id;

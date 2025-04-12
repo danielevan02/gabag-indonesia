@@ -7,8 +7,10 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: 'Home',
-  description: 'Temukan Gabag! pompa ASI dan tas cooler premium untuk ibu modern. Praktis, stylish, dan sempurna untuk kebutuhan menyusui di mana saja!'
+  description: 'Temukan Gabag! pompa ASI dan tas cooler premium untuk ibu modern. Praktis, stylish, dan sempurna untuk kebutuhan menyusui di mana saja!',
+  openGraph: {
+    type: 'website'
+  }
 }
 
 const HomePage = async () => {
@@ -132,7 +134,7 @@ const HomePage = async () => {
         <hr className="mb-2 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-900 to-transparent opacity-25 dark:via-white" />
         <div className="flex flex-col md:flex-row gap-10 md:gap-5 lg:gap-5">
           {newArrival.map((product) => (
-            <Link href={`/products/${product.slug}`} key={product.slug} className="w-full">
+            <Link href={`/products/${product.slug}`} key={product.slug} className="w-full" prefetch>
               <Image
                 src={product.images[0]}
                 alt={product.name}

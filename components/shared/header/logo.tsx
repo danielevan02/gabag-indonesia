@@ -17,7 +17,6 @@ const Logo = () => {
     return (
       <div className="flex flex-col gap-1">
         <Skeleton className="rounded-lg w-44 h-10"/>
-        <Skeleton className="rounded-lg h-5"/>
       </div>
     )// Placeholder saat loading
   }

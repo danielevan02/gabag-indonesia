@@ -4,7 +4,7 @@ import { auth, signIn, signOut } from "@/auth"
 import { redirect } from "next/navigation";
 import { prisma } from "../db/prisma";
 import { Address } from "@/types";
-import { convertToPlainObject, formatError } from "../utils";
+import { convertToPlainObject } from "../utils";
 import { SignUpType } from "@/app/(auth)/sign-up/sign-up-form";
 import {hash} from 'bcrypt-ts-edge'
 import {v4 as uuidv4} from 'uuid'
@@ -71,7 +71,7 @@ export async function registerUser(data: SignUpType) {
       }
     })
 
-    if(existUser&&existUser.emailVerified) throw new Error('This email is already in used, please use another email')
+    if(existUser&&existUser.emailVerified) throw 'This email is already in used, please use another email'
     
     const existPhone = await prisma.user.findFirst({
       where: {
@@ -79,7 +79,7 @@ export async function registerUser(data: SignUpType) {
       }
     })
 
-    if(existPhone&&existPhone.emailVerified) throw new Error("This phone number is already used, please use another number")
+    if(existPhone&&existPhone.emailVerified) throw "This phone number is already used, please use another number"
     
     const email = data.email.toLowerCase()
 
@@ -115,7 +115,6 @@ export async function registerUser(data: SignUpType) {
       message: 'Email verification is sent'
     }
   } catch (error) {
-    console.log(formatError(error))
     return {
       success: false,
       message: error

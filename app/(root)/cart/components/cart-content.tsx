@@ -18,9 +18,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import toast from "react-hot-toast";
 import { createOrder } from "@/lib/actions/order.action";
 import { Cart } from "@prisma/client";
+import { toast } from "sonner";
 
 interface CartContentProps {
   cart: Cart;

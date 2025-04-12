@@ -1,11 +1,12 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff } from "lucide-react";
-import { HTMLInputTypeAttribute, useState } from "react";
+import { CircleAlert, Eye, EyeOff } from "lucide-react";
+import { CSSProperties, HTMLInputTypeAttribute, useState } from "react";
 import { Control, Controller, FieldErrors, FieldValues, Path, UseFormRegister } from "react-hook-form";
-import PhoneInput from 'react-phone-number-input'
+import {PhoneInput} from 'react-international-phone'
+import 'react-international-phone/style.css';
 
-type FormFieldProps<TFieldValues extends FieldValues> = {
+interface FormFieldProps<TFieldValues extends FieldValues> {
   label: string;
   placeholder?: string;
   type?: HTMLInputTypeAttribute;
@@ -29,9 +30,32 @@ export function FormField<TFieldValues extends FieldValues>({
   type
 }:FormFieldProps<TFieldValues>) {
   const [passShown, setPassShown] = useState(false);
+
+  const phoneInputStyle: CSSProperties = {
+    width: '100%',
+    borderColor: 'black',
+    borderTopRightRadius: 7,
+    borderBottomRightRadius: 7,
+    paddingTop: 23,
+    paddingBottom: 23,
+    fontSize: 16
+  }
+
+  const phoneCountrySelectorStyle = {
+    buttonStyle: {
+      borderColor: 'black',
+      borderTopLeftRadius: 7,
+      borderBottomLeftRadius: 7,
+      paddingTop: 23,
+      paddingBottom: 23,
+      paddingLeft: 10,
+      paddingRight: 10,
+    }
+  }
+
   return (
     <div className="flex flex-col gap-2 mb-5">
-      <Label htmlFor={name} className="text-lg">
+      <Label htmlFor={name} className="text-sm">
         {label}
       </Label>
       {isPhone&&control ? (
@@ -40,12 +64,11 @@ export function FormField<TFieldValues extends FieldValues>({
           name={name}
           render={({ field }) => (
             <PhoneInput
-              international
-              className="border rounded-md py-3 pl-3 border-black dark:bg-neutral-900"
-              defaultCountry="ID"
-              autoComplete="phone"
+              defaultCountry="id"
               value={field.value}
               onChange={field.onChange}
+              inputStyle={phoneInputStyle}
+              countrySelectorStyleProps={phoneCountrySelectorStyle}
             />
           )}
         />
@@ -55,7 +78,7 @@ export function FormField<TFieldValues extends FieldValues>({
             id={name}
             type={passShown ? "text" : "password"}
             placeholder={placeholder}
-            className="border-black peer py-6"
+            className="border-black py-6 text-xs"
             {...(register ? register(name) : {})}
           />
           {passShown ? (
@@ -69,12 +92,15 @@ export function FormField<TFieldValues extends FieldValues>({
           id={name}
           type={type}
           placeholder={placeholder}
-          className="border-black peer py-6"
+          className="border-black py-6 text-xs"
           {...(register ? register(name) : {})}
         />
       )}
       {errors?.[name] && (
-        <p className="text-xs text-red-600">{errors[name]?.message as string}</p>
+        <p className="text-xs text-red-600 flex items-center gap-1">
+          <CircleAlert className="w-3 h-3"/>
+          {errors[name]?.message as string}
+        </p>
       )}
     </div>
   );

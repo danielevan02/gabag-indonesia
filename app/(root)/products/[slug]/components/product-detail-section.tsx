@@ -11,7 +11,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 import { toast } from "sonner";
-import { toast as hotToast } from "react-hot-toast";
 
 const ProductDetailSection = ({ product }: { product: FullProductType }) => {
   const router = useRouter();
@@ -34,7 +33,7 @@ const ProductDetailSection = ({ product }: { product: FullProductType }) => {
 
   const handleAddToCart = async () => {
     if (product.hasVariant && !variant) {
-      return hotToast.error("Please select one variant");
+      return toast.error("Please select one variant");
     }
     setIsLoading(true);
     const res = await addToCart({

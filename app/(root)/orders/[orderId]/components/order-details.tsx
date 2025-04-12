@@ -8,7 +8,7 @@ import { FullOrderType, ShippingInfo } from "@/types";
 import { format } from "date-fns";
 import Image from "next/image";
 import Script from "next/script";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 declare global {
   interface Window {
@@ -36,20 +36,20 @@ const OrderDetails = ({ order }: { order: FullOrderType }) => {
       />
       <div className="flex-1 p-5 overflow-hidden lg:max-w-xl flex flex-col gap-12 lg:border-r-1">
         <div>
-          <h1 className="text-xl font-semibold mb-5">Order Details</h1>
-          <div className="grid grid-cols-2 gap-y-5">
+          <h1 className="text-xl font-semibold mb-5">Order Info</h1>
+          <div className="grid grid-cols-3 gap-y-5">
             <p className="col-span-1 text-sm">Email</p>
-            <p className="col-span-1 text-sm">{shippingInfo.email}</p>
+            <p className="col-span-2 text-sm text-end">{shippingInfo.email}</p>
             <p className="col-span-1 text-sm">Name</p>
-            <p className="col-span-1 text-sm">{shippingInfo.name}</p>
+            <p className="col-span-2 text-sm text-end">{shippingInfo.name}</p>
             <p className="col-span-1 text-sm">Address</p>
-            <p className="col-span-1 text-sm">{shippingInfo.address}</p>
+            <p className="col-span-2 text-sm text-end">{shippingInfo.address}</p>
             <p className="col-span-1 text-sm">Phone</p>
-            <p className="col-span-1 text-sm">{shippingInfo.phone}</p>
+            <p className="col-span-2 text-sm text-end">{shippingInfo.phone}</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-y-12">
+        <div className="grid grid-cols-2 gap-y-12 gap-x-10 md:gap-x-0">
           <div className="col-span-1">
             <h3 className="mb-3 font-semibold">Courier</h3>
             <p className="uppercase">{order.courier}</p>
@@ -60,19 +60,19 @@ const OrderDetails = ({ order }: { order: FullOrderType }) => {
           </div>
           <div className="col-span-1">
             <h3 className="mb-3 font-semibold">Order Created</h3>
-            <p>{format(order.createdAt, "EEEE, d MMMM yyyy")}</p>
+            <p className="text-sm">{format(order.createdAt, "EEEE, d MMMM yyyy")}</p>
           </div>
           <div className="col-span-1">
             <h3 className="mb-3 font-semibold">Order Notes</h3>
-            <Textarea disabled value={order.notes || "There is no notes"} />
+            <Textarea disabled className="text-sm" value={order.notes || "There is no notes"} />
           </div>
           <div className="col-span-1">
             <h3 className="mb-3 font-semibold">Delivery Status</h3>
-            <p>{order.isDelivered ? "On Delivery" : "Not Delivered"}</p>
+            <p className="text-sm">{order.isDelivered ? "On Delivery" : "Not Delivered"}</p>
           </div>
           <div className="col-span-1">
             <h3 className="mb-3 font-semibold">Paid At</h3>
-            <p>
+            <p className="text-sm">
               {order.isPaid && order.paidAt
                 ? format(order.paidAt, "dd/MM/yyyy HH:mm:ss")
                 : "Not Paid"}
@@ -104,7 +104,7 @@ const OrderDetails = ({ order }: { order: FullOrderType }) => {
         )}
       </div>
       <div className="block lg:sticky top-36 right-0 overflow-hidden flex-1 lg:max-w-lg p-5 h-fit">
-        <h2 className="font-semibold text-lg mb-5">Your Items</h2>
+        <h2 className="font-semibold text-lg mb-5">Your Order</h2>
         <div className="flex flex-col gap-3 max-h-72 overflow-scroll pt-1">
           {order.orderItems.map((item, index) => (
             <div className="flex gap-2 justify-between" key={index}>
@@ -145,7 +145,7 @@ const OrderDetails = ({ order }: { order: FullOrderType }) => {
           </div>
           <div className="flex justify-between items-center">
             <p className="text-lg font-semibold">Total</p>
-            <p className="text-2xl font-semibold">Rp {Number(order.totalPrice).toLocaleString()}</p>
+            <p className="text-xl md:text-2xl font-semibold">Rp {Number(order.totalPrice).toLocaleString()}</p>
           </div>
         </div>
       </div>
