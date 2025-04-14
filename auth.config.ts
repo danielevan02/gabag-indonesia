@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { type NextAuthConfig } from "next-auth";
 import { NextResponse } from "next/server";
 
@@ -34,17 +33,5 @@ export const authConfig = {
 
       return true;
     },
-    
-    async session({ session, user, token, trigger }: any) {
-      session.user.id = token.sub;
-      session.user.role = token.role;
-      session.user.name = token.name;
-
-      if (trigger === "update") {
-        session.user.name = user.name;
-      }
-      return session;
-    },
-    
   },
 } satisfies NextAuthConfig;

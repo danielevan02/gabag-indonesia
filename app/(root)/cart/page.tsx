@@ -13,10 +13,12 @@ export const metadata: Metadata = {
 };
 
 const CartPage = async () => {
-  const cart = await getMyCart();
-  const session = await auth();
+  const [cart, session, products] = await Promise.all([
+    getMyCart(),
+    auth(),
+    getProductByCategory("Cooler Bag"),
+  ]);
   const user = await getUserById(session?.user?.id);
-  const products = await getProductByCategory("Cooler Bag");
 
   if (!cart) {
     return (

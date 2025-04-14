@@ -24,9 +24,12 @@ export async function generateMetadata({ params }: { params: tParams }): Promise
 
 const OrderDetailPage = async ({ params }: { params: tParams }) => {
   const { orderId }: { orderId: string } = await params;
-  const order = await getOrderById(orderId)
-  const user = await getCurrentUser();
-  const cart = await getMyCart();
+  
+  const [order, user, cart] = await Promise.all([
+    getOrderById(orderId),
+    getCurrentUser(),
+    getMyCart()
+  ])
 
   return (
     <div

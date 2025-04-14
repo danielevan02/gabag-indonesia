@@ -4,9 +4,9 @@ export const defaultLogin = {
 }
 
 export const defaultSignUp = {
-  email: 'danielevan454@gmail.com',
-  fullName: 'Daniel Evan Khalfany',
-  password: 'daniel123456',
-  phone: '+6281297496456',
-  confirmPassword: 'daniel123456'
+  email: 'leovieni@gmail.com',
+  fullName: 'Leovieni Arzella',
+  password: 'leovieni123456',
+  phone: '+6281280876039',
+  confirmPassword: 'leovieni123456'
 }

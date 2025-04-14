@@ -14,30 +14,21 @@ const HomeCarousel = ({slideDuration}: {slideDuration?: number}) => {
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  if (!mounted) {
-    return (
-      <div className="flex flex-col gap-1">
-        <Skeleton className="rounded-lg w-[85%] h-72 mx-auto"/>
-        <div className="flex gap-1 w-[85%] mx-auto">
-          <Skeleton className="rounded-full w-20 h-18"/>
-          <div className="flex flex-col gap-1 w-full">
-            <Skeleton className="rounded-lg h-20 "/>
-            <Skeleton className="rounded-lg h-10 w-full mx-auto"/>
-          </div>
-          <Skeleton className="rounded-full w-20 h-18"/>
-        </div>
-        <Skeleton className="rounded-lg h-52 w-[85%] mx-auto"/>
-      </div>
-    )// Placeholder saat loading
-  }
+  
   const carouselImg = [
     {desktop: 'dummy1.png', mobile: 'mobiledummy1.png'},
     {desktop: 'dummy2.png', mobile: 'mobiledummy2.png'},
     {desktop: 'dummy3.jpg', mobile: 'mobiledummy3.jpg'},
   ]
+  if (!mounted) {
+    return (
+      <div className="flex flex-col gap-1 mt-5">
+        <Skeleton className="rounded-lg w-[85%] h-[555px] lg:h-[700px] mx-auto"/>
+      </div>
+    )// Placeholder saat loading
+  }
   return (
-    <div className="w-[85%] m-auto mt-2">
+    <div className="w-[85%] m-auto mt-5">
       <Carousel
         plugins={[
           Autoplay({

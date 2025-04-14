@@ -4,15 +4,15 @@ import GbgVerifyEmail from ".";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const domain = process.env.URL || "http://localhost:3000";
+const domain = process.env.BASE_URL || "http://localhost:3000";
 
 export const sendVerificationEmail = async (email: string, token: string) => {
   const verificationLink = `${domain}/verify-email?token=${token}`;
 
   await resend.emails.send({
-    from: "onboarding@resend.dev",
+    from: "Gabag Indonesia <no-reply@gabag-indonesia.com>",
     to: email,
-    subject: "Verify your email",
+    subject: "Verify Your Email",
     html: await render(GbgVerifyEmail({verificationLink}))
   });
 };

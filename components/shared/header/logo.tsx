@@ -16,7 +16,7 @@ const Logo = () => {
   if (!mounted) {
     return (
       <div className="flex flex-col gap-1">
-        <Skeleton className="rounded-lg w-44 h-10"/>
+        <Skeleton className="rounded-lg w-32 lg:w-44 h-10 lg:h-[69px]"/>
       </div>
     )// Placeholder saat loading
   }

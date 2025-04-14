@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Boxes, ClipboardList, HomeIcon, Info, LucideIcon, User } from "lucide-react";
+import { Boxes, ClipboardList, HomeIcon, Info, LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -15,10 +15,11 @@ const NavLinks = ({device}: {device: string}) => {
   const path = usePathname();
   const links: LinkType[] = [
     { label: "Home", link: "/", icon: HomeIcon },
-    { label: "Product", link: "/products", icon: Boxes },
+    { label: "Mother", link: "/products", icon: Boxes },
+    { label: "Kids", link: "/products/kids", icon: Boxes },
+    { label: "Beauty", link: "/products/beauty", icon: Boxes },
     { label: "Order", link: "/orders", icon: ClipboardList },
     { label: "About", link: "/about", icon: Info },
-    { label: "Profile", link: "/profile", icon: User },
   ];
   if(device === 'desktop'){
     return (

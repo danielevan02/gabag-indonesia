@@ -17,6 +17,7 @@ import SearchBar from "./search-bar";
 import { auth } from "@/auth";
 import CredentialsButton from "./credentials-button";
 import { getMyCart } from "@/lib/actions/cart.action";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Header = async () => {
   const session = await auth()
@@ -64,7 +65,9 @@ const Header = async () => {
 
         <NavLinks device="desktop" />
 
-        <div className="hidden lg:flex gap-5">
+        <div className="hidden lg:flex gap-12 items-center">
+          <ModeToggle />
+
           <Link
             href="/cart"
             className="hover:bg-accent relative rounded-lg w-10 h-10 flex items-center justify-center transition-all group"
@@ -74,9 +77,15 @@ const Header = async () => {
             </div>
             <ShoppingBag />
           </Link>
-          <ModeToggle />
+
           
-          <CredentialsButton user={user!}/>
+          <Link href='/profile'>
+            <Avatar className="w-10 h-10">
+              <AvatarImage src={user?.image || ''} alt={user?.name||"User"}/>
+              <AvatarFallback className="bg-orange-600 text-white">{user?.name?.charAt(0)}</AvatarFallback>
+            </Avatar>
+          </Link>
+          {/* <CredentialsButton user={user!}/> */}
         </div>
 
         {/* MOBILE CART BUTTON */}

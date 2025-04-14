@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import NextAuth, { CredentialsSignin, type NextAuthConfig } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./lib/db/prisma";
@@ -77,7 +76,6 @@ export const config: NextAuthConfig = {
       return true;
     },
     async jwt({ token, user, trigger, session }) {
-      console.log("this is the user")
       if (user) {
         token.role = user.role;
         token.id = user.id;
@@ -127,6 +125,16 @@ export const config: NextAuthConfig = {
       }
 
       return token;
+    },
+    async session({ session, user, token, trigger }) {
+      session.user.id = token.sub!;
+      session.user.role = token.role as string;
+      session.user.name = token.name;
+
+      if (trigger === "update") {
+        session.user.name = user.name;
+      }
+      return session;
     },
   },
 } satisfies NextAuthConfig;

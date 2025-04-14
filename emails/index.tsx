@@ -18,7 +18,7 @@ interface GbgVerifyEmailProps {
   verificationLink?: string;
 }
 
-const baseUrl = process.env.URL || "http://localhost:3000"
+const baseUrl = process.env.BASE_URL || "http://localhost:3000"
 
 export default function GbgVerifyEmail({ verificationLink }: GbgVerifyEmailProps) {
   return (
@@ -30,7 +30,7 @@ export default function GbgVerifyEmail({ verificationLink }: GbgVerifyEmailProps
           <Section style={coverSection}>
             <Section style={imageSection}>
               <Img
-                src={`${baseUrl}/images/black-logo.png`}
+                src={`${baseUrl}/images/white-logo.png`}
                 width="300"
                 height="100"
                 alt="Gabag's Logo"

@@ -35,7 +35,6 @@ const CredentialsButton = ({user}: {user: User}) => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <p className="text-xs">Welcome back, {user?.name?.split(" ")[0]}</p>
         </div>
         <form action={signOutUser} className="flex lg:hidden">
           <Button variant='destructive' className="w-full uppercase tracking-widest">Log out</Button>
