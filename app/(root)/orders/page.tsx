@@ -43,7 +43,7 @@ const OrderPage = async () => {
                   <TableCell> <Badge>{order.isDelivered ? "delivered" : "not delivered"}</Badge></TableCell>
                   <TableCell>{orderDate}</TableCell>
                   <TableCell className="text-end">
-                    <Link href={`/orders/${order.id}`} className="underline">{order.paymentStatus !== 'pending' ? "See Details" : "Pay Now"}</Link>
+                    <Link prefetch href={`/orders/${order.id}`} className="underline">{order.paymentStatus !== 'pending' ? "See Details" : "Pay Now"}</Link>
                   </TableCell>
                 </TableRow>
               )

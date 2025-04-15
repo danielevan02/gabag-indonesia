@@ -9,6 +9,7 @@ import { SignUpType } from "@/app/(auth)/sign-up/sign-up-form";
 import {hash} from 'bcrypt-ts-edge'
 import {v4 as uuidv4} from 'uuid'
 import { sendVerificationEmail } from "@/emails/send-verification";
+import { revalidatePath } from "next/cache";
 
  
 export async function signInWithCredetials(data: {email: string; password: string;}) {
@@ -211,5 +212,51 @@ export async function getCurrentUser(){
       ...user,
       address: user.address as Address
     })
+  }
+}
+
+export async function updateProfile({name, phone, photo, userId}: {name?: string; phone?: string; photo?: string; userId: string}) {
+  try {
+    await prisma.user.update({
+      where: {id: userId},
+      data: {
+        ...(name !== undefined && { name }),
+        ...(phone !== undefined && { phone }),
+        ...(photo !== undefined && { photo }),
+      },
+    })
+
+    revalidatePath('/profile')
+
+    return {
+      success: true,
+      message: 'Update success!'
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: error
+    }
+  }
+}
+
+export async function updateAddress({address, id}:{ id: string; address: Address}) {
+  try {
+    await prisma.user.update({
+      where: {id},
+      data: {
+        address
+      }
+    })
+
+    return {
+      success: true,
+      message: 'Address successfully updated'
+    }
+  } catch (error) {
+    return{
+      success: false,
+      message: error
+    }
   }
 }

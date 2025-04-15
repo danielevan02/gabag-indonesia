@@ -16,13 +16,24 @@ export const signUpSchema = z.object({
   path: ["confirmPassword"],
 })
 
+export const phoneSchema = z.object({
+  phone: z
+    .string()
+    .min(1, 'Phone number is required')
+    .regex(/^\+62[0-9]{9,13}$/, {
+      message: 'Phone number must be start with +62 and consist of 9-13 digit',
+    }),
+});
+
+export const nameSchema = z.string().min(1, 'Name is required')
+
 export const addressSchema = z.object({
   province: z.string().min(1, "Please choose your province"),
   city: z.string().min(1, "Please choose your city"),
   district: z.string().min(1, "Please choose your district"),
   village: z.string().min(1, "Please choose your village"),
   address: z.string().min(1, "Please insert your address"),
-  postalCode: z.string().min(1, "Please insert your postal code").max(5, 'Please insert a valid postal code')
+  postalCode: z.string().max(5, 'Please insert a valid postal code').optional()
 })
 
 export const orderSchema = z.object({

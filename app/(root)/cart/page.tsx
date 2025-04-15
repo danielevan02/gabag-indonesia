@@ -5,7 +5,7 @@ import CartContent from "./components/cart-content";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { getUserById } from "@/lib/actions/user.action";
-import { getProductByCategory } from "@/lib/actions/product.action";
+import { getAllProducts} from "@/lib/actions/product.action";
 import ProductCard from "@/components/shared/product/product-card";
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ const CartPage = async () => {
   const [cart, session, products] = await Promise.all([
     getMyCart(),
     auth(),
-    getProductByCategory("Cooler Bag"),
+    getAllProducts("Cooler Bag")
   ]);
   const user = await getUserById(session?.user?.id);
 
@@ -51,7 +51,7 @@ const CartPage = async () => {
 
       {products && (
         <div className="mt-10">
-          <p className="text-2xl">You Might Also Like</p>
+          <p className="text-lg lg:text-2xl">You Might Also Like</p>
           <div className="flex gap-1 mt-5 md:gap-5 overflow-scroll no-scrollbar snap-x snap-mandatory py-px">
             {products.map((product) => (
               <ProductCard

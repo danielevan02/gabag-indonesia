@@ -25,7 +25,7 @@ const ProductDetailSection = ({ product }: { product: FullProductType }) => {
   const [mainImage, setMainImage] = useState(imagesList[0]);
 
   const categoryDiscount = product?.categories.reduce(
-    (prev, curr) => prev + (curr.discount ?? 0),
+    (prev, curr) => prev + (curr.discount || 0),
     0
   );
   const discount = variant?.discount || product?.discount || categoryDiscount || 0;

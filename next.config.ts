@@ -7,6 +7,9 @@ const bundleAnalyzer = withBundleAnalyzer({
 
 const nextConfig: NextConfig = {
   /* config options here */
+  experimental: {
+    useCache: true
+  },
   images: {
     remotePatterns: [
       {protocol: 'https', hostname: 'www.google.com'}

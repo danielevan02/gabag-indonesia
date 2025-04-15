@@ -15,15 +15,13 @@ const NavLinks = ({device}: {device: string}) => {
   const path = usePathname();
   const links: LinkType[] = [
     { label: "Home", link: "/", icon: HomeIcon },
-    { label: "Mother", link: "/products", icon: Boxes },
-    { label: "Kids", link: "/products/kids", icon: Boxes },
-    { label: "Beauty", link: "/products/beauty", icon: Boxes },
+    { label: "Product", link: "/products", icon: Boxes },
     { label: "Order", link: "/orders", icon: ClipboardList },
     { label: "About", link: "/about", icon: Info },
   ];
   if(device === 'desktop'){
     return (
-      <div className="justify-between gap-5 hidden lg:flex items-center">
+      <div className="justify-center gap-5 hidden lg:flex items-center">
         {links.map(({ icon: Icon, label, link }) => (
           <div key={link} className="relative flex justify-center items-center group">
             <Icon
@@ -33,6 +31,7 @@ const NavLinks = ({device}: {device: string}) => {
               )}
             />
             <Link
+              prefetch
               key={link}
               href={link}
               className={cn("group-hover:opacity-0 transition-all uppercase text-xs tracking-widest", 

@@ -135,24 +135,24 @@ const CartContent: React.FC<CartContentProps> = ({ cart, userId }) => {
 
       {/* SUMMARY SECTION */}
       <div className="flex flex-col lg:max-w-72 md:w-full mt-10 lg:mt-0">
-        <h4 className="text-xl mb-5">Summary</h4>
+        <h4 className="text-lg lg:text-xl mb-2 lg:mb-5">Summary</h4>
         <div className="flex flex-col gap-2">
           <div className="flex w-full justify-between">
-            <p>Subtotal</p>
-            <p>Rp {cart.itemsPrice.toLocaleString()}</p>
+            <p className="text-sm lg:text-base">Subtotal</p>
+            <p className="text-sm lg:text-base">Rp {cart.itemsPrice.toLocaleString()}</p>
           </div>
 
           <div className="flex w-full justify-between">
-            <p>Tax Price</p>
-            <p>Rp {cart.taxPrice.toLocaleString()}</p>
+            <p className="text-sm lg:text-base">Tax Price</p>
+            <p className="text-sm lg:text-base">Rp {cart.taxPrice.toLocaleString()}</p>
           </div>
 
-          <p className="text-xs text-neutral-600">Shipping price calculated at checkout.</p>
+          <p className="text-xs text-neutral-400 font-semibold">Shipping price calculated at checkout.</p>
 
           <hr className="mt-3" />
           <div className="flex w-full justify-between">
-            <p className="font-bold">Total</p>
-            <p className="font-semibold">Rp {cart.totalPrice.toLocaleString()}</p>
+            <p className="text-sm lg:text-base font-semibold">Total</p>
+            <p className="text-sm lg:text-base font-semibold">Rp {cart.totalPrice.toLocaleString()}</p>
           </div>
           <hr />
 
@@ -161,6 +161,7 @@ const CartContent: React.FC<CartContentProps> = ({ cart, userId }) => {
             <Input
               placeholder="enter your order notes (optional)"
               type="text"
+              className="text-xs"
               onBlur={(e) => setNotes(e.target.value)}
             />
           </div>

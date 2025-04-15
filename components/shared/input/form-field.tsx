@@ -16,6 +16,7 @@ interface FormFieldProps<TFieldValues extends FieldValues> {
   isPassword?: boolean;
   isPhone?: boolean;
   name: Path<TFieldValues>
+  disable?: boolean
 }
 
 export function FormField<TFieldValues extends FieldValues>({
@@ -27,7 +28,8 @@ export function FormField<TFieldValues extends FieldValues>({
   isPhone,
   placeholder,
   register,
-  type
+  type,
+  disable
 }:FormFieldProps<TFieldValues>) {
   const [passShown, setPassShown] = useState(false);
 
@@ -54,7 +56,7 @@ export function FormField<TFieldValues extends FieldValues>({
   }
 
   return (
-    <div className="flex flex-col gap-2 mb-5">
+    <div className="flex flex-col gap-2 mb-5 flex-1">
       <Label htmlFor={name} className="text-sm">
         {label}
       </Label>
@@ -94,6 +96,7 @@ export function FormField<TFieldValues extends FieldValues>({
           placeholder={placeholder}
           className="border-black py-6 text-xs"
           {...(register ? register(name) : {})}
+          disabled={disable}
         />
       )}
       {errors?.[name] && (

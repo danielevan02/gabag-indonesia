@@ -5,10 +5,13 @@ import { getMyCart } from "./cart.action";
 import { prisma } from "../db/prisma";
 import { convertToPlainObject, formatError } from "../utils";
 import { CartItem, ItemDetail, ShippingInfo } from "@/types";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_cacheLife as cacheLife, unstable_cacheTag as cacheTag, revalidateTag } from "next/cache";
 import { createTransaction } from "../midtrans/transaction";
 
 export async function getAllOrders(userId?: string) {
+  'use cache'
+  cacheTag('orders')
+  cacheLife('days')
   if (userId) {
     return prisma.order.findMany({
       where: {
@@ -18,7 +21,11 @@ export async function getAllOrders(userId?: string) {
         }
       },
       include: {
-        orderItems: true,
+        orderItems: {
+          select: {
+            id: true
+          }
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -34,6 +41,10 @@ export async function getAllOrders(userId?: string) {
 }
 
 export async function getOrderById(orderId: string) {
+  'use cache'
+  cacheTag('orderById')
+  cacheLife('days')
+
   const order = await prisma.order.findFirst({
     where: { id: orderId },
     include: { orderItems: true },
@@ -213,7 +224,7 @@ export async function finalizeOrder({
             orderItems: true
           }
         });
-
+        revalidateTag('orderById')
         if (!updatedOrder) throw new Error("There is no order found");
 
         
@@ -277,6 +288,7 @@ export async function updatePaymentStatus({orderId, paymentStatus}:UpdatePayment
           orderItems: true
         }
       })
+      revalidateTag('orderById')
 
       if (['capture', 'settlement'].includes(paymentStatus)) {
         for (const item of order.orderItems) {
@@ -289,6 +301,7 @@ export async function updatePaymentStatus({orderId, paymentStatus}:UpdatePayment
                 },
               },
             });
+            revalidateTag('products')
           } else {
             await tx.product.update({
               where: { id: item.productId },
@@ -298,6 +311,7 @@ export async function updatePaymentStatus({orderId, paymentStatus}:UpdatePayment
                 },
               },
             });
+            revalidateTag('products')
           }
         }
       }

@@ -1,8 +1,13 @@
 'use server'
 
+import { unstable_cacheLife as cacheLife, unstable_cacheTag as cacheTag } from "next/cache";
 import { prisma } from "../db/prisma"
+import { convertToPlainObject } from "../utils";
 
 export async function getAllCategories(){
+  'use cache'
+  cacheTag('categories')
+  cacheLife('days')
   return await prisma.category.findMany()
 }
 
@@ -14,8 +19,11 @@ export async function getAllProducts(
   sort?: string,
   price?: { min?: string; max?: string }
 ) {
-  
-  return await prisma.product.findMany({
+  'use cache'
+  cacheTag("products")
+  cacheLife('days')
+
+  const products = await prisma.product.findMany({
     where: {
       AND: [
         // Filter berdasarkan kategori (cari produk yang memiliki kategori dengan nama tertentu)
@@ -58,28 +66,23 @@ export async function getAllProducts(
     include: {
       categories: true,
     },
+
     orderBy: sort ? {
       createdAt: 'desc'
     } : {
       name: 'asc'
     }
-  });
-}
-
-export async function getProductByCategory(categoryName: string) {
-  return await prisma.product.findMany({
-    where: {
-      categories: {
-        some: {
-          name: categoryName,
-        }
-      },
-    },
-    include: {
-      categories: true,
-      variant: true
-    }
   })
+
+  return (
+    products.map(product => ({
+      ...product,
+      weight: product.weight ? Number(product.weight) : null,
+      width: product.width ? Number(product.width) : null,
+      height: product.height ? Number(product.height) : null,
+      length: product.length ? Number(product.length) : null,
+    }))
+  )
 }
 
 export async function searchProduct(keyword:string) {
@@ -101,23 +104,45 @@ export async function searchProduct(keyword:string) {
 }
 
 export async function getProductBySlug(slug:string) {
-  return await prisma.product.findFirst({
+  'use cache'
+  cacheTag('productBySlug')
+  cacheLife('days')
+
+  const product = await prisma.product.findFirst({
     where: {
       slug
     },
     include: {
       categories: true,
-      variant: true
+      variant: true,
     }
   })
+  
+  return (
+    convertToPlainObject({
+      ...product,
+      weight: product?.weight ? Number(product.weight) : null,
+      width: product?.width ? Number(product.width) : null,
+      height: product?.height ? Number(product.height) : null,
+      length: product?.length ? Number(product.length) : null,
+    })
+  )
 }
 
 export async function getNewArrivalProduct() {
+  'use cache'
+  cacheTag('newArrivalProducts')
+  cacheLife('days')
   return await prisma.product.findMany({
     orderBy: {
       createdAt: 'desc'
     },
+    select: {
+      name: true,
+      price: true,
+      slug: true,
+      images: true
+    },
     take: 2
   })
 }
-

@@ -1,23 +1,15 @@
-
 import React from "react";
 import NavLinks from "./nav-links";
 import { ModeToggle } from "./mode-toggle";
 import Logo from "./logo";
 import Link from "next/link";
-import { AlignJustify, ShoppingBag } from "lucide-react";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+import { ShoppingBag } from "lucide-react";
 import SearchBar from "./search-bar";
 import { auth } from "@/auth";
-import CredentialsButton from "./credentials-button";
 import { getMyCart } from "@/lib/actions/cart.action";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import MobileDrawer from "./mobile-drawer";
+import { SessionProvider } from "next-auth/react";
 
 const Header = async () => {
   const session = await auth()
@@ -45,34 +37,27 @@ const Header = async () => {
 
       <div className="flex w-full justify-between px-5 lg:px-10 pb-2">
         {/* MENU BUTTON VISIBLE FOR MOBILE SCREEN */}
-        <Drawer>
-          <DrawerTrigger className="lg:hidden">
-            <AlignJustify />
-          </DrawerTrigger>
-          <DrawerContent className="px-10">
-            <DrawerHeader className="flex-row items-center justify-between">
-              <DrawerTitle className="w-min">Menu</DrawerTitle>
-              <ModeToggle />
-            </DrawerHeader>
-            <NavLinks device="mobile" />
-            <DrawerFooter>
-              <CredentialsButton user={user!} />
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
+        {/* @ts-expect-error Server Component doesn't accept Client component like SessionProvider directly */}
+        <SessionProvider session={session}>
+          <MobileDrawer/>
+        </SessionProvider>
 
-        <SearchBar />
+        <div className="w-1/3">
+          <SearchBar />
+        </div>
+        
+        <div className="w-1/3 flex justify-center items-center">
+          <NavLinks device="desktop" />
+        </div>
 
-        <NavLinks device="desktop" />
-
-        <div className="hidden lg:flex gap-12 items-center">
+        <div className="hidden lg:flex gap-5 justify-end items-center w-1/3">
           <ModeToggle />
 
           <Link
             href="/cart"
             className="hover:bg-accent relative rounded-lg w-10 h-10 flex items-center justify-center transition-all group"
           >
-            <div className="absolute bg-red-700 rounded-full text-white px-1 text-xs -top-0.5 -right-px">
+            <div className="absolute bg-red-700 rounded-full text-white min-w-4 h-4 px-1 text-center text-xs -top-0.5 -right-px">
               {cart?.items.length}
             </div>
             <ShoppingBag />
@@ -85,7 +70,6 @@ const Header = async () => {
               <AvatarFallback className="bg-orange-600 text-white">{user?.name?.charAt(0)}</AvatarFallback>
             </Avatar>
           </Link>
-          {/* <CredentialsButton user={user!}/> */}
         </div>
 
         {/* MOBILE CART BUTTON */}
