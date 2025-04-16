@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import {useSession} from 'next-auth/react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const MobileDrawer = () => {
   const pathname = usePathname()
@@ -33,16 +34,27 @@ const MobileDrawer = () => {
         </DrawerHeader>
         <NavLinks device="mobile" />
         <DrawerFooter>
-          <Link prefetch href='/profile' className="flex items-center justify-between gap-2 bg-blue-50 dark:bg-blue-950 p-1 rounded-full w-full">
-            <div className="flex items-center gap-2">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={user?.image||""} alt={user?.name||""}/>
-                <AvatarFallback className="bg-black text-white dark:bg-white dark:text-black">{splitName![0].charAt(0) + splitName![1].charAt(0)}</AvatarFallback>
-              </Avatar>
-              <p className="text-sm line-clamp-1">{user?.name}</p>
+          {user ? (
+            <Link prefetch href='/profile' className="flex items-center justify-between gap-2 bg-blue-50 dark:bg-blue-950 p-1 rounded-full w-full">
+              <div className="flex items-center gap-2">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={user?.image||""} alt={user?.name||""}/>
+                  <AvatarFallback className="bg-black text-white dark:bg-white dark:text-black">{splitName![0].charAt(0) + splitName![1].charAt(0)}</AvatarFallback>
+                </Avatar>
+                <p className="text-sm line-clamp-1">{user?.name}</p>
+              </div>
+              <Pencil className="h-4 w-4 mr-3"/>
+            </Link>
+          ):(
+            <div className="flex flex-col gap-2">
+              <Button asChild className="tracking-widest">
+                <Link href={'/sign-in'}>Login</Link>
+              </Button>
+              <Button variant="outline" asChild className="tracking-widest">
+                <Link href={'/sign-up'}>Sign Up</Link>
+              </Button>
             </div>
-            <Pencil className="h-4 w-4 mr-3"/>
-          </Link>
+          )}
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

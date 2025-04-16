@@ -10,6 +10,7 @@ import { getMyCart } from "@/lib/actions/cart.action";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import MobileDrawer from "./mobile-drawer";
 import { SessionProvider } from "next-auth/react";
+import { Button } from "@/components/ui/button";
 
 const Header = async () => {
   const session = await auth()
@@ -62,13 +63,23 @@ const Header = async () => {
             <ShoppingBag />
           </Link>
 
-          
+          {!session ? (
+            <div className="flex gap-2">
+              <Button asChild className="tracking-widest">
+                <Link href={'/sign-in'}>Login</Link>
+              </Button>
+              <Button variant="outline" asChild className="tracking-widest">
+                <Link href={'/sign-up'}>Sign Up</Link>
+              </Button>
+            </div>
+          ):(
           <Link href='/profile'>
             <Avatar className="w-10 h-10">
               <AvatarImage src={user?.image || ''} alt={user?.name||"User"}/>
               <AvatarFallback className="bg-orange-600 text-white">{user?.name?.charAt(0)}</AvatarFallback>
             </Avatar>
           </Link>
+          )}
         </div>
 
         {/* MOBILE CART BUTTON */}
