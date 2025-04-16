@@ -15,7 +15,10 @@ export type User = Omit<UserPrisma, "address"> & {
 
 export type FullProductType = Product & {
   variant: Variant[];
-  categories: Category[]
+  categories: Category[];
+  orderItem: {
+    qty: number
+  }[]
 }
 
 type OrderItem = Omit<PrismaOrderItem, "weight"> & {

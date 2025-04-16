@@ -112,6 +112,10 @@ type PaymentProps = {
   cartItem: CartItem[];
 };
 
+export async function revalidateData(path:string) {
+  revalidateTag(path)
+}
+
 export async function makePayment({
   email,
   name,
@@ -224,7 +228,7 @@ export async function finalizeOrder({
             orderItems: true
           }
         });
-        revalidateTag('orderById')
+        
         if (!updatedOrder) throw new Error("There is no order found");
 
         
@@ -254,6 +258,7 @@ export async function finalizeOrder({
       })
       .catch((e) => console.log("ORDER_FINALIZE_ERROR:", e));
 
+    revalidateTag('orderById')
     revalidatePath("/orders");
 
     return {
@@ -288,7 +293,6 @@ export async function updatePaymentStatus({orderId, paymentStatus}:UpdatePayment
           orderItems: true
         }
       })
-      revalidateTag('orderById')
 
       if (['capture', 'settlement'].includes(paymentStatus)) {
         for (const item of order.orderItems) {
@@ -316,7 +320,7 @@ export async function updatePaymentStatus({orderId, paymentStatus}:UpdatePayment
         }
       }
     })
-
+    revalidateTag('orderById')
     revalidatePath('/orders')
   } catch (error) {
     console.log(formatError(error))

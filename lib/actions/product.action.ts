@@ -115,6 +115,18 @@ export async function getProductBySlug(slug:string) {
     include: {
       categories: true,
       variant: true,
+      orderItem: {
+        where: {
+          order: {
+            paymentStatus: {
+              in: ['settlement', 'capture']
+            }
+          }
+        },
+        select: {
+          qty: true
+        }
+      }
     }
   })
   

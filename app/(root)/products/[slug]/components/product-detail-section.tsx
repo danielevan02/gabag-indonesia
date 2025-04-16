@@ -18,6 +18,8 @@ const ProductDetailSection = ({ product }: { product: FullProductType }) => {
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
+  const sold = product.orderItem.reduce((initial, curr) => curr.qty + initial, 0) || 0
+
   const lowestPrice = Math.min(...product.variant.map((v) => Number(v.price)));
   const [price, setPrice] = useState(lowestPrice === Infinity ? product.price : lowestPrice);
 
@@ -251,8 +253,12 @@ const ProductDetailSection = ({ product }: { product: FullProductType }) => {
           ) : (
             <p className="text-red-600 tracking-wider">Out of stock!</p>
           )}
+          <div className="flex gap-2 my-5">
+            <p>Sold</p>
+            <p className="font-semibold">{sold} item(s)</p>
+          </div>
           <Button
-            className="uppercase tracking-widest rounded-full py-7 w-full mt-5"
+            className="uppercase tracking-widest rounded-full py-7 w-full"
             onClick={handleAddToCart}
             disabled={
               isLoading || (product.hasVariant ? !variant || variant.stock < 1 : product.stock < 1)

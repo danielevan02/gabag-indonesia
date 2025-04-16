@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/actions/user.action";
 import ProfileForm from "./components/profile-form";
 import AddressForm from "./components/address-form";
+import Image from "next/image";
 
 const ProfilePage = async () => {
   const user = await getCurrentUser()
@@ -13,8 +14,18 @@ const ProfilePage = async () => {
             <ProfileForm user={user!} />
             <AddressForm address={user?.address} id={user?.id||""}/>
           </div>
-          <div className="bg-blue-600 w-full max-w-2xl">
-            
+          <div className="relative w-full max-w-2xl">
+            <div className="lg:sticky lg:top-1/2 lg:-translate-y-1/2 w-full flex justify-center">
+              <div className="rounded-full w-1/2 min-w-72 overflow-hidden">
+                <Image
+                  src={user?.image || '/images/user-placeholder.png'}
+                  alt={user?.name||'User Profile'}
+                  width={720}
+                  height={720}
+                  className="object-cover"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

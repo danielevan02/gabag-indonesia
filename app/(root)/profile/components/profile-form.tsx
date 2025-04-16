@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { updateProfile } from "@/lib/actions/user.action";
 import { nameSchema, phoneSchema } from "@/lib/schema";
 import { User } from "@/types";
-import { Pencil } from "lucide-react";
+import { Loader, Pencil } from "lucide-react";
 import { HTMLInputTypeAttribute, useState } from "react";
 import { toast } from "sonner";
 
@@ -42,82 +42,77 @@ interface ProfileItemProps {
 
 const ProfileItem = ({ label, value, editable, type = "text", userId }: ProfileItemProps) => {
   const [onEdit, setOnEdit] = useState(false);
-  const [phone, setPhone] = useState(value)
-  const [name, setName] = useState(value)
-  const [isLoading, setIsLoading] = useState(false)
-  
+  const [fieldValue, setFieldValue] = useState(value);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const isName = label.toLowerCase() === "name";
+  const isPhone = label.toLowerCase() === "phone";
+
   const handleSubmit = async () => {
-    setIsLoading(true)
-    if(label.toLowerCase() === 'name'){
-      const testName = nameSchema.safeParse(name)
+    setIsLoading(true);
 
-      if(!testName.success) {
-        return (
-          toast.error(testName.error.errors[0].message),
-          setIsLoading(false)
-        )
+    // Validasi
+    if (isName) {
+      const result = nameSchema.safeParse(fieldValue);
+      if (!result.success) {
+        toast.error(result.error.errors[0].message);
+        return setIsLoading(false);
       }
-
-      const res = await updateProfile({userId: userId!, name})
-      if(res.success){
-        toast.success(res.message as string)
-        setOnEdit(false)
-        setIsLoading(false)
-      } else {
-        toast.error(res.message as string)
-        setIsLoading(false)
-      }
-    } else {
-      const testPhone = phoneSchema.safeParse({phone})
-      if(!testPhone.success) {
-        return (
-          toast.error(testPhone.error.errors[0].message),
-          setIsLoading(false)
-        )
-      }
-
-      const res = await updateProfile({userId: userId!, phone: testPhone.data?.phone})
-      if(res.success){
-        toast.success(res.message as string)
-        setOnEdit(false)
-        setIsLoading(false)
-      } else {
-        toast.error(res.message as string)
-        setIsLoading(false)
+    } else if (isPhone) {
+      const result = phoneSchema.safeParse({ phone: fieldValue });
+      if (!result.success) {
+        toast.error(result.error.errors[0].message);
+        return setIsLoading(false);
       }
     }
-    setIsLoading(false)
+
+    // Submit update
+    const res = await updateProfile({
+      userId: userId!,
+      ...(isName && { name: fieldValue }),
+      ...(isPhone && { phone: fieldValue }),
+    });
+
+    if (res.success) {
+      toast.success(res.message as string);
+      setOnEdit(false);
+    } else {
+      toast.error(res.message as string);
+    }
+
+    setIsLoading(false);
   };
+
   return (
-    <div className="flex-1 ">
+    <div className="flex-1">
       <Label className="lg:text-base mb-2 capitalize">{label}</Label>
 
       {onEdit ? (
-        type === "text" ? (
-          <Input 
-            defaultValue={value} 
-            type={type} 
-            onChange={(e) => setName(e.target.value)} 
-          />
-        ) : (
-          <Input
-            defaultValue={value}
-            type={type}
-            pattern="^\+62[0-9]{9,13}$"
-            placeholder="+628**********"
-            onChange={(e)=>setPhone(e.target.value)}
-          />
-        )
+        <Input
+          type={type}
+          defaultValue={value}
+          value={fieldValue}
+          onChange={(e) => setFieldValue(e.target.value)}
+          pattern={isPhone ? "^\\+62[0-9]{9,13}$" : undefined}
+          placeholder={isPhone ? "+628**********" : ""}
+        />
       ) : (
         <p className="text-sm lg:text-base">{value}</p>
       )}
+
       {editable &&
         (onEdit ? (
           <div className="flex gap-2 mt-3">
-            <Button onClick={() => setOnEdit(false)} variant="outline" className="uppercase">
+            <Button onClick={() => setOnEdit(false)} variant="outline" className="uppercase" disabled={isLoading}>
               Cancel
             </Button>
-            <Button className="uppercase" onClick={handleSubmit} disabled={isLoading}>Save</Button>
+            <Button onClick={handleSubmit} className="uppercase" disabled={isLoading}>
+              {isLoading ? (
+                <Loader className="h-4 w-4 animate-spin"/>
+              ):(
+                "Save"
+              )}
+            </Button>
           </div>
         ) : (
           <Button variant="outline" className="mt-3" onClick={() => setOnEdit(true)}>

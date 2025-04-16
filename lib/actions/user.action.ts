@@ -9,7 +9,7 @@ import { SignUpType } from "@/app/(auth)/sign-up/sign-up-form";
 import {hash} from 'bcrypt-ts-edge'
 import {v4 as uuidv4} from 'uuid'
 import { sendVerificationEmail } from "@/emails/send-verification";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
  
 export async function signInWithCredetials(data: {email: string; password: string;}) {
@@ -216,6 +216,20 @@ export async function getCurrentUser(){
 }
 
 export async function updateProfile({name, phone, photo, userId}: {name?: string; phone?: string; photo?: string; userId: string}) {
+  const dataToUpdate: Partial<{ name: string; phone: string; photo: string }> = {};
+
+  if (name !== undefined) dataToUpdate.name = name;
+  if (phone !== undefined) dataToUpdate.phone = phone;
+  if (photo !== undefined) dataToUpdate.photo = photo;
+
+  // Jika tidak ada data yang diberikan, kembalikan error
+  if (Object.keys(dataToUpdate).length === 0) {
+    return {
+      success: false,
+      message: "Tidak ada data yang ingin diperbarui.",
+    };
+  }
+
   try {
     await prisma.user.update({
       where: {id: userId},
@@ -225,6 +239,8 @@ export async function updateProfile({name, phone, photo, userId}: {name?: string
         ...(photo !== undefined && { photo }),
       },
     })
+
+    revalidateTag('productBySlug')
 
     revalidatePath('/profile')
 
@@ -241,6 +257,7 @@ export async function updateProfile({name, phone, photo, userId}: {name?: string
 }
 
 export async function updateAddress({address, id}:{ id: string; address: Address}) {
+  
   try {
     await prisma.user.update({
       where: {id},

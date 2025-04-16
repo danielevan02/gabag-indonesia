@@ -27,6 +27,7 @@ const OrderDetails = ({ order }: { order: FullOrderType }) => {
 
     window.snap.pay(order.transactionToken);
   };
+
   return (
     <>
       <Script
