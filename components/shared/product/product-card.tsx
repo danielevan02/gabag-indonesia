@@ -70,7 +70,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <div className="p-1 md:p-3 flex-1 flex flex-col justify-between h-auto">
         <div className="flex flex-col">
           <h4 className="text-foreground/50 uppercase text-xs md:text-sm font-semibold">{categoryName}</h4>
-          <h3 className="line-clamp-2 text-foreground/80 text-sm lg:text-base font-semibold tracking-wider min-h-12">{name}</h3>
+          <h3 className="line-clamp-2 text-foreground/80 text-sm lg:text-base font-semibold tracking-wider min-h-14">{name}</h3>
         </div>
         <div>
           {discount !== 0 || categoryDiscount !==0 ? (
