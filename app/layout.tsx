@@ -5,6 +5,7 @@ import { APP_DESCRIPTION, APP_NAME, BASE_URL } from "@/lib/constants";
 import { Toaster} from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { EdgeStoreProvider } from "@/lib/edge-store";
 
 const outift = Poppins({
   subsets: ['latin'],
@@ -40,10 +41,12 @@ export default function RootLayout({
       <body>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <SpeedInsights />
-          <main>
-            {children}
-            <Toaster position="top-center"/>
-          </main>
+          <EdgeStoreProvider>
+            <main>
+              {children}
+              <Toaster position="top-center"/>
+            </main>
+          </EdgeStoreProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -21,8 +21,12 @@ const ProductPage = async ({searchParams}: {
 }) => {
   const {categories, search, banner, max, min, sort} = await searchParams
   const categoryIds = categories?.split(',')
-  const products = await getAllProducts(undefined, search, categoryIds, banner, sort, {max, min})
-  const categoryList = await getAllCategories()
+
+  const [products, categoryList] = await Promise.all([
+    getAllProducts(undefined, search, categoryIds, banner, sort, {max, min}),
+    getAllCategories()
+  ])
+  
   return (
     <div className="flex items-start relative flex-col md:flex-row justify-between mx-3 xl:mx-10 lg:gap-5">
       <FilterProduct categories={categoryList}/>

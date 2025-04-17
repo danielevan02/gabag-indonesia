@@ -22,6 +22,7 @@ const HomePage = async () => {
   ])
   return (
     <div className="flex flex-col w-full max-w-screen px-2 md:px-5 lg:px-10">
+      
       <HomeCarousel slideDuration={5000} />
 
       <Suspense>

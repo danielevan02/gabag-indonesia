@@ -215,12 +215,12 @@ export async function getCurrentUser(){
   }
 }
 
-export async function updateProfile({name, phone, photo, userId}: {name?: string; phone?: string; photo?: string; userId: string}) {
-  const dataToUpdate: Partial<{ name: string; phone: string; photo: string }> = {};
+export async function updateProfile({name, phone, image, userId}: {name?: string; phone?: string; image?: string; userId: string}) {
+  const dataToUpdate: Partial<{ name: string; phone: string; image: string }> = {};
 
   if (name !== undefined) dataToUpdate.name = name;
   if (phone !== undefined) dataToUpdate.phone = phone;
-  if (photo !== undefined) dataToUpdate.photo = photo;
+  if (image !== undefined) dataToUpdate.image = image;
 
   // Jika tidak ada data yang diberikan, kembalikan error
   if (Object.keys(dataToUpdate).length === 0) {
@@ -236,7 +236,7 @@ export async function updateProfile({name, phone, photo, userId}: {name?: string
       data: {
         ...(name !== undefined && { name }),
         ...(phone !== undefined && { phone }),
-        ...(photo !== undefined && { photo }),
+        ...(image !== undefined && { image }),
       },
     })
 
