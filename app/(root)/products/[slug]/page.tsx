@@ -24,7 +24,7 @@ const ProductDetailsPage = async ({ params }: {params: tParams}) => {
   const { slug }: {slug: string} = await params;
   const product = await getProductBySlug(slug);
   const products = await getAllProducts(product.categories?.[0].name)
-  console.log(product)
+  
   if (!product) {
     return <div>Product not found</div>;
   }

@@ -46,7 +46,6 @@ const ImageForm = ({ user }: { user: User }) => {
         const res = await edgestore.publicImages.upload({
           file: renamedFile,
           onProgressChange(progress) {
-            console.log(progress)
             setProgress(progress);
           },
         });

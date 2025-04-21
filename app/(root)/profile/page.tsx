@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/actions/user.action";
 import ProfileForm from "./components/profile-form";
 import AddressForm from "./components/address-form";
 import ImageForm from "./components/image-form";
+import SignOutButton from "./components/sign-out-button";
 
 const ProfilePage = async () => {
   const user = await getCurrentUser()
@@ -13,6 +14,7 @@ const ProfilePage = async () => {
           <div className="w-full max-w-2xl">
             <ProfileForm user={user!} />
             <AddressForm address={user?.address} id={user?.id||""}/>
+            <SignOutButton/>
           </div>
           <div className="relative w-full max-w-2xl">
             <div className="lg:sticky lg:top-1/2 lg:-translate-y-1/2 w-full flex justify-center">

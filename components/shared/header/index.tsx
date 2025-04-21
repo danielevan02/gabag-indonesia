@@ -75,7 +75,7 @@ const Header = async () => {
           ):(
           <Link href='/profile'>
             <Avatar className="w-10 h-10">
-              <AvatarImage src={user?.image || ''} alt={user?.name||"User"}/>
+              <AvatarImage src={user?.image || ''} alt={user?.name||"User"} className="object-cover"/>
               <AvatarFallback className="bg-orange-600 text-white">{user?.name?.charAt(0)}</AvatarFallback>
             </Avatar>
           </Link>
