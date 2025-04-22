@@ -38,6 +38,7 @@ const Header = async () => {
 
       <div className="flex w-full justify-between px-5 lg:px-10 pb-2">
         {/* MENU BUTTON VISIBLE FOR MOBILE SCREEN */}
+        {/* @ts-expect-error there is no fix */}
         <SessionProvider session={session}>
           <MobileDrawer/>
         </SessionProvider>

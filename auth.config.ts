@@ -7,11 +7,20 @@ export const authConfig = {
     authorized({ request, auth }) {
       // Array of regex patterns of paths we want to protect
       const protectedPaths = [/\/profile/, /\/orders(\/.*)?/, /\/admin/];
+      const adminPaths = [/\/admin/]
 
       // Get pathname from the req URL object
       const { pathname } = request.nextUrl;
       // Check if user is not authenticated and accessing a protected path
       if (!auth && protectedPaths.some((p) => p.test(pathname))) return false;
+
+      console.log("niddleware", auth)
+
+      if (auth?.user?.role !== 'admin' && adminPaths.some((p) => p.test(pathname))) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/";
+        return NextResponse.redirect(url)
+      }
 
       // Check for session cart cookie
       if (!request.cookies.get("sessionCartId")) {

@@ -125,7 +125,6 @@ export const config: NextAuthConfig = {
       if (session?.user.name && trigger === "update") {
         token.name = session.user.name;
       }
-
       return token;
     },
     async session({ session, user, token, trigger }) {
@@ -137,6 +136,8 @@ export const config: NextAuthConfig = {
       if (trigger === "update") {
         session.user.name = user.name;
       }
+
+      console.log(session.user.role)
       return session;
     },
   },
