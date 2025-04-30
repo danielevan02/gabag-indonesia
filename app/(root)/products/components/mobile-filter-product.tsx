@@ -9,13 +9,13 @@ import {
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Settings2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Category } from "@prisma/client";
+import { SubCategory } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn, updateQueryParams } from "@/lib/utils";
 import { priceFilter, sort } from "@/lib/constants";
 
-const MobileFilterProduct = ({ categories }: { categories?: Category[] }) => {
+const MobileFilterProduct = ({ subCategories }: { subCategories?: SubCategory[] }) => {
   const [selectedSort, setSelectedSort] = useState<string | null>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedPrice, setSelectedPrice] = useState<{ min: number; max: number } | null>(null);
@@ -89,16 +89,16 @@ const MobileFilterProduct = ({ categories }: { categories?: Category[] }) => {
             <AccordionItem value="item-1">
               <AccordionTrigger className="font-normal">Category</AccordionTrigger>
               <AccordionContent className="flex flex-col gap-3">
-                {categories &&
-                  categories.map((category) => (
-                    <div key={category.id} className="flex gap-2 items-center">
+                {subCategories &&
+                  subCategories.map((subCategory) => (
+                    <div key={subCategory.id} className="flex gap-2 items-center">
                       <Checkbox
-                        value={category.name}
-                        onCheckedChange={() => handleCategory(category.id)}
-                        checked={selectedCategories.includes(category.id)}
+                        value={subCategory.name}
+                        onCheckedChange={() => handleCategory(subCategory.id)}
+                        checked={selectedCategories.includes(subCategory.id)}
                       />
                       <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                        {category.name}
+                        {subCategory.name}
                       </p>
                     </div>
                   ))}

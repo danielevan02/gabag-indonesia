@@ -9,9 +9,9 @@ import { revalidatePath, unstable_cacheLife as cacheLife, unstable_cacheTag as c
 import { createTransaction } from "../midtrans/transaction";
 
 export async function getAllOrders(userId?: string) {
-  'use cache'
-  cacheTag('orders')
-  cacheLife('days')
+  // 'use cache'
+  // cacheTag('orders')
+  // cacheLife('days')
   if (userId) {
     return prisma.order.findMany({
       where: {
@@ -41,9 +41,9 @@ export async function getAllOrders(userId?: string) {
 }
 
 export async function getOrderById(orderId: string) {
-  'use cache'
-  cacheTag('orderById')
-  cacheLife('days')
+  // 'use cache'
+  // cacheTag('orderById')
+  // cacheLife('days')
 
   const order = await prisma.order.findFirst({
     where: { id: orderId },

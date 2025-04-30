@@ -8,56 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Category {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name            String
-  discount        Int?      @default(0)
-  createdAt       DateTime  @default(now()) @db.Timestamp(6)
-  image           String?
-  isEventCategory Boolean   @default(false)
-  products        Product[] @relation("CategoryToProduct")
-}
-
-model Product {
-  id                       String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                     String
-  slug                     String      @unique(map: "product_slug_idx")
-  description              String
-  images                   String[]
-  stock                    Int         @default(0)
-  price                    BigInt      @default(0)
-  rating                   Int         @default(0)
-  discount                 Int         @default(0)
-  numReviews               Int         @default(0)
-  isFeatured               Boolean     @default(false)
-  banner                   String?
-  hasVariant               Boolean     @default(false)
-  createdAt                DateTime    @default(now()) @db.Timestamp(6)
-  hasDifferentVariantPrice Boolean     @default(false)
-  height                   Decimal     @default(0) @db.Decimal(12, 2)
-  length                   Decimal     @default(0) @db.Decimal(12, 2)
-  sku                      String?
-  weight                   Decimal     @default(0) @db.Decimal(12, 2)
-  width                    Decimal     @default(0) @db.Decimal(12, 2)
-  orderItem                OrderItem[]
-  variant                  Variant[]
-  categories               Category[]  @relation("CategoryToProduct")
-}
-
-model Variant {
-  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  productId String      @db.Uuid
-  name      String
-  discount  Int?        @default(0)
-  stock     Int         @default(0)
-  price     BigInt      @default(0)
-  createdAt DateTime    @default(now()) @db.Timestamp(6)
-  image     String      @default("")
-  sku       String?
-  orderItem OrderItem[]
-  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
-}
-
 model User {
   id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name          String    @default("NO_NAME")
@@ -67,13 +17,12 @@ model User {
   password      String?
   role          String    @default("user")
   address       Json?     @db.Json
-  paymentMethod String?
   createdAt     DateTime  @default(now()) @db.Timestamp(6)
   updatedAt     DateTime  @updatedAt
   phone         String    @unique @default("")
   accounts      Account[]
-  cart          Cart[]
-  order         Order[]
+  carts         Cart[]
+  orders        Order[]
   sessions      Session[]
 }
 
@@ -113,9 +62,110 @@ model VerificationToken {
   @@id([identifier, token])
 }
 
+model SubCategory {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  discount   Int?      @default(0)
+  image      String?
+  createdAt  DateTime  @default(now()) @db.Timestamp(6)
+  categoryId String    @db.Uuid
+  products   Product[]
+  category   Category  @relation(fields: [categoryId], references: [id])
+}
+
+model Category {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  createdAt     DateTime      @default(now()) @db.Timestamp(6)
+  image         String
+  subCategories SubCategory[]
+}
+
+model Product {
+  id                       String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                     String
+  slug                     String      @unique(map: "product_slug_idx")
+  description              String
+  images                   String[]
+  stock                    Int         @default(0)
+  discount                 Int         @default(0)
+  hasVariant               Boolean     @default(false)
+  hasDifferentVariantPrice Boolean     @default(false)
+  height                   Decimal     @default(0) @db.Decimal(12, 2)
+  length                   Decimal     @default(0) @db.Decimal(12, 2)
+  sku                      String?
+  weight                   Decimal     @default(0) @db.Decimal(12, 2)
+  width                    Decimal     @default(0) @db.Decimal(12, 2)
+  createdAt                DateTime    @default(now()) @db.Timestamp(6)
+  eventId                  String?     @db.Uuid
+  subCategoryId            String      @db.Uuid
+  regularPrice             BigInt      @default(0)
+  orderItems               OrderItem[]
+  event                    Event?      @relation(fields: [eventId], references: [id])
+  subCategory              SubCategory @relation(fields: [subCategoryId], references: [id])
+  reviews                  Review[]
+  variants                 Variant[]
+}
+
+model Variant {
+  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  discount     Int?        @default(0)
+  stock        Int         @default(0)
+  createdAt    DateTime    @default(now()) @db.Timestamp(6)
+  image        String      @default("")
+  sku          String?
+  productId    String      @db.Uuid
+  regularPrice BigInt      @default(0)
+  orderItems   OrderItem[]
+  product      Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Voucher {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code         String       @unique
+  value        Int
+  type         VoucherType
+  expires      DateTime     @db.Timestamp(6)
+  autoApply    Boolean      @default(false)
+  min          BigInt       @default(0)
+  limit        Int?
+  count        Int          @default(0)
+  limitPerUser Int?
+  createdAt    DateTime     @default(now()) @db.Timestamp(6)
+  Redemption   Redemption[]
+  orders       Order[]      @relation("OrderToVoucher")
+}
+
+model Redemption {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String
+  createdAt DateTime @default(now())
+  voucherId String   @db.Uuid
+  voucher   Voucher  @relation(fields: [voucherId], references: [id])
+
+  @@unique([email, voucherId])
+}
+
+model Event {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  discount  Int?      @default(0)
+  createdAt DateTime  @default(now()) @db.Timestamp(6)
+  products  Product[]
+}
+
+model Review {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  productId String   @db.Uuid
+  product   Product  @relation(fields: [productId], references: [id])
+}
+
 model Cart {
   id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId        String?  @db.Uuid
   sessionCartId String
   items         Json[]   @default([]) @db.Json
   itemsPrice    BigInt   @default(0)
@@ -125,36 +175,36 @@ model Cart {
   shippingPrice BigInt?  @default(0)
   notes         String?
   orderId       String?  @unique
+  userId        String?  @db.Uuid
   order         Order?   @relation(fields: [orderId], references: [id])
   user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Order {
   id               String      @id
-  userId           String      @db.Uuid
   itemsPrice       BigInt      @default(0)
   totalPrice       BigInt      @default(0)
   shippingPrice    BigInt      @default(0)
   taxPrice         BigInt      @default(0)
   isPaid           Boolean     @default(false)
   isDelivered      Boolean     @default(false)
-  deliveredAt      DateTime?   @db.Timestamp(6)
-  paidAt           DateTime?   @db.Timestamp(6)
-  createdAt        DateTime    @default(now()) @db.Timestamp(6)
   transactionToken String?     @unique @default("")
   courier          String?     @default("")
   notes            String?     @default("")
   paymentStatus    String?     @default("")
   shippingInfo     Json?       @db.Json
+  deliveredAt      DateTime?   @db.Timestamp(6)
+  paidAt           DateTime?   @db.Timestamp(6)
+  createdAt        DateTime    @default(now()) @db.Timestamp(6)
+  userId           String      @db.Uuid
   cart             Cart?
   user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderItems       OrderItem[]
+  vouchers         Voucher[]   @relation("OrderToVoucher")
 }
 
 model OrderItem {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orderId   String   @default(uuid())
-  productId String   @db.Uuid
   qty       Int
   price     BigInt   @default(0)
   name      String
@@ -162,9 +212,16 @@ model OrderItem {
   image     String
   variantId String?  @db.Uuid
   weight    Decimal  @default(0) @db.Decimal(12, 2)
+  orderId   String   @default(uuid())
+  productId String   @db.Uuid
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   variant   Variant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
   @@unique([orderId, productId, variantId], map: "orderitems_orderId_productId_variantId_unique")
+}
+
+enum VoucherType {
+  FIXED
+  PERCENT
 }

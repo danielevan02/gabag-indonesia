@@ -2,35 +2,32 @@
 
 import { unstable_cacheLife as cacheLife, unstable_cacheTag as cacheTag } from "next/cache";
 import { prisma } from "../db/prisma"
-import { convertToPlainObject } from "../utils";
-
-export async function getAllCategories(){
-  'use cache'
-  cacheTag('categories')
-  cacheLife('days')
-  return await prisma.category.findMany()
-}
+import { Product } from "@/types";
+import { Event } from '@prisma/client'
 
 export async function getAllProducts(
-  category?: string,
+  subCategory?: string,
   search?: string,
-  categoriesId?: string[],
+  subCategoriesId?: string[],
   banner?: string,
   sort?: string,
   price?: { min?: string; max?: string }
-) {
-  'use cache'
-  cacheTag("products")
-  cacheLife('days')
+): Promise<Product[]> {
+  // 'use cache'
+  // cacheTag("products")
+  // cacheLife('days')
 
   const products = await prisma.product.findMany({
     where: {
       AND: [
         // Filter berdasarkan kategori (cari produk yang memiliki kategori dengan nama tertentu)
-        category
+        subCategory
           ? {
-              categories: {
-                some: { name: { contains: category, mode: "insensitive" } },
+              subCategory: {
+                name: {
+                  contains: subCategory,
+                  mode: 'insensitive'
+                }
               },
             }
           : {},
@@ -39,10 +36,10 @@ export async function getAllProducts(
           ? { name: { contains: search, mode: "insensitive" } }
           : {},
         // Filter berdasarkan kategori ID (produk yang memiliki kategori dalam array ini)
-        categoriesId?.length
+        subCategoriesId?.length
           ? {
-              categories: {
-                some: { id: { in: categoriesId } },
+              subCategoryId: {
+                in: subCategoriesId ,
               },
             }
           : {},
@@ -64,7 +61,9 @@ export async function getAllProducts(
       ],
     },
     include: {
-      categories: true,
+      subCategory: true,
+      event: true,
+      variants: true
     },
 
     orderBy: sort ? {
@@ -74,48 +73,67 @@ export async function getAllProducts(
     }
   })
 
-  return (
-    products.map(product => ({
+  return [
+    ...products.map((product) => ({
       ...product,
-      weight: product.weight ? Number(product.weight) : null,
-      width: product.width ? Number(product.width) : null,
-      height: product.height ? Number(product.height) : null,
-      length: product.length ? Number(product.length) : null,
+      variants: product?.variants.map((variant) => ({
+        ...variant,
+        discount: variant.discount as number | undefined,
+        sku: variant.sku as string | undefined,
+        regularPrice: Number(variant.regularPrice),
+        price: Number(variant.regularPrice) - Number(variant.regularPrice)*(variant.discount||0/100)
+      })),
+      weight: Number(product.weight),
+      length: Number(product.length),
+      width: Number(product.width),
+      height: Number(product.height),
+      sku: product.sku as string | undefined,
+      eventId: product.eventId as string | undefined,
+      regularPrice: Number(product.regularPrice),
+      event: product.event as Event | undefined,
+      price: Number(product.regularPrice) - (Number(product.regularPrice)*product.discount/100)
     }))
-  )
+  ]
 }
 
-export async function searchProduct(keyword:string) {
-  return await prisma.product.findMany({
+export async function searchProduct(keyword:string): Promise<Product[]> {
+  const products = await prisma.product.findMany({
     where: {
       name: {
         contains : keyword,
         mode: 'insensitive'
       },
     },
-    select: {
-      name: true,
-      images: true,
-      price: true,
-      id: true,
-      slug: true,
-    }
   })
+
+  return [
+    ...products.map((product) => ({
+      ...product,
+      weight: Number(product.weight),
+      length: Number(product.length),
+      width: Number(product.width),
+      height: Number(product.height),
+      sku: product.sku as string | undefined,
+      eventId: product.eventId as string | undefined,
+      regularPrice: Number(product.regularPrice),
+      price: Number(product.regularPrice) - (Number(product.regularPrice)*product.discount/100)
+    }))
+  ]
 }
 
-export async function getProductBySlug(slug:string) {
-  'use cache'
-  cacheTag('productBySlug')
-  cacheLife('days')
+export async function getProductBySlug(slug:string): Promise<Product> {
+  // 'use cache'
+  // cacheTag('productBySlug')
+  // cacheLife('days')
 
   const product = await prisma.product.findFirst({
     where: {
       slug
     },
     include: {
-      categories: true,
-      variant: true,
-      orderItem: {
+      subCategory: true,
+      variants: true,
+      orderItems: {
         where: {
           order: {
             paymentStatus: {
@@ -123,38 +141,57 @@ export async function getProductBySlug(slug:string) {
             }
           }
         },
-        select: {
-          qty: true
-        }
       }
     }
   })
   
-  return (
-    convertToPlainObject({
-      ...product,
-      weight: product?.weight ? Number(product.weight) : null,
-      width: product?.width ? Number(product.width) : null,
-      height: product?.height ? Number(product.height) : null,
-      length: product?.length ? Number(product.length) : null,
-    })
-  )
+  return {
+    ...product!,
+    variants: product?.variants.map((variant) => ({
+      ...variant,
+      discount: variant.discount as number | undefined,
+      sku: variant.sku as string | undefined,
+      regularPrice: Number(variant.regularPrice),
+      price: Number(variant.regularPrice) - Number(variant.regularPrice)*(variant.discount||0/100)
+    })),
+    orderItems: product?.orderItems.map((item) => ({
+      ...item,
+      weight: Number(item.weight)
+    })),
+    weight: Number(product?.weight),
+    length: Number(product?.length),
+    width: Number(product?.width),
+    height: Number(product?.height),
+    sku: product?.sku as string | undefined,
+    eventId: product?.eventId as string | undefined,
+    regularPrice: Number(product?.regularPrice),
+    price: Number(product?.regularPrice) - (Number(product?.regularPrice)*(product?.discount||0)/100)
+  }
 }
 
-export async function getNewArrivalProduct() {
-  'use cache'
-  cacheTag('newArrivalProducts')
-  cacheLife('days')
-  return await prisma.product.findMany({
+export async function getNewArrivalProduct(): Promise<Product[]> {
+  // 'use cache'
+  // cacheTag('newArrivalProducts')
+  // cacheLife('days')
+
+  const products = await prisma.product.findMany({
     orderBy: {
       createdAt: 'desc'
     },
-    select: {
-      name: true,
-      price: true,
-      slug: true,
-      images: true
-    },
     take: 2
   })
+
+  return [
+    ...products.map((product) => ({
+      ...product,
+      weight: Number(product.weight),
+      length: Number(product.length),
+      width: Number(product.width),
+      height: Number(product.height),
+      sku: product.sku as string | undefined,
+      eventId: product.eventId as string | undefined,
+      regularPrice: Number(product.regularPrice),
+      price: Number(product.regularPrice) - (Number(product.regularPrice)*product.discount/100)
+    }))
+  ]
 }

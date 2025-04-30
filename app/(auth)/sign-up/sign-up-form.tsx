@@ -25,10 +25,14 @@ const SignUpForm = () => {
     control,
   } = useForm({
     resolver: zodResolver(signUpSchema),
-    defaultValues: defaultSignUp,
+    defaultValues: {
+      ...defaultSignUp,
+      phone: defaultSignUp.phone.slice(3)
+    },
   });
 
   const onSubmit: SubmitHandler<SignUpType> = async (data) => {
+    console.log(data)
     startTransition(async()=>{
       const res = await registerUser(data)
       
@@ -65,6 +69,7 @@ const SignUpForm = () => {
         name="phone"
         errors={errors}
         placeholder="Enter your phone number..."
+        register={register}
         isPhone
         control={control}
       />

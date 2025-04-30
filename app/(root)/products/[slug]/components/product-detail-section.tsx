@@ -4,34 +4,30 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { addToCart } from "@/lib/actions/cart.action";
 import { cn } from "@/lib/utils";
-import { FullProductType } from "@/types";
-import { Variant } from "@prisma/client";
+import { Product, Variant } from "@/types";
 import { Loader, Minus, Plus } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 import { toast } from "sonner";
 
-const ProductDetailSection = ({ product }: { product: FullProductType }) => {
+const ProductDetailSection = ({ product }: { product: Product }) => {
   const router = useRouter();
   const [variant, setVariant] = useState<Variant>();
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
-  const sold = product.orderItem.reduce((initial, curr) => curr.qty + initial, 0) || 0
+  const sold = product.orderItems?.reduce((initial, curr) => curr.qty + initial, 0) || 0
 
-  const lowestPrice = Math.min(...product.variant.map((v) => Number(v.price)));
+  const lowestPrice = Math.min(
+    ...(product.variants?.map((v) => Number(v.regularPrice)) ?? [0])
+  );
   const [price, setPrice] = useState(lowestPrice === Infinity ? product.price : lowestPrice);
 
-  const imagesList = [...(product?.images || []), ...(product?.variant.map((v) => v.image) || [])];
+  const imagesList = [...(product?.images || []), ...(product?.variants?.map((v) => v.image ?? [""]) || [])];
   const [mainImage, setMainImage] = useState(imagesList[0]);
 
-  const categoryDiscount = product?.categories.reduce(
-    (prev, curr) => prev + (curr.discount || 0),
-    0
-  );
-  const discount = variant?.discount || product?.discount || categoryDiscount || 0;
-  const stock = product.variant.reduce((curr, v) => curr + v.stock, 0) || product.stock;
+  const stock = product.variants?.reduce((curr, v) => curr + v.stock, 0) || product.stock||0;
 
   const handleAddToCart = async () => {
     if (product.hasVariant && !variant) {
@@ -41,7 +37,7 @@ const ProductDetailSection = ({ product }: { product: FullProductType }) => {
     const res = await addToCart({
       image: variant?.image || product.images[0] || "/images/placeholder-product.png",
       name: variant ? product.name + " - " + variant?.name : product.name,
-      price: Number(price) - Number(price) * Number(discount / 100),
+      price: Number(price) - Number(price) * Number(variant?.discount||0 / 100),
       productId: product.id,
       variantId: variant?.id,
       qty: quantity,
@@ -178,12 +174,12 @@ const ProductDetailSection = ({ product }: { product: FullProductType }) => {
       {/* PRODUCT DETAILS */}
       <div className="mt-5 min-w-80 flex-1 lg:max-w-96">
         <h2 className="uppercase tracking-wider text-foreground/60 text-sm md:text-base">
-          {product?.categories[0].name}
+          {product?.subCategory?.name}
         </h2>
         <h1 className="md:text-xl font-medium tracking-wider mb-5">{product?.name}</h1>
         <PriceTag
           price={Number(price)}
-          discount={discount}
+          discount={variant?.discount||0}
           variant={variant}
           hasVariant={product.hasVariant}
         />
@@ -192,7 +188,7 @@ const ProductDetailSection = ({ product }: { product: FullProductType }) => {
           <>
             <span className="uppercase tracking-widest text-sm">Variants:</span>
             <div className="flex gap-3 mt-3">
-              {product?.variant.map((item) => (
+              {product?.variants?.map((item) => (
                 <div
                   key={item.id}
                   className="relative flex flex-col items-center gap-1 rounded-lg"
@@ -200,7 +196,7 @@ const ProductDetailSection = ({ product }: { product: FullProductType }) => {
                     if (item.stock > 0) {
                       setVariant(item);
                       setMainImage(item.image);
-                      setPrice(item.price);
+                      setPrice(item.regularPrice);
                       setQuantity(1);
                     }
                   }}
@@ -227,7 +223,7 @@ const ProductDetailSection = ({ product }: { product: FullProductType }) => {
         )}
 
         <div className="flex flex-col gap-3 mt-5 mb-10">
-          {product.stock > 0 ? (
+          {stock > 0 ? (
             <>
               <p>
                 Stock: <span className="font-medium">{stock}</span>

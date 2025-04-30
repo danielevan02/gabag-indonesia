@@ -1,24 +1,51 @@
 import { addressSchema, orderSchema } from "@/lib/schema";
-import { Category, Product as ProductPrisma, Variant, User as UserPrisma, Order, OrderItem as PrismaOrderItem } from "@prisma/client";
+import { User as UserPrisma, Order, OrderItem as PrismaOrderItem, SubCategory, Review, Event } from "@prisma/client";
 import { z } from "zod";
 
-export type Product = Omit<ProductPrisma, "weight"|"length"|"width"|"height"> & {
-  weight: number;
-  length: number;
-  width: number;
+export type Product = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  images: string[];
+  stock: number;
+  discount: number;
+  hasVariant: boolean;
+  hasDifferentVariantPrice: boolean;
   height: number;
+  length: number;
+  sku?: string;
+  weight: number;
+  width: number;
+  createdAt: Date;
+  eventId?: string;
+  subCategoryId: string;
+  regularPrice: number;
+  price: number;
+  orderItems?: OrderItem[];
+  event?: Event;
+  subCategory?: SubCategory;
+  reviews?: Review[];
+  variants?: Variant[];
+};
+
+export type Variant = {
+  id: string
+  name: string
+  discount?: number
+  stock: number
+  createdAt: Date
+  image: string
+  sku?: string
+  productId: string
+  regularPrice: number
+  orderItems?: OrderItem[]
+  product?: Product
+  price: number
 }
 
 export type User = Omit<UserPrisma, "address"> & {
   address: Address
-}
-
-export type FullProductType = Product & {
-  variant: Variant[];
-  categories: Category[];
-  orderItem: {
-    qty: number
-  }[]
 }
 
 type OrderItem = Omit<PrismaOrderItem, "weight"> & {

@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Boxes, ClipboardList, HomeIcon, Info, LucideIcon } from "lucide-react";
+import { Baby, ClipboardList, HandHeart, HomeIcon, Info, LucideIcon, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -15,7 +15,9 @@ const NavLinks = ({device}: {device: string}) => {
   const path = usePathname();
   const links: LinkType[] = [
     { label: "Home", link: "/", icon: HomeIcon },
-    { label: "Product", link: "/products", icon: Boxes },
+    { label: "Mom", link: "/products?category=e827dd23-8c59-4360-bcd7-147e3d5a5224", icon: HandHeart },
+    { label: "Beauty", link: "/products?category=6329a950-5652-476d-94c6-7a73381936a5", icon: Sparkles },
+    { label: "Kids", link: "/products?category=4bea0680-9151-4372-9b5d-b8dc0f9e77b8", icon: Baby },
     { label: "Order", link: "/orders", icon: ClipboardList },
     { label: "About", link: "/about", icon: Info },
   ];

@@ -90,6 +90,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
       debounce(async () => {
         // this is the input for searching location by city and district
         const res = await getMapsId(`${watch("city")} ${watch("district")}`);
+        console.log(watch('city'), watch('district'))
         setArea((prev) => (prev === res[0] ? prev : res[0]));
       }, 1000),
     [watch("city"), watch("district")]

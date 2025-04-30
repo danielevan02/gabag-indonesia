@@ -9,38 +9,38 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { priceFilter, sort } from "@/lib/constants";
 import { cn, updateQueryParams } from "@/lib/utils";
-import { Category } from "@prisma/client";
+import { SubCategory } from "@prisma/client";
 import { Filter, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export interface FilterProductProps {
-  categories: Category[];
+  subCategories: SubCategory[];
 }
 
-const FilterProduct: React.FC<FilterProductProps> = ({ categories }) => {
+const FilterProduct: React.FC<FilterProductProps> = ({ subCategories }) => {
   const [showDialog, setShowDialog] = useState(true);
   const [selectedSort, setSelectedSort] = useState<string | null>(null);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>([]);
   const [selectedPrice, setSelectedPrice] = useState<{min: number, max: number} | null>(null)
   const searchParams = useSearchParams();
   const router = useRouter();
 
   useEffect(() => {
-    const categoriesQuery = searchParams.get("categories");
-    if (categoriesQuery) {
-      setSelectedCategories(categoriesQuery.split(","));
+    const subCategoriesQuery = searchParams.get("subCategories");
+    if (subCategoriesQuery) {
+      setSelectedSubCategories(subCategoriesQuery.split(","));
     }
   }, [searchParams]);
 
-  const handleCategory = (categoryId: string) => {
-    const updatedCategories = selectedCategories.includes(categoryId)
-      ? selectedCategories.filter((item) => item !== categoryId)
-      : [...selectedCategories, categoryId];
-    setSelectedCategories(updatedCategories);
+  const handleSubCategory = (subCategoryId: string) => {
+    const updatedSubCategories = selectedSubCategories.includes(subCategoryId)
+      ? selectedSubCategories.filter((item) => item !== subCategoryId)
+      : [...selectedSubCategories, subCategoryId];
+    setSelectedSubCategories(updatedSubCategories);
 
-    const queryValue = updatedCategories.length > 0 ? updatedCategories.join(",") : undefined;
-    updateQueryParams({ categories: queryValue }, searchParams, router);
+    const queryValue = updatedSubCategories.length > 0 ? updatedSubCategories.join(",") : undefined;
+    updateQueryParams({ subCategories: queryValue }, searchParams, router);
   };
 
   const handleSort = (val: string) => {
@@ -115,15 +115,15 @@ const FilterProduct: React.FC<FilterProductProps> = ({ categories }) => {
           <AccordionItem value="item-1">
             <AccordionTrigger className="font-light">Categories</AccordionTrigger>
             <AccordionContent className="flex flex-col gap-3">
-              {categories.map((category) => (
-                <div key={category.id} className="flex gap-2 items-center">
+              {subCategories.map((subCategory) => (
+                <div key={subCategory.id} className="flex gap-2 items-center">
                   <Checkbox
-                    value={category.name}
-                    onCheckedChange={() => handleCategory(category.id)}
-                    checked={selectedCategories.includes(category.id)}
+                    value={subCategory.name}
+                    onCheckedChange={() => handleSubCategory(subCategory.id)}
+                    checked={selectedSubCategories.includes(subCategory.id)}
                   />
                   <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                    {category.name}
+                    {subCategory.name}
                   </p>
                 </div>
               ))}

@@ -1,7 +1,7 @@
 import { getAllProducts, getProductBySlug } from "@/lib/actions/product.action";
 import ProductDetailSection from "./components/product-detail-section";
 import { Metadata } from "next";
-import { FullProductType } from "@/types";
+import { Product } from "@/types";
 import ProductCard from "@/components/shared/product/product-card";
 
 type tParams = Promise<{ slug: string }>;
@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: {params: tParams}): Promise<M
 const ProductDetailsPage = async ({ params }: {params: tParams}) => {
   const { slug }: {slug: string} = await params;
   const product = await getProductBySlug(slug);
-  const products = await getAllProducts(product.categories?.[0].name)
+  const products = await getAllProducts(product.subCategory?.name)
   
   if (!product) {
     return <div>Product not found</div>;
@@ -32,7 +32,7 @@ const ProductDetailsPage = async ({ params }: {params: tParams}) => {
   return (
     <div className="flex flex-col px-5 w-full max-w-screen mt-10">
       <ProductDetailSection 
-        product={product as FullProductType} 
+        product={product as Product} 
       />
 
       {products && (
@@ -43,10 +43,8 @@ const ProductDetailsPage = async ({ params }: {params: tParams}) => {
               <ProductCard
                 key={product.slug}
                 {...product}
-                categoryName={product.categories[0].name}
                 image={product.images[0]}
-                category={product.categories}
-                banner={product.banner!}
+                subCategory={product.subCategory!}
                 className={`
                 min-w-56 
                 max-w-56 

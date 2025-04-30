@@ -57,10 +57,8 @@ const CartPage = async () => {
               <ProductCard
                 key={product.slug}
                 {...product}
-                categoryName={product.categories[0].name}
                 image={product.images[0]}
-                category={product.categories}
-                banner={product.banner!}
+                subCategory={product.subCategory!}
                 className={`
                 min-w-56 
                 max-w-56 

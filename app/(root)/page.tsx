@@ -20,6 +20,7 @@ const HomePage = async () => {
     getAllProducts("Beauty") || [],
     getNewArrivalProduct()
   ])
+
   return (
     <div className="flex flex-col w-full max-w-screen px-2 md:px-5 lg:px-10">
       
@@ -38,10 +39,8 @@ const HomePage = async () => {
               <ProductCard
                 key={product.slug}
                 {...product}
-                categoryName={product.categories[0].name}
                 image={product.images[0]}
-                category={product.categories}
-                banner={product.banner!}
+                subCategory={product.subCategory!}
                 className={`
                   min-w-56 
                   max-w-56 
@@ -76,10 +75,8 @@ const HomePage = async () => {
             <ProductCard
               key={product.slug}
               {...product}
-              categoryName={product.categories[0].name}
               image={product.images[0]}
-              category={product.categories}
-              banner={product.banner!}
+              subCategory={product.subCategory!}
               className={`
                 min-w-56 
                 max-w-56 
@@ -133,10 +130,8 @@ const HomePage = async () => {
             <ProductCard
               key={product.slug}
               {...product}
-              categoryName={product.categories[0].name}
               image={product.images[0]}
-              category={product.categories}
-              banner={product.banner!}
+              subCategory={product.subCategory!}
               className={`
                 min-w-56 
                 max-w-56 

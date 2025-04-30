@@ -8,7 +8,7 @@ const bundleAnalyzer = withBundleAnalyzer({
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
-    useCache: true
+    useCache: false
   },
   images: {
     remotePatterns: [

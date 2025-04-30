@@ -1,33 +1,38 @@
 import { cn } from "@/lib/utils";
-import { Category } from "@prisma/client";
+import { Variant } from "@/types";
+import { Event, SubCategory } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 
 interface ProductCardProps {
   name: string;
-  categoryName: string;
-  price: bigint;
+  price: number;
+  regularPrice: number;
   discount?: number;
-  rating: number;
   image: string;
   slug: string;
+  hasVariant: boolean
+  hasDifferentVariantPrice: boolean
   className?: string;
-  banner?: string;
-  category: Category[]
+  subCategory: SubCategory
+  event?: Event
+  variants?: Variant[]
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
-  categoryName,
   discount,
   image,
   name,
+  regularPrice,
+  hasVariant,
+  hasDifferentVariantPrice,
+  variants,
   price,
   slug,
-  banner,
-  category,
+  subCategory,
+  event,
   className
 }) => {
-  const categoryDiscount = category.reduce((prev, curr) => prev + (curr.discount??0), 0)
   return (
     <Link 
       prefetch
@@ -45,7 +50,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         className
       )}
     >
-      {banner && <p className="absolute bg-red-700 top-3 px-1 py-1 capitalize right-0 z-10 text-white text-sm font-bold">{banner}</p>}
+      {event?.name && <p className="absolute bg-red-700 top-3 px-1 py-1 capitalize right-0 z-10 text-white text-sm font-bold">{event.name}</p>}
       {/* IMAGE CONTAINER */}
       <div className={`
           overflow-hidden 
@@ -69,36 +74,68 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       <div className="p-1 md:p-3 flex-1 flex flex-col justify-between h-auto">
         <div className="flex flex-col">
-          <h4 className="text-foreground/50 uppercase text-xs md:text-sm font-semibold">{categoryName}</h4>
+          <h4 className="text-foreground/50 uppercase text-xs md:text-sm font-semibold">{subCategory.name}</h4>
           <h3 className="line-clamp-2 text-foreground/80 text-sm lg:text-base font-semibold tracking-wider min-h-14">{name}</h3>
         </div>
-        <div>
-          {discount !== 0 || categoryDiscount !==0 ? (
-            <div className="bg-red-600 text-white px-2 py-px text-xs font-bold relative w-min my-1">{discount || categoryDiscount}%</div>
-          ) : (
-            <div className="h-6" />
-          )}
-          <PriceTag price={Number(price)} discount={discount || categoryDiscount}/>
-        </div>
+        <PriceTag 
+          regularPrice={regularPrice} 
+          price={price} 
+          hasDifferentVariantPrice={hasDifferentVariantPrice} 
+          hasVariant={hasVariant}
+          variants={variants}
+          discount={discount}
+        />
       </div>
     </Link>
   );
 };
 
-const PriceTag = ({price, discount}:{price: number; discount?: number;}) => {
-  let lastPrice = price;
-  if(discount){
-    lastPrice = Number(price) - Number(price)*(discount/100)
+interface PriceTagProps {
+  price: number; 
+  regularPrice: number;
+  hasVariant: boolean;
+  hasDifferentVariantPrice: boolean;
+  variants?: Variant[]
+  discount?: number
+}
+
+const PriceTag = ({price, regularPrice, hasDifferentVariantPrice, hasVariant, variants, discount}: PriceTagProps) => {
+  let lowestPrice;
+  if(variants){
+    lowestPrice = Math.min(...variants.map((v) => v.price))
   }
   return(
     <>
-      {discount ? (
-        <div className="flex flex-col md:flex-row gap-1">
-          <h4 className="line-through text-neutral-400 text-sm">Rp{price.toLocaleString()}</h4>
-          <h4>Rp{lastPrice.toLocaleString()}</h4>
-        </div>
+      {discount !== 0 ? (
+        <div className="bg-red-600 text-white px-2 py-px text-xs font-bold relative w-min my-1">{discount}%</div>
+      ) : (
+        <div className="h-6" />
+      )}
+      {hasVariant ? (
+        hasDifferentVariantPrice ? (
+          <div className="flex gap-1">
+            <span>from</span>
+            <p>Rp{lowestPrice?.toLocaleString()}</p>
+          </div>
+        ):(
+          variants?.[0].regularPrice !== variants?.[0].price ? (
+            <div className="flex flex-col md:flex-row gap-1">
+              <h4 className="line-through text-neutral-400 text-sm">Rp{variants?.[0].regularPrice.toLocaleString()}</h4>
+              <h4>Rp{variants?.[0].price.toLocaleString()}</h4>
+            </div>
+          ):(
+            <h4>Rp{variants?.[0].price.toLocaleString()}</h4>
+          )
+        )
       ):(
-        <h4>Rp{lastPrice.toLocaleString()}</h4>
+        price !== regularPrice ? (
+          <div className="flex flex-col md:flex-row gap-1">
+            <h4 className="line-through text-neutral-400 text-sm">Rp{(regularPrice??0).toLocaleString()}</h4>
+            <h4>Rp{price.toLocaleString()}</h4>
+          </div>
+        ):(
+          <h4>Rp{price.toLocaleString()}</h4>
+        )
       )}
     </>
   )

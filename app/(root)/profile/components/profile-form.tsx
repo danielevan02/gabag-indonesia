@@ -90,7 +90,6 @@ const ProfileItem = ({ label, value, editable, type = "text", userId }: ProfileI
       {onEdit ? (
         <Input
           type={type}
-          defaultValue={value}
           value={fieldValue}
           onChange={(e) => setFieldValue(e.target.value)}
           pattern={isPhone ? "^\\+62[0-9]{9,13}$" : undefined}

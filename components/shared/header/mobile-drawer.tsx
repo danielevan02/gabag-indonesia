@@ -5,7 +5,7 @@ import { AlignJustify, Pencil } from "lucide-react";
 import { ModeToggle } from "./mode-toggle";
 import NavLinks from "./nav-links";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {useSession} from 'next-auth/react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 
 const MobileDrawer = () => {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const category = searchParams.get('category')
   const session = useSession()
   const user = session.data?.user
   const [open, setOpen] = useState(false)
@@ -20,7 +22,7 @@ const MobileDrawer = () => {
   const splitName = user?.name?.split(" ")
   useEffect(()=>{
     setOpen(false)
-  }, [pathname])
+  }, [pathname, category])
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>

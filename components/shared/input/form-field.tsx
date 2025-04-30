@@ -1,10 +1,10 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CircleAlert, Eye, EyeOff } from "lucide-react";
-import { CSSProperties, HTMLInputTypeAttribute, useState } from "react";
-import { Control, Controller, FieldErrors, FieldValues, Path, UseFormRegister } from "react-hook-form";
-import {PhoneInput} from 'react-international-phone'
+import { HTMLInputTypeAttribute, useState } from "react";
+import { Control, FieldErrors, FieldValues, Path, UseFormRegister } from "react-hook-form";
 import 'react-international-phone/style.css';
+import { InputPhone } from "../input-phone";
 
 interface FormFieldProps<TFieldValues extends FieldValues> {
   label: string;
@@ -22,7 +22,6 @@ interface FormFieldProps<TFieldValues extends FieldValues> {
 export function FormField<TFieldValues extends FieldValues>({
   label,
   name,
-  control, 
   errors,
   isPassword,
   isPhone,
@@ -33,46 +32,16 @@ export function FormField<TFieldValues extends FieldValues>({
 }:FormFieldProps<TFieldValues>) {
   const [passShown, setPassShown] = useState(false);
 
-  const phoneInputStyle: CSSProperties = {
-    width: '100%',
-    borderColor: 'black',
-    borderTopRightRadius: 7,
-    borderBottomRightRadius: 7,
-    paddingTop: 23,
-    paddingBottom: 23,
-    fontSize: 16
-  }
-
-  const phoneCountrySelectorStyle = {
-    buttonStyle: {
-      borderColor: 'black',
-      borderTopLeftRadius: 7,
-      borderBottomLeftRadius: 7,
-      paddingTop: 23,
-      paddingBottom: 23,
-      paddingLeft: 10,
-      paddingRight: 10,
-    }
-  }
-
   return (
     <div className="flex flex-col gap-2 mb-5 flex-1">
       <Label htmlFor={name} className="text-sm">
         {label}
       </Label>
-      {isPhone&&control ? (
-        <Controller
-          control={control}
-          name={name}
-          render={({ field }) => (
-            <PhoneInput
-              defaultCountry="id"
-              value={field.value}
-              onChange={field.onChange}
-              inputStyle={phoneInputStyle}
-              countrySelectorStyleProps={phoneCountrySelectorStyle}
-            />
-          )}
+      {isPhone ? (
+        <InputPhone 
+          id={name}
+          className="border-black min-h-12"
+          {...(register ? register(name) : {})}
         />
       ): isPassword ? (
         <div className="relative flex items-center">

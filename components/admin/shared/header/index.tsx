@@ -5,7 +5,7 @@ import { User } from "next-auth";
 
 const AdminHeader = ({user}: {user?: User}) => {
   return (
-    <div className="py-3 px-5">
+    <div className="py-3 px-5 h-1/12">
       <div className="flex justify-between items-center">
         <SidebarTrigger />
 

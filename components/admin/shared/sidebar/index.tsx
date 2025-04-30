@@ -16,6 +16,7 @@ const AdminSidebar = () => {
       Icon: Boxes,
       subMenu: [
         { label: "category", link: "/admin/catalog/category" },
+        { label: "sub category", link: "/admin/catalog/sub-category" },
         { label: "product", link: "/admin/catalog/product" },
         { label: "variant", link: "/admin/catalog/variant" },
       ],
@@ -44,7 +45,7 @@ const AdminSidebar = () => {
                 <CollapsibleContent>
                   <SidebarMenuSub>
                     {subMenu.map((sub, subIndex) => (
-                      <SidebarMenuButton key={subIndex} className="text-base capitalize" asChild>
+                      <SidebarMenuButton key={subIndex} className="text-sm capitalize" asChild>
                         <Link href={sub.link}>{sub.label}</Link>
                       </SidebarMenuButton>
                     ))}
