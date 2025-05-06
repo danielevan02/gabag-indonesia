@@ -1,12 +1,11 @@
-import ProductCard from "@/components/shared/product/product-card";
-import { getAllProducts } from "@/lib/actions/product.action";
-
 import FilterProduct from "./components/filter-product";
 import MobileFilterProduct from "./components/mobile-filter-product";
 import { Metadata } from "next";
 import Image from "next/image";
 import { getCategory } from "@/lib/actions/category.action";
 import { getSubCategories } from "@/lib/actions/subCategory.action";
+import ProductList, { ProductListFallback } from "./components/product-list";
+import { Suspense } from "react";
 
 export const metadata: Metadata={
   title: 'Products',
@@ -17,22 +16,18 @@ const ProductPage = async ({searchParams}: {
   searchParams: Promise<{
     subCategories: string;
     search: string;
-    banner: string;
     sort: string;
     min: string;
     max: string;
     category: string;
   }>
 }) => {
-  const {subCategories, search, banner, max, min, sort, category} = await searchParams
+  const {subCategories, search, max, min, sort, category} = await searchParams
   const subCategoryIds = subCategories?.split(',')
 
   const categories = await getCategory(category)
   
-  const [products, subCategoryList] = await Promise.all([
-    getAllProducts(undefined, search, subCategoryIds||categories?.subCategories.map((sub) => sub.id), banner, sort, {max, min}),
-    getSubCategories(categories?.id||""),
-  ])
+  const subCategoryList = await getSubCategories(categories?.id||"")
   
   return (
     <div className="mx-3 xl:mx-10 flex flex-col items-center">
@@ -58,30 +53,17 @@ const ProductPage = async ({searchParams}: {
               Showing results for <span className="font-bold">&quot;{search}&quot;</span>
             </p>
           )}
-          <div 
-            className={`
-              grid 
-              w-full 
-              gap-2 
-              md:gap-5 
-              grid-cols-2 
-              lg:grid-cols-3
-              h-full
-              `}
-          >
-            { products && (products?.length !== 0) ? products.map((product) => (
-              <ProductCard
-                key={product.slug}
-                {...product}
-                image={product.images[0]}
-                subCategory={product.subCategory!}
-                className="col-span-1"
-              />
-              )):(
-                <p className="text-lg text-neutral-500 text-center mt-36 col-span-3">There is no products.</p>
-              )
-            }
-          </div>
+
+          <Suspense fallback={<ProductListFallback/>}>
+            <ProductList
+              subCategoryIds={subCategoryIds||categories?.subCategories.map((sub) => sub.id)}
+              search={search}
+              max={max}
+              min={min}
+              sort={sort}
+            />
+          </Suspense>
+
         </div>
       </div>
     </div>

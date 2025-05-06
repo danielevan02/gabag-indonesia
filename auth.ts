@@ -95,7 +95,8 @@ export const config: NextAuthConfig = {
         if (trigger === "signIn" || trigger === "signUp") {
           const cookiesObject = await cookies();
           const sessionCartId = cookiesObject.get("sessionCartId")?.value;
-          console.log("INI SESSIONCART ID NYA", sessionCartId)
+          console.log("ini session cart id nya",sessionCartId)
+
           if (sessionCartId) {
             const sessionCart = await prisma.cart.findFirst({
               where: {
@@ -103,11 +104,10 @@ export const config: NextAuthConfig = {
               },
             });
 
-            if (sessionCart) {
+            if (sessionCart && sessionCart.id == null) {
               await prisma.cart.deleteMany({
                 where: {
                   userId: user.id,
-                  id: { not: sessionCart.id }, // JANGAN hapus cart yang sessionCart
                 },
               });
             
@@ -118,7 +118,7 @@ export const config: NextAuthConfig = {
                 data: {
                   userId: user.id,
                 },
-              }).catch((e) => console.log("INI YA ERROR NYA", e));
+              }).catch((e) => console.log("CART UPDATE ERROR AUTH:", e));
             }
           }
         }

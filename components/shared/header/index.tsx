@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import MobileDrawer from "./mobile-drawer";
 import { SessionProvider } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import CartModal from "./cart-modal";
 
 const Header = async () => {
   const session = await auth()
@@ -38,7 +39,6 @@ const Header = async () => {
 
       <div className="flex w-full justify-between px-5 lg:px-10 pb-2">
         {/* MENU BUTTON VISIBLE FOR MOBILE SCREEN */}
-        {/* @ts-expect-error there is no fix */}
         <SessionProvider session={session}>
           <MobileDrawer/>
         </SessionProvider>
@@ -54,15 +54,7 @@ const Header = async () => {
         <div className="hidden lg:flex gap-5 justify-end items-center w-1/3">
           <ModeToggle />
 
-          <Link
-            href="/cart"
-            className="hover:bg-accent relative rounded-lg w-10 h-10 flex items-center justify-center transition-all group"
-          >
-            <div className="absolute bg-red-700 rounded-full text-white min-w-4 h-4 px-1 text-center text-xs -top-0.5 -right-px">
-              {cart?.items.length}
-            </div>
-            <ShoppingBag />
-          </Link>
+          <CartModal cart={cart} userId={user?.id}/>
 
           {!session ? (
             <div className="flex gap-2">

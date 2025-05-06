@@ -67,6 +67,20 @@ export type CartItem = {
   image: string
 }
 
+export type Cart = {
+  id: string
+  orderId: string | null
+  createdAt: Date
+  itemsPrice: string
+  totalPrice: string
+  shippingPrice: string | undefined
+  taxPrice: string
+  notes: string | null
+  userId: string | undefined
+  sessionCartId: string
+  items: CartItem[]
+}
+
 export type Address = z.infer<typeof addressSchema>
 
 export type Courier = {

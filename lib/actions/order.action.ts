@@ -5,13 +5,10 @@ import { getMyCart } from "./cart.action";
 import { prisma } from "../db/prisma";
 import { convertToPlainObject, formatError } from "../utils";
 import { CartItem, ItemDetail, ShippingInfo } from "@/types";
-import { revalidatePath, unstable_cacheLife as cacheLife, unstable_cacheTag as cacheTag, revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { createTransaction } from "../midtrans/transaction";
 
 export async function getAllOrders(userId?: string) {
-  // 'use cache'
-  // cacheTag('orders')
-  // cacheLife('days')
   if (userId) {
     return prisma.order.findMany({
       where: {
@@ -111,10 +108,6 @@ type PaymentProps = {
   orderId: string;
   cartItem: CartItem[];
 };
-
-export async function revalidateData(path:string) {
-  revalidateTag(path)
-}
 
 export async function makePayment({
   email,
@@ -258,7 +251,6 @@ export async function finalizeOrder({
       })
       .catch((e) => console.log("ORDER_FINALIZE_ERROR:", e));
 
-    revalidateTag('orderById')
     revalidatePath("/orders");
 
     return {
@@ -305,7 +297,6 @@ export async function updatePaymentStatus({orderId, paymentStatus}:UpdatePayment
                 },
               },
             });
-            revalidateTag('products')
           } else {
             await tx.product.update({
               where: { id: item.productId },
@@ -315,12 +306,10 @@ export async function updatePaymentStatus({orderId, paymentStatus}:UpdatePayment
                 },
               },
             });
-            revalidateTag('products')
           }
         }
       }
     })
-    revalidateTag('orderById')
     revalidatePath('/orders')
   } catch (error) {
     console.log(formatError(error))

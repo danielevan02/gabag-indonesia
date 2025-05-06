@@ -3,9 +3,6 @@
 import { prisma } from "../db/prisma"
 
 export async function getSubCategories(categoryId: string){
-  // 'use cache'
-  // cacheTag('categories')
-  // cacheLife('days')
   return await prisma.subCategory.findMany({
     where: {
       categoryId
@@ -14,7 +11,16 @@ export async function getSubCategories(categoryId: string){
 }
 
 export async function getAllSubCategories() {
-  return await prisma.subCategory.findMany()
+  return await prisma.subCategory.findMany({
+    include: {
+      _count: {
+        select: {
+          products: true
+        }
+      },
+      category: true
+    }
+  })
 }
 
 export async function deleteManySubCategories(subCategoryIds: string[]) {

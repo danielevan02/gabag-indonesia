@@ -59,7 +59,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           md:min-h-96
           md:max-h-96
           xl:min-h-[600px]
-          xl:mx-h-[600px]
+          xl:max-h-[600px]
           w-full`
         }
       >

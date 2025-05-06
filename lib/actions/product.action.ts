@@ -1,6 +1,5 @@
 'use server'
 
-import { unstable_cacheLife as cacheLife, unstable_cacheTag as cacheTag } from "next/cache";
 import { prisma } from "../db/prisma"
 import { Product } from "@/types";
 import { Event } from '@prisma/client'
@@ -9,13 +8,9 @@ export async function getAllProducts(
   subCategory?: string,
   search?: string,
   subCategoriesId?: string[],
-  banner?: string,
   sort?: string,
   price?: { min?: string; max?: string }
 ): Promise<Product[]> {
-  // 'use cache'
-  // cacheTag("products")
-  // cacheLife('days')
 
   const products = await prisma.product.findMany({
     where: {
@@ -43,12 +38,6 @@ export async function getAllProducts(
               },
             }
           : {},
-        // Filter berdasarkan banner
-        banner ? { 
-          banner: { 
-            equals: banner === "exclusive" ? "Exclusive": banner === "best-seller" ? "Best Seller" : "New Arrival"
-          } 
-        } : {},
         // Filter berdasarkan harga (min dan max)
         price?.min || price?.max
           ? {
@@ -122,9 +111,6 @@ export async function searchProduct(keyword:string): Promise<Product[]> {
 }
 
 export async function getProductBySlug(slug:string): Promise<Product> {
-  // 'use cache'
-  // cacheTag('productBySlug')
-  // cacheLife('days')
 
   const product = await prisma.product.findFirst({
     where: {
@@ -170,9 +156,6 @@ export async function getProductBySlug(slug:string): Promise<Product> {
 }
 
 export async function getNewArrivalProduct(): Promise<Product[]> {
-  // 'use cache'
-  // cacheTag('newArrivalProducts')
-  // cacheLife('days')
 
   const products = await prisma.product.findMany({
     orderBy: {

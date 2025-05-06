@@ -3,6 +3,7 @@ import AdminHeader from "@/components/admin/shared/header";
 import AdminSidebar from "@/components/admin/shared/sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import QueryProvider from "@/lib/query-provider";
+import { redirect } from "next/navigation";
 
 export default async function RootLayout({
   children,
@@ -10,6 +11,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
+  if(session?.user?.role !== 'admin'){
+    redirect('/')
+  }
   return (
     <div className="flex flex-col items-center">
       <div className="relative max-w-[2500px] w-full max-h-screen">

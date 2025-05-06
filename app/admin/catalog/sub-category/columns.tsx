@@ -3,12 +3,19 @@
 import ActionTable from "@/components/shared/table/action-table";
 import { deleteSubCategory } from "@/lib/actions/subCategory.action";
 import { Checkbox } from "@/components/ui/checkbox";
-import { SubCategory } from "@prisma/client";
+import { Category, SubCategory } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import Image from "next/image";
 
-export const columns: ColumnDef<SubCategory>[] = [
+type FullSubCategory = SubCategory & {
+  category: Category
+  _count: {
+    products: number
+  }
+}
+
+export const columns: ColumnDef<FullSubCategory>[] = [
   {
     id: 'select',
     header: ({table}) => (
@@ -56,6 +63,14 @@ export const columns: ColumnDef<SubCategory>[] = [
     accessorKey: "discount",
     header: "Discount",
     cell: ({ row }) => <p className="">{row.original.discount}%</p>
+  },
+  {
+    header: "Category",
+    cell: ({ row }) => <p className="">{row.original.category.name}</p>
+  },
+  {
+    header: "Products",
+    cell: ({ row }) => <p className="">{row.original._count.products}</p>
   },
   {
     accessorKey: "createdAt",

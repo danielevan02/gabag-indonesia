@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { addToCart } from "@/lib/actions/cart.action";
+import { useCartStore } from "@/lib/stores/cart-store";
 import { cn } from "@/lib/utils";
 import { Product, Variant } from "@/types";
 import { Loader, Minus, Plus } from "lucide-react";
@@ -13,6 +14,7 @@ import { toast } from "sonner";
 
 const ProductDetailSection = ({ product }: { product: Product }) => {
   const router = useRouter();
+  const {setOpenModal} = useCartStore()
   const [variant, setVariant] = useState<Variant>();
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,6 +47,7 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
       weight: product.weight || 0,
     });
     setIsLoading(false);
+    setOpenModal(true)
     return toast(res.message, {
       description: "Check out your cart to see the product",
       action: {

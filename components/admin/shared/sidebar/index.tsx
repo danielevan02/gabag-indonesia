@@ -18,7 +18,6 @@ const AdminSidebar = () => {
         { label: "category", link: "/admin/catalog/category" },
         { label: "sub category", link: "/admin/catalog/sub-category" },
         { label: "product", link: "/admin/catalog/product" },
-        { label: "variant", link: "/admin/catalog/variant" },
       ],
     },
     {

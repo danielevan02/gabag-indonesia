@@ -78,7 +78,7 @@ export function DataTable<TData, TValue>({ columns, data, searchPlaceholder, del
 
   return (
     <>
-      <div className="flex w-full px-1 mb-3 mt-12 justify-between items-center">
+      <div className="flex w-full px-1 mb-3 mt-8 justify-between items-center">
         <div className="relative w-1/2 lg:w-1/4 shrink-0 flex items-center">
           <IconSearch className="absolute right-2 text-neutral-400" size={18} />
           <Input
