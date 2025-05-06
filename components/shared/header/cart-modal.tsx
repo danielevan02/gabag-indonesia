@@ -69,7 +69,7 @@ const CartModal = ({ cart, userId }: { cart?: Cart; userId?: string }) => {
         <SheetHeader className="px-0 h-[10%]">
           <SheetTitle className="flex-1 flex items-center">Shopping Cart</SheetTitle>
         </SheetHeader>
-        <div className="flex flex-col justify-between h-[90%] gap-5">
+        <div className="flex flex-col justify-between h-[90%] gap-5 overflow-scroll">
           <ul className="flex flex-col w-full flex-1 overflow-scroll px-1">
             {cart?.items.map((item, index) => {
               const itemName = item.name.split(" - ");
@@ -138,7 +138,7 @@ const CartModal = ({ cart, userId }: { cart?: Cart; userId?: string }) => {
             })}
           </ul>
 
-          <div className="flex flex-col gap-10 justify-end h-[30%]">
+          <div className="flex flex-col gap-10 justify-end h-[40%] md:h-[30%] lg:h-[45%] xl:h-[30%]">
             <div className="flex flex-col gap-4">
               {priceDetail.map((detail, index) => (
                 <div className="flex flex-col" key={index}>

@@ -76,15 +76,9 @@ const Header = async () => {
         </div>
 
         {/* MOBILE CART BUTTON */}
-        <Link
-          href="/cart"
-          className="hover:bg-neutral-300 relative rounded-lg w-10 h-10 flex items-center justify-center transition-all group lg:hidden"
-        >
-          <div className="absolute bg-red-700 rounded-full text-white px-1 text-xs -top-0.5 -right-px">
-            {cart?.items.length}
-          </div>
-          <ShoppingBag />
-        </Link>
+        <div className="lg:hidden">
+          <CartModal cart={cart} userId={user?.id}/>
+        </div>
 
       </div>
     </div>
