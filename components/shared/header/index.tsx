@@ -3,7 +3,6 @@ import NavLinks from "./nav-links";
 import { ModeToggle } from "./mode-toggle";
 import Logo from "./logo";
 import Link from "next/link";
-import { ShoppingBag } from "lucide-react";
 import SearchBar from "./search-bar";
 import { auth } from "@/auth";
 import { getMyCart } from "@/lib/actions/cart.action";
