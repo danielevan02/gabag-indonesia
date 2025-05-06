@@ -11,7 +11,7 @@ import { useState, useEffect, useRef, useTransition, ChangeEvent, KeyboardEvent 
 
 type ProductSearch = {
   name: string;
-  price: bigint;
+  price: number;
   images: string[];
   slug: string;
   id: string;
