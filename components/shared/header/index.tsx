@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import MobileDrawer from "./mobile-drawer";
 import { SessionProvider } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import CartModal from "./cart-modal";
+import CartModal from "../cart/cart-modal";
 
 const Header = async () => {
   const session = await auth()

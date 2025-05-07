@@ -367,10 +367,10 @@ const OrderForm: React.FC<OrderFormProps> = ({
                 </p>
               </div>
               <div className="flex flex-col max-w-72 justify-between flex-1">
-                <h2 className="text-sm mb-auto">{item.name}</h2>
+                <h2 className="text-sm mb-auto line-clamp-2">{item.name}</h2>
                 <p className="text-xs ">Rp {item.price.toLocaleString()}</p>
               </div>
-              <p className="text-sm">Rp {(item.price * item.qty).toLocaleString()}</p>
+              <p className="text-sm font-medium">Rp {(item.price * item.qty).toLocaleString()}</p>
             </div>
           ))}
         </div>
