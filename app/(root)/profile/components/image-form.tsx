@@ -48,6 +48,9 @@ const ImageForm = ({ user }: { user: User }) => {
           onProgressChange(progress) {
             setProgress(progress);
           },
+          options: {
+            manualFileName: newFileName
+          }
         });
   
         const profileRes = await updateProfile({image: res.url, userId: user.id})

@@ -78,7 +78,7 @@ export function DataTable<TData, TValue>({ columns, data, searchPlaceholder, del
 
   return (
     <>
-      <div className="flex w-full px-1 mb-3 mt-8 justify-between items-center">
+      <div className="flex w-full justify-between items-center my-5">
         <div className="relative w-1/2 lg:w-1/4 shrink-0 flex items-center">
           <IconSearch className="absolute right-2 text-neutral-400" size={18} />
           <Input
@@ -101,7 +101,7 @@ export function DataTable<TData, TValue>({ columns, data, searchPlaceholder, del
         </Button>
       </div>
 
-      <div className="rounded-md border relative overflow-y-auto">
+      <div className="rounded-md border relative overflow-y-auto flex-1">
         <Table>
           <TableHeader className="sticky top-0 bg-white shadow shadow-neutral-200 z-50">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -136,7 +136,7 @@ export function DataTable<TData, TValue>({ columns, data, searchPlaceholder, del
         </Table>
       </div>
 
-      <div className="mt-5 mb-1 flex items-center justify-center">
+      <div className="flex items-center justify-center mt-5">
         <TablePagination table={table}/>
       </div>
 

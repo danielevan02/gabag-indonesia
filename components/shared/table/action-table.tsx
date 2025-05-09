@@ -7,8 +7,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useMutation } from "@tanstack/react-query";
 import React, { useCallback, useState } from "react";
-
-
 import { MoreHorizontal } from "lucide-react";
 import { IconPencil, IconTrash } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
@@ -26,12 +24,7 @@ interface ActionTableProps {
 
 const ActionTable: React.FC<ActionTableProps> = ({ id, desc, title, deleteFunction, type }) => {
   const [deleteModal, setDeleteModal] = useState(false);
-  let href
-  if(type === 'variants' || type === 'products' || type === 'categories'){
-    href = `/dashboard/${ type === 'products' ? type : 'products/'+type }/edit/${id}`
-  } else {
-    href = `/dashboard/${type}`
-  }
+  const href = `/admin/catalog/${type}/${id}`
 
   const menus = [
     {label: 'Edit', icon:<IconPencil/>, href: href},

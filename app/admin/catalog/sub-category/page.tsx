@@ -7,15 +7,15 @@ import Link from "next/link";
 export default async function AdminSubCategoryPage() {
   const subCategories = await getAllSubCategories();
   return (
-    <div className="p-5 h-full">
-      <div className="flex justify-between mt-6 items-center">
+    <div className="p-5 h-full max-h-full flex flex-col">
+      <div className="flex justify-between items-center">
         <h1 className="font-medium text-2xl">Sub Category List</h1>
         <Button>
           <Link href='/admin/catalog/sub-category/add'>Add Sub Category</Link>
         </Button>
       </div>
 
-      <div className='flex-1 overflow-hidden flex flex-col h-full'>
+      <div className='overflow-hidden flex flex-col flex-1'>
         <DataTable
           columns={columns}
           data={subCategories}

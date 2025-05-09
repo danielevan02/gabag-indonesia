@@ -22,7 +22,7 @@ export default async function RootLayout({
           <div className="flex flex-col w-full h-screen">
             <AdminHeader user={session?.user}/>
             <QueryProvider>
-              <main className="flex-1 max-h-10/12">{children}</main>
+              <main className="flex-1 overflow-hidden">{children}</main>
             </QueryProvider>
           </div>
         </SidebarProvider>

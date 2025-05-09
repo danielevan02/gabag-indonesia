@@ -81,7 +81,7 @@ export const columns: ColumnDef<FullSubCategory>[] = [
     id: "actions",
     cell: ({ row }) => (
       <ActionTable 
-        type="products"
+        type="sub-category"
         deleteFunction={deleteSubCategory}
         id={row.original.id} 
         title="Delete Product" 

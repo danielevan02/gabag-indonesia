@@ -47,3 +47,40 @@ export const orderSchema = z.object({
   address: z.string().min(10, "Please enter a valid address. Min. 10 characters"),
   email: z.string().email("Please enter a valid email").min(1, "Please enter your email")
 })
+
+export const categorySchema = z.object({
+  name: z.string().min(1, 'Please enter the name of the category'),
+  image: z.string().min(1, 'Please pick an image for the sub category'),
+  discount: z.number().min(0, "Please enter between 0 - 100").max(100, 'Please enter between 0 - 100'),
+})
+
+export const productsSchema = z.object({
+  name: z.string().min(1, "Please enter the name of the product"),
+  slug: z.string(),
+  description: z.string().min(1, "Please enter the product description"),
+  images: z.array(z.string()).min(1, 'Please enter the product images'),
+  stock: z.number().min(1),
+  discount: z.number().min(0, "Please enter between 0 - 100").max(100, 'Please enter between 0 - 100').default(0),
+  hasVariant: z.boolean().default(false),
+  hasDifferentVariantPrice: z.boolean().default(false),
+  width: z.number().default(0),
+  length: z.number().default(0),
+  height: z.number().default(0),
+  weight: z.number().default(0),
+  sku: z.string().optional(),
+  regularPrice: z.number().default(0)
+})
+
+export const subCategorySchema = z.object({
+  name: z.string().min(1, 'Please enter the name of the sub category'),
+  image: z.string({message: "Please insert an image for this sub category"}).optional(),
+  discount: z.coerce.number().optional(),
+  category: z.object({
+    label: z.string(),
+    value: z.string()
+  }, {message: "Please choose a category"}),
+  products: z.array(z.object({
+    label: z.string(),
+    value: z.string()
+  })).optional()
+})
