@@ -1,135 +1,148 @@
-'use client'
+"use client";
 
-import { FormField } from "@/components/shared/input/form-field";
 import { Button } from "@/components/ui/button";
-import { UploadFn } from "@/components/upload/uploader-provider";
+import { FormField } from "@/components/shared/input/form-field";
 import { createSubCategory } from "@/lib/actions/subCategory.action";
 import { useEdgeStore } from "@/lib/edge-store";
-import { subCategorySchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
+import { subCategorySchema } from "@/lib/schema";
+import { SubCategoryFormType } from "../../page";
+import { UploadFn } from "@/components/upload/uploader-provider";
 
+const SubCategoryForm = ({
+  category,
+  products,
+}: {
+  category: { value: string; label: string }[];
+  products: { value: string; label: string }[];
+}) => {
+  const router = useRouter();
+  const { edgestore } = useEdgeStore();
+  const [isImageUploaded, setIsImageUploaded] = useState(false);
+  const [triggerUpload, setTriggerUpload] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, startTransition] = useTransition();
+  const [data, setData] = useState<SubCategoryFormType>(
+    {} as SubCategoryFormType
+  );
 
-export type SubCategoryFormType = z.infer<typeof subCategorySchema>
-
-interface SubCategoryFormProps {
-  products: {
-    value: string,
-    label: string,
-  }[]
-  category: {
-    value: string,
-    label: string,
-  }[]
-}
-
-const SubCategoryForm = ({category, products}:SubCategoryFormProps) => {
-  const {edgestore} = useEdgeStore()
-  const [isImageUploaded, setIsImageUploaded] = useState(false)
-  const [isLoading, startTransition] = useTransition()
-  const router = useRouter()
   const {
     register,
-    formState: {errors},
+    handleSubmit,
+    formState: { errors },
     control,
-    setValue,
-    handleSubmit
-  } = useForm({
+  } = useForm<SubCategoryFormType>({
     resolver: zodResolver(subCategorySchema),
-  })
+  });
 
-  const handleUpload: UploadFn = useCallback(
-    async ({ file, onProgressChange, signal }) => {
+  const handleUpload: UploadFn = async ({ file, signal, onProgressChange }) => {
+    startTransition(async () => {
       const res = await edgestore.publicImages.upload({
         file,
         signal,
         onProgressChange,
       });
 
-      setValue('image', res.url)
-      return res;
-    },
-    [edgestore.publicImages, setValue],
-  );
+      try {
+        const response = await createSubCategory({ ...data, image: res.url });
+        if (response.success) {
+          toast.success(response.message);
+          router.push("/admin/catalog/sub-category");
+        } else {
+          toast.error(response.message);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    });
 
+    return { url: "" };
+  };
 
   const onSubmit = async (data: SubCategoryFormType) => {
-    startTransition(async()=>{
-      const res = await createSubCategory(data)
-      toast.success(res.message)
-    })
-    router.push("/admin/catalog/sub-category")
-  }
+    setData(data);
+    
+    // this will trigger the handleUpload function
+    setTriggerUpload(true);
+  };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col my-5 flex-1 overflow-y-scroll px-1">
-      <FormField<SubCategoryFormType>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-5">
+      <FormField
         label="Name"
         name="name"
-        placeholder="Please enter sub category name"
+        type="text"
         register={register}
         errors={errors}
         required
+        placeholder="Enter sub-category name"
+        disabled={isLoading}
       />
-      <FormField<SubCategoryFormType>
-        label="Select Category"
+
+      <FormField
+        label="Category"
         name="category"
-        placeholder="Please choose the main category"
         type="select"
-        errors={errors}
-        options={category}
         control={control}
+        errors={errors}
         required
+        placeholder="Select category"
+        options={category}
+        disabled={isLoading}
       />
-      <FormField<SubCategoryFormType>
-        label="Select Products"
+
+      <FormField
+        label="Image"
+        name="image"
+        type="image"
+        errors={errors}
+        required
+        uploadFn={handleUpload}
+        triggerUpload={triggerUpload}
+        disabled={isLoading}
+      />
+
+      <FormField
+        label="Discount"
+        name="discount"
+        type="text"
+        register={register}
+        errors={errors}
+        placeholder="Enter discount percentage"
+        disabled={isLoading}
+      />
+
+      <FormField
+        label="Products"
         name="products"
-        placeholder="Please choose the products"
         type="select"
+        control={control}
         errors={errors}
         isMulti
+        placeholder="Select products"
         options={products}
-        control={control}
+        disabled={isLoading}
       />
-      <FormField<SubCategoryFormType>
-        label="Discount (optional)"
-        name="discount"
-        placeholder="Please input the discount"
-        errors={errors}
-        register={register}
-        type="number"
-      />
-
-      <div className="w-fit">
-        <FormField<SubCategoryFormType>
-          label="Image"
-          name="image"
-          type="image"
-          uploadFn={handleUpload}
-          errors={errors}
-          setIsImageUploaded={setIsImageUploaded}
-          required
-        />
-      </div>
 
       <div className="flex justify-end gap-2">
-        <Button variant='destructive' onClick={()=>router.back()} disabled={isLoading}>Cancel</Button>
-        <Button type="submit" disabled={!isImageUploaded || isLoading}>
-          {isLoading ? (
-            <Loader className="w-4 h-4 animate-spin"/>
-          ):(
-            "Create"
-          )}
+        <Button
+          variant="destructive"
+          type="button"
+          disabled={isSubmitting || isLoading}
+          onClick={() => router.push("/admin/catalog/sub-category")}
+        >
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isSubmitting || !isImageUploaded}>
+          {isSubmitting ? "Creating..." : "Create Sub-Category"}
         </Button>
       </div>
-
     </form>
   );
-}
- 
+};
+
 export default SubCategoryForm;

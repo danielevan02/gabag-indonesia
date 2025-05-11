@@ -19,7 +19,7 @@ const MobileDrawer = () => {
   const user = session.data?.user
   const [open, setOpen] = useState(false)
   
-  const splitName = user?.name?.split(" ")
+  const splitName = user?.name?.includes(" ") && user?.name?.split(" ") || [user?.name]
   useEffect(()=>{
     setOpen(false)
   }, [pathname, category])
@@ -41,7 +41,7 @@ const MobileDrawer = () => {
               <div className="flex items-center gap-2">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={user?.image||""} alt={user?.name||""}/>
-                  <AvatarFallback className="bg-black text-white dark:bg-white dark:text-black">{splitName![0].charAt(0) + splitName![1].charAt(0)}</AvatarFallback>
+                  <AvatarFallback className="bg-black text-white dark:bg-white dark:text-black">{splitName[0]?.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <p className="text-sm line-clamp-1">{user?.name}</p>
               </div>

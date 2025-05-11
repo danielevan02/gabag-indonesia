@@ -5,20 +5,29 @@ import { SingleImageDropzone } from "@/components/upload/single-image";
 import { useUploader } from "@/components/upload/uploader-provider";
 import { useEffect } from "react";
 
-const UploadImage = ({triggerUpload}:{triggerUpload: boolean}) => {
-  const {uploadFiles} = useUploader()
+interface UploadImageProps {
+  triggerUpload?: boolean;
+  initialPhoto?: string;
+}
 
-  useEffect(()=>{
-    uploadFiles()
-  }, [triggerUpload])
+const UploadImage = ({ triggerUpload, initialPhoto }: UploadImageProps) => {
+  const { uploadFiles } = useUploader();
+  console.log(initialPhoto);
+
+  useEffect(() => {
+    if (triggerUpload) {
+      uploadFiles();
+    }
+  }, [triggerUpload]);
 
   return (
     <SingleImageDropzone
-      height={200}
       width={200}
+      height={200}
       dropzoneOptions={{
         maxSize: 1024 * 1024 * 3, // 3 MB
       }}
+      url={initialPhoto}
     />
   );
 };

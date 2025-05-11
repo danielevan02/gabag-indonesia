@@ -25,7 +25,6 @@ const AdminHeader = ({user}: {user?: User}) => {
           </Button>
         </div>
 
-
         <Account user={user} />
       </div>
     </div>

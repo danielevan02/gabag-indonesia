@@ -54,7 +54,7 @@ const CartModal = ({ cart, userId }: { cart?: Cart; userId?: string }) => {
     <Sheet open={isOpen} onOpenChange={setOpenModal}>
       <SheetTrigger className="relative w-10 h-10 flex items-center justify-center transition-all hover:bg-accent rounded-lg">
         <div className="absolute bg-red-700 rounded-full text-white min-w-4 h-4 px-1 text-center text-xs -top-0.5 -right-px">
-          {cart?.items.length}
+          {cart?.items.length??0}
         </div>
         <ShoppingBag />
       </SheetTrigger>

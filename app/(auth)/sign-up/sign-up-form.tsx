@@ -46,7 +46,7 @@ const SignUpForm = () => {
 
   return !email ? (
     <form className="flex flex-col px-1" onSubmit={handleSubmit(onSubmit)}>
-      <FormField<SignUpType>
+      <FormField
         label="Full Name"
         name="fullName"
         errors={errors}
@@ -55,7 +55,7 @@ const SignUpForm = () => {
         register={register}
       />
 
-      <FormField<SignUpType>
+      <FormField
         label="Email"
         name="email"
         errors={errors}
@@ -64,26 +64,24 @@ const SignUpForm = () => {
         register={register}
       />
 
-      <FormField<SignUpType>
+      <FormField
         label="Phone"
         name="phone"
         errors={errors}
         placeholder="Enter your phone number..."
         register={register}
-        isPhone
         control={control}
       />
 
-      <FormField<SignUpType>
+      <FormField
         label="Password"
         name="password"
         errors={errors}
         placeholder="Enter your password..."
-        isPassword
         register={register}
       />
 
-      <FormField<SignUpType>
+      <FormField
         label="Confirm Password"
         name="confirmPassword"
         errors={errors}

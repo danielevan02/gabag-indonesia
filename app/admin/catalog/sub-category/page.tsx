@@ -3,6 +3,10 @@ import { columns } from "./columns";
 import { deleteManySubCategories, getAllSubCategories } from "@/lib/actions/subCategory.action";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { subCategorySchema } from "@/lib/schema";
+import { z } from "zod";
+
+export type SubCategoryFormType = z.infer<typeof subCategorySchema>;
 
 export default async function AdminSubCategoryPage() {
   const subCategories = await getAllSubCategories();

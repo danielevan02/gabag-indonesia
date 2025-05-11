@@ -46,6 +46,11 @@ export interface SingleImageDropzoneProps
   disabled?: boolean;
 
   /**
+   * External URL to display as the initial image
+   */
+  url?: string;
+
+  /**
    * Options passed to the underlying react-dropzone component.
    * Cannot include 'disabled', 'onDrop', 'maxFiles', or 'multiple' as they are handled internally.
    */
@@ -74,7 +79,7 @@ export interface SingleImageDropzoneProps
 const SingleImageDropzone = React.forwardRef<
   HTMLInputElement,
   SingleImageDropzoneProps
->(({ dropzoneOptions, width, height, className, disabled, ...props }, ref) => {
+>(({ dropzoneOptions, width, height, className, disabled, url, ...props }, ref) => {
   const { fileStates, addFiles, removeFile, cancelUpload } = useUploader();
   const [error, setError] = React.useState<string>();
 
@@ -98,11 +103,11 @@ const SingleImageDropzone = React.forwardRef<
     };
   }, [tempUrl]);
 
-  const displayUrl = tempUrl ?? fileState?.url;
+  const displayUrl = tempUrl ?? fileState?.url ?? url;
   const isDisabled =
     !!disabled ||
     fileState?.status === 'UPLOADING' ||
-    fileState?.status === 'COMPLETE'; // Disable when upload complete
+    fileState?.status === 'COMPLETE';
 
   const { getRootProps, getInputProps, isFocused, isDragAccept, isDragReject } =
     useDropzone({
