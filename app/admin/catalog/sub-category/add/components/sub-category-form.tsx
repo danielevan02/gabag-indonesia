@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { subCategorySchema } from "@/lib/schema";
 import { SubCategoryFormType } from "../../page";
 import { UploadFn } from "@/components/upload/uploader-provider";
+import { Loader } from "lucide-react";
 
 const SubCategoryForm = ({
   category,
@@ -22,9 +23,7 @@ const SubCategoryForm = ({
 }) => {
   const router = useRouter();
   const { edgestore } = useEdgeStore();
-  const [isImageUploaded, setIsImageUploaded] = useState(false);
   const [triggerUpload, setTriggerUpload] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, startTransition] = useTransition();
   const [data, setData] = useState<SubCategoryFormType>(
     {} as SubCategoryFormType
@@ -132,13 +131,13 @@ const SubCategoryForm = ({
         <Button
           variant="destructive"
           type="button"
-          disabled={isSubmitting || isLoading}
+          disabled={isLoading}
           onClick={() => router.push("/admin/catalog/sub-category")}
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={isSubmitting || !isImageUploaded}>
-          {isSubmitting ? "Creating..." : "Create Sub-Category"}
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? <Loader className="w-4 h-4 animate-spin" /> : "Create Sub-Category"}
         </Button>
       </div>
     </form>

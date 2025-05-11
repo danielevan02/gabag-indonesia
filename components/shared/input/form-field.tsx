@@ -97,6 +97,7 @@ export function FormField<TFieldValues extends FieldValues>({
   type,
   ...props
 }: FormFieldProps<TFieldValues>) {
+  const [passShown, setPassShown] = useState(false);
   const renderField = () => {
     switch (type) {
       case 'phone': {
@@ -113,7 +114,6 @@ export function FormField<TFieldValues extends FieldValues>({
 
       case 'password': {
         const passwordProps = props as PasswordFormFieldProps<TFieldValues>;
-        const [passShown, setPassShown] = useState(false);
         return (
           <div className="relative flex items-center">
             <Input

@@ -12,7 +12,6 @@ import { useRouter } from "next/navigation";
 import { useCallback, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
 import { SubCategoryFormType } from "../../page";
 
 interface EditSubCategoryFormProps {
@@ -34,7 +33,6 @@ interface EditSubCategoryFormProps {
 
 const EditSubCategoryForm = ({ subCategory }: EditSubCategoryFormProps) => {
   const { edgestore } = useEdgeStore();
-  const [isImageUploaded, setIsImageUploaded] = useState(true); // Start as true since we have an initial image
   const [isLoading, startTransition] = useTransition();
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>(
     subCategory.image
@@ -94,6 +92,7 @@ const EditSubCategoryForm = ({ subCategory }: EditSubCategoryFormProps) => {
           toast.error(res.message);
         }
       } catch (error) {
+        console.log(error);
         toast.error("Failed to update sub category");
       }
     });
@@ -160,7 +159,7 @@ const EditSubCategoryForm = ({ subCategory }: EditSubCategoryFormProps) => {
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={!isImageUploaded || isLoading}>
+        <Button type="submit" disabled={isLoading}>
           {isLoading ? <Loader className="w-4 h-4 animate-spin" /> : "Update"}
         </Button>
       </div>
