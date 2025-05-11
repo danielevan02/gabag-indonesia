@@ -68,7 +68,7 @@ const AddressForm = ({address, id}: {address?: Address; id: string}) => {
             register={register}
             name="province"
             placeholder="enter your province"
-            disable={!edit}
+            disabled={!edit}
           />
           <FormField<AddressFormType>
             label="City"
@@ -76,7 +76,7 @@ const AddressForm = ({address, id}: {address?: Address; id: string}) => {
             register={register}
             name="city"
             placeholder="enter your city"
-            disable={!edit}
+            disabled={!edit}
           />
         </div>
         <div className="flex flex-col lg:flex-row lg:gap-5">
@@ -86,7 +86,7 @@ const AddressForm = ({address, id}: {address?: Address; id: string}) => {
             register={register}
             name="district"
             placeholder="enter your district"
-            disable={!edit}
+            disabled={!edit}
           />
           <FormField<AddressFormType>
             label="Village"
@@ -94,7 +94,7 @@ const AddressForm = ({address, id}: {address?: Address; id: string}) => {
             register={register}
             name="village"
             placeholder="enter your village"
-            disable={!edit}
+            disabled={!edit}
           />
         </div>
         <FormField<AddressFormType>
@@ -103,7 +103,7 @@ const AddressForm = ({address, id}: {address?: Address; id: string}) => {
           register={register}
           name="postalCode"
           placeholder="enter your postal code"
-          disable={!edit}
+          disabled={!edit}
         />
         <div className="flex flex-col gap-2">
           <label htmlFor="address" className="text-sm font-medium">Address</label>
