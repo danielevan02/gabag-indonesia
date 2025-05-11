@@ -58,7 +58,6 @@ const SignInForm = () => {
         placeholder="enter your password..."
         errors={errors}
         register={register}
-        isPassword
       />
       <p className="mb-5 md:mb-0">Don&apos;t have an account? <Link href='/sign-up' className="underline hover:text-blue-900">Create Account</Link> </p>
       <Button className="w-fit ml-auto tracking-widest rounded-full py-7 px-10 min-w-40 text-lg" type="submit">
