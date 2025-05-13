@@ -38,7 +38,7 @@ const EditSubCategoryForm = ({ subCategory }: EditSubCategoryFormProps) => {
     subCategory.image
   );
   const router = useRouter();
-  console.log(subCategory.image);
+
   const {
     register,
     formState: { errors },

@@ -57,7 +57,7 @@ export async function addToCart(item: CartItem) {
 
     const session = await auth();
     const userId = session?.user?.id ? session.user.id : undefined;
-    console.log(userId);
+
     const cart = await getMyCart();
 
     let message: string;

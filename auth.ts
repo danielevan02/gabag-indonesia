@@ -95,7 +95,6 @@ export const config: NextAuthConfig = {
         if (trigger === "signIn" || trigger === "signUp") {
           const cookiesObject = await cookies();
           const sessionCartId = cookiesObject.get("sessionCartId")?.value;
-          console.log("ini session cart id nya",sessionCartId)
 
           if (sessionCartId) {
             const sessionCart = await prisma.cart.findFirst({

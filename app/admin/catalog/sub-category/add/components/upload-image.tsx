@@ -12,7 +12,6 @@ interface UploadImageProps {
 
 const UploadImage = ({ triggerUpload, initialPhoto }: UploadImageProps) => {
   const { uploadFiles } = useUploader();
-  console.log(initialPhoto);
 
   useEffect(() => {
     if (triggerUpload) {

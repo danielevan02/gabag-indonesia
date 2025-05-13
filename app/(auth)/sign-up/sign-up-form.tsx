@@ -32,7 +32,6 @@ const SignUpForm = () => {
   });
 
   const onSubmit: SubmitHandler<SignUpType> = async (data) => {
-    console.log(data)
     startTransition(async()=>{
       const res = await registerUser(data)
       

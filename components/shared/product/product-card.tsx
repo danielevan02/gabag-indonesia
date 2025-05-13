@@ -104,6 +104,7 @@ const PriceTag = ({price, regularPrice, hasDifferentVariantPrice, hasVariant, va
   if(variants){
     lowestPrice = Math.min(...variants.map((v) => v.price))
   }
+
   return(
     <>
       {discount !== 0 ? (

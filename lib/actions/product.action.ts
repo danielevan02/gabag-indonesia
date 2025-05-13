@@ -70,7 +70,7 @@ export async function getAllProducts(
         discount: variant.discount as number | undefined,
         sku: variant.sku as string | undefined,
         regularPrice: Number(variant.regularPrice),
-        price: Number(variant.regularPrice) - Number(variant.regularPrice)*(variant.discount||0/100)
+        price: Number(variant.regularPrice) - Number(variant.regularPrice)*((variant.discount??0)/100)
       })),
       weight: Number(product.weight),
       length: Number(product.length),
