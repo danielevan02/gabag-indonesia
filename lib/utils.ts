@@ -42,3 +42,9 @@ export const updateQueryParams = (
   const queryString = updatedParams.toString();
   router.replace(queryString ? `?${queryString}` : "/products");
 };
+
+export const generateFileName = (prefix: string, name: string, imageUrl: string) => {
+  const clearName = name.trim().toLowerCase()
+  const format = imageUrl.split('.').pop()
+  return `${prefix}_${clearName}-${Date.now()}.${format}`
+}

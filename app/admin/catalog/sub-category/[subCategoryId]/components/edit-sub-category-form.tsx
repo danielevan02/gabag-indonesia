@@ -9,10 +9,11 @@ import { subCategorySchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { SubCategoryFormType } from "../../page";
+import { generateFileName } from "@/lib/utils";
 
 interface EditSubCategoryFormProps {
   subCategory: {
@@ -29,21 +30,25 @@ interface EditSubCategoryFormProps {
       label: string;
     }[];
   };
+  categoryList: {
+    value: string;
+    label: string;
+  }[];
 }
 
-const EditSubCategoryForm = ({ subCategory }: EditSubCategoryFormProps) => {
+const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormProps) => {
   const { edgestore } = useEdgeStore();
   const [isLoading, startTransition] = useTransition();
-  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>(
-    subCategory.image
-  );
+  const [triggerUpload, setTriggerUpload] = useState(false);
   const router = useRouter();
+  const [data, setData] = useState<SubCategoryFormType>(
+    {} as SubCategoryFormType
+  );
 
   const {
     register,
     formState: { errors },
     control,
-    setValue,
     handleSubmit,
   } = useForm({
     resolver: zodResolver(subCategorySchema),
@@ -56,46 +61,39 @@ const EditSubCategoryForm = ({ subCategory }: EditSubCategoryFormProps) => {
     },
   });
 
-  const handleUpload: UploadFn = useCallback(
-    async ({ file, onProgressChange, signal }) => {
+  const handleUpload: UploadFn = async ({ file, signal, onProgressChange }) => {
+    startTransition(async () => {
+      await edgestore.publicImages.delete({url: subCategory.image});
+
       const res = await edgestore.publicImages.upload({
         file,
         signal,
         onProgressChange,
+        options: {
+          manualFileName: generateFileName('sub-category', data.name, subCategory.image),
+        }
       });
 
-      setUploadedImageUrl(res.url);
-      setValue("image", res.url);
-      return res;
-    },
-    [edgestore.publicImages, setValue]
-  );
-
-  const onSubmit = async (data: SubCategoryFormType) => {
-    if (!uploadedImageUrl) {
-      toast.error("Please upload an image first");
-      return;
-    }
-
-    startTransition(async () => {
       try {
-        const formData = {
-          ...data,
-          id: subCategory.id,
-          image: uploadedImageUrl,
-        };
-        const res = await updateSubCategory(formData);
-        if (res.success) {
-          toast.success(res.message);
+        const response = await updateSubCategory({ ...data, image: res.url, id: subCategory.id });
+        if (response.success) {
+          toast.success(response.message);
           router.push("/admin/catalog/sub-category");
         } else {
-          toast.error(res.message);
+          toast.error(response.message);
         }
       } catch (error) {
         console.log(error);
-        toast.error("Failed to update sub category");
       }
     });
+
+    return { url: "" };
+  };
+  const onSubmit = async (data: SubCategoryFormType) => {
+    setData(data);
+    
+    // this will trigger the handleUpload function
+    setTriggerUpload(true);
   };
 
   return (
@@ -109,6 +107,7 @@ const EditSubCategoryForm = ({ subCategory }: EditSubCategoryFormProps) => {
         placeholder="Please enter sub category name"
         register={register}
         errors={errors}
+
         required
       />
       <FormField
@@ -117,7 +116,7 @@ const EditSubCategoryForm = ({ subCategory }: EditSubCategoryFormProps) => {
         placeholder="Please choose the main category"
         type="select"
         errors={errors}
-        options={[subCategory.category]}
+        options={categoryList}
         control={control}
         required
       />
@@ -127,6 +126,7 @@ const EditSubCategoryForm = ({ subCategory }: EditSubCategoryFormProps) => {
           name="image"
           type="image"
           uploadFn={handleUpload}
+          triggerUpload={triggerUpload}
           errors={errors}
           required
           initialPhoto={subCategory.image}

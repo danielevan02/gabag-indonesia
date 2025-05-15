@@ -145,6 +145,7 @@ export function FormField<TFieldValues extends FieldValues>({
           <div className="w-fit">
             <UploaderProvider 
               uploadFn={imageProps.uploadFn}
+              
             >
               <UploadImage 
                 triggerUpload={imageProps.triggerUpload}

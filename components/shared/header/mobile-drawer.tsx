@@ -1,7 +1,7 @@
 "use client";
 
 import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
-import { AlignJustify, Pencil } from "lucide-react";
+import { AlignJustify, Pencil, ShieldUser } from "lucide-react";
 import { ModeToggle } from "./mode-toggle";
 import NavLinks from "./nav-links";
 import { useEffect, useState } from "react";
@@ -10,6 +10,7 @@ import {useSession} from 'next-auth/react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import TooltipWrapper from "../tooltip-wrapper";
 
 const MobileDrawer = () => {
   const pathname = usePathname()
@@ -32,7 +33,19 @@ const MobileDrawer = () => {
       <DrawerContent className="px-10">
         <DrawerHeader className="flex-row items-center justify-between">
           <DrawerTitle className="w-min">Menu</DrawerTitle>
-          <ModeToggle />
+          <div className="flex items-center gap-2">
+            <ModeToggle />
+            {user?.role === "admin" && (
+              <TooltipWrapper text="Admin Panel">
+                <Link
+                  href="/admin/dashboard"
+                  className="cursor-pointer hover:bg-muted rounded-md p-2"
+                >
+                  <ShieldUser className="w-6 h-6" />
+                </Link>
+              </TooltipWrapper>
+            )}
+          </div>
         </DrawerHeader>
         <NavLinks device="mobile" />
         <DrawerFooter>

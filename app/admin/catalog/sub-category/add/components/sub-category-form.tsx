@@ -13,6 +13,7 @@ import { subCategorySchema } from "@/lib/schema";
 import { SubCategoryFormType } from "../../page";
 import { UploadFn } from "@/components/upload/uploader-provider";
 import { Loader } from "lucide-react";
+import { generateFileName } from "@/lib/utils";
 
 const SubCategoryForm = ({
   category,
@@ -44,6 +45,9 @@ const SubCategoryForm = ({
         file,
         signal,
         onProgressChange,
+        options: {
+          manualFileName: generateFileName('sub-category', data.name, '.png')
+        }
       });
 
       try {
