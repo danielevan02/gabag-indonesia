@@ -123,8 +123,8 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
           snap-mandatory
           `}
         >
-          {imagesList.map((item) => (
-            <Suspense key={item} fallback={<Skeleton className="w-20 h-20 rounded-md" />}>
+          {imagesList.map((item, index) => (
+            <Suspense key={index} fallback={<Skeleton className="w-20 h-20 rounded-md" />}>
               <div
                 className="relative snap-start min-h-20 max-h-20 min-w-20 max-w-20 rounded-md overflow-hidden"
                 onMouseEnter={() => setMainImage(item)}

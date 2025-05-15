@@ -17,7 +17,7 @@ export default async function AddSubCategoryPage() {
   }))
 
   return(
-    <div className="p-5 flex flex-col h-full">
+    <div className="p-5 flex flex-col h-full overflow-scroll">
       <p className="text-lg">Add New Sub Category</p>
 
       <SubCategoryForm category={categoryList} products={productList}/>

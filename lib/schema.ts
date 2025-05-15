@@ -84,3 +84,27 @@ export const subCategorySchema = z.object({
     value: z.string()
   })).optional()
 })
+
+export const variantSchema = z.object({
+  name: z.string().min(1, "Variant name is required"),
+  sku: z.string().optional(),
+  price: z.coerce.number().min(0, "Price must be greater than or equal to 0"),
+  stock: z.coerce.number().min(0, "Stock must be greater than or equal to 0"),
+  discount: z.coerce.number().min(0).max(100).optional(),
+  image: z.string().min(1, "Variant image is required"),
+});
+
+export const productSchema = z.object({
+  name: z.string().min(1, "Name is required").optional(),
+  slug: z.string().optional(),
+  subCategory: z.object({
+    value: z.string(),
+    label: z.string()
+  }).nullable(),
+  price: z.coerce.number().min(0, "Price must be greater than or equal to 0").optional(),
+  discount: z.coerce.number().min(0).max(100).optional(),
+  image: z.array(z.string()).min(1, "Image is required").optional(),
+  description: z.string().min(1, "Description is required").optional(),
+  hasVariant: z.boolean().default(false),
+  variants: z.array(variantSchema).optional()
+});

@@ -3,6 +3,8 @@
 import { prisma } from "../db/prisma"
 import { Product } from "@/types";
 import { Event } from '@prisma/client'
+import { ProductFormType } from "@/app/admin/catalog/product/add/components/product-form"
+import { revalidatePath } from "next/cache"
 
 export async function getAllProducts(
   subCategory?: string,
@@ -177,4 +179,157 @@ export async function getNewArrivalProduct(): Promise<Product[]> {
       price: Number(product.regularPrice) - (Number(product.regularPrice)*product.discount/100)
     }))
   ]
+}
+
+export async function getProductById(id: string) {
+  return await prisma.product.findFirst({
+    where: {
+      id
+    },
+    include: {
+      subCategory: {
+        select: {
+          id: true,
+          name: true
+        }
+      }
+    }
+  })
+}
+
+export async function createProduct(data: ProductFormType) {
+  try {
+    const { subCategory, name, price, discount, image, description, slug, hasVariant, variants } = data
+    
+    await prisma.product.create({
+      data: {
+        name: name!,
+        slug: slug!,
+        subCategoryId: subCategory?.value ?? "",
+        regularPrice: hasVariant ? 0 : price,
+        discount,
+        images: image,
+        description: description!,
+        hasVariant,
+        variants: hasVariant ? {
+          create: variants?.map(variant => ({
+            name: variant.name,
+            sku: variant.sku,
+            regularPrice: variant.price,
+            stock: variant.stock,
+            discount: variant.discount
+          }))
+        } : undefined
+      },
+    })
+
+    revalidatePath('/admin/catalog/product')
+
+    return {
+      success: true,
+      message: 'Product Created'
+    }
+  } catch (error) {
+    console.log(error)
+    return {
+      success: false,
+      message: 'Failed to Create Product'
+    }
+  }
+}
+
+export async function updateProduct(data: ProductFormType & { id?: string }) {
+  try {
+    const { subCategory, name, price, discount, image, description, id, hasVariant, variants } = data
+    
+    if (!id) {
+      throw new Error("Product ID is required")
+    }
+
+    await prisma.product.update({
+      where: {
+        id
+      },
+      data: {
+        name,
+        subCategoryId: subCategory?.value,
+        regularPrice: hasVariant ? 0 : price,
+        discount,
+        images: image,
+        description,
+        hasVariant,
+        variants: hasVariant ? {
+          deleteMany: {},
+          create: variants?.map(variant => ({
+            name: variant.name,
+            sku: variant.sku,
+            regularPrice: variant.price,
+            stock: variant.stock,
+            discount: variant.discount
+          }))
+        } : undefined
+      },
+    })
+
+    revalidatePath('/admin/catalog/product')
+
+    return {
+      success: true,
+      message: 'Product Updated'
+    }
+  } catch (error) {
+    console.log(error)
+    return {
+      success: false,
+      message: 'Failed to Update Product'
+    }
+  }
+}
+
+export async function deleteProduct(id: string) {
+  try {
+    await prisma.product.delete({
+      where: {
+        id
+      }
+    })
+
+    revalidatePath('/admin/catalog/product')
+
+    return {
+      success: true,
+      message: 'Product Deleted'
+    }
+  } catch (error) {
+    console.log(error)
+    return {
+      success: false,
+      message: 'Failed to Delete Product'
+    }
+  }
+}
+
+export async function deleteManyProducts(ids: string[]) {
+  try {
+    await prisma.product.deleteMany({
+      where: {
+        id: {
+          in: ids
+        }
+      }
+    })
+
+    revalidatePath('/admin/catalog/product')
+
+    return {
+      success: true,
+      message: 'Products Deleted'
+    }
+  } catch (error) {
+    console.log(error)
+    return {
+      success: false,
+      message: 'Failed to Delete Products'
+    }
+  }
 }

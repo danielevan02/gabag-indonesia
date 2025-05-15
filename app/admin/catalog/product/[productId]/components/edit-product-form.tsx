@@ -3,47 +3,43 @@
 import { FormField } from "@/components/shared/input/form-field";
 import { Button } from "@/components/ui/button";
 import { UploadFn } from "@/components/upload/uploader-provider";
-import { updateSubCategory } from "@/lib/actions/subCategory.action";
+import { updateProduct } from "@/lib/actions/product.action";
 import { useEdgeStore } from "@/lib/edge-store";
-import { subCategorySchema } from "@/lib/schema";
+import { productSchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { SubCategoryFormType } from "../../page";
+import { ProductFormType } from "../../add/components/product-form";
 import { generateFileName } from "@/lib/utils";
 
-interface EditSubCategoryFormProps {
-  subCategory: {
+interface EditProductFormProps {
+  product: {
     id: string;
     name: string;
-    category: {
+    subCategory: {
       value: string;
       label: string;
-    };
+    } | null;
     image: string;
+    price: number;
     discount: number;
-    products: {
-      value: string;
-      label: string;
-    }[];
+    description: string;
   };
-  categoryList: {
+  subCategoryList: {
     value: string;
     label: string;
   }[];
 }
 
-const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormProps) => {
+const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => {
   const { edgestore } = useEdgeStore();
   const [isLoading, startTransition] = useTransition();
   const [triggerUpload, setTriggerUpload] = useState(false);
   const router = useRouter();
-  const [data, setData] = useState<SubCategoryFormType>(
-    {} as SubCategoryFormType
-  );
+  const [data, setData] = useState<ProductFormType>({} as ProductFormType);
 
   const {
     register,
@@ -51,35 +47,35 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
     control,
     handleSubmit,
   } = useForm({
-    resolver: zodResolver(subCategorySchema),
+    resolver: zodResolver(productSchema),
     defaultValues: {
-      name: subCategory.name,
-      category: subCategory.category,
-      products: subCategory.products,
-      discount: subCategory.discount,
-      image: subCategory.image,
+      name: product.name,
+      subCategory: product.subCategory,
+      price: product.price,
+      discount: product.discount,
+      description: product.description,
+      image: product.image,
     },
   });
 
   const handleUpload: UploadFn = async ({ file, signal, onProgressChange }) => {
-    console.log('masuksiniiiii');
     startTransition(async () => {
-      await edgestore.publicImages.delete({url: subCategory.image});
+      await edgestore.publicImages.delete({ url: product.image });
 
       const res = await edgestore.publicImages.upload({
         file,
         signal,
         onProgressChange,
         options: {
-          manualFileName: generateFileName('sub-category', data.name, subCategory.image),
+          manualFileName: generateFileName('product', data.name, product.image),
         }
       });
 
       try {
-        const response = await updateSubCategory({ ...data, image: res.url, id: subCategory.id });
+        const response = await updateProduct({ ...data, image: res.url, id: product.id });
         if (response.success) {
           toast.success(response.message);
-          router.push("/admin/catalog/sub-category");
+          router.push("/admin/catalog/product");
         } else {
           toast.error(response.message);
         }
@@ -90,8 +86,8 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
 
     return { url: "" };
   };
-  const onSubmit = async (data: SubCategoryFormType) => {
-    console.log('masuk');
+
+  const onSubmit = async (data: ProductFormType) => {
     setData(data);
     
     // this will trigger the handleUpload function
@@ -106,51 +102,58 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
       <FormField
         label="Name"
         name="name"
-        placeholder="Please enter sub category name"
+        placeholder="Please enter product name"
         register={register}
         errors={errors}
-
         required
       />
       <FormField
-        label="Select Category"
-        name="category"
-        placeholder="Please choose the main category"
+        label="Select Sub Category"
+        name="subCategory"
+        placeholder="Please choose the sub category"
         type="select"
         errors={errors}
-        options={categoryList}
+        options={subCategoryList}
         control={control}
+        required
+      />
+      <FormField
+        label="Price"
+        name="price"
+        type="number"
+        placeholder="Please enter product price"
+        register={register}
+        errors={errors}
         required
       />
       <div className="w-fit">
         <FormField
           label="Image"
           name="image"
-          type="image"
+          type="multi-image"
           uploadFn={handleUpload}
           triggerUpload={triggerUpload}
           errors={errors}
           required
-          initialPhoto={subCategory.image}
+          initialPhoto={product.image}
         />
       </div>
       <FormField
-        label="Select Products"
-        name="products"
-        placeholder="Please choose the products"
-        type="select"
-        errors={errors}
-        isMulti
-        options={subCategory.products}
-        control={control}
-      />
-      <FormField
         label="Discount (optional)"
         name="discount"
+        type="number"
         placeholder="Please input the discount"
         errors={errors}
         register={register}
-        type="number"
+      />
+      <FormField
+        label="Description"
+        name="description"
+        type="textarea"
+        placeholder="Please enter product description"
+        register={register}
+        errors={errors}
+        required
       />
 
       <div className="flex justify-end gap-2">
@@ -169,4 +172,4 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
   );
 };
 
-export default EditSubCategoryForm;
+export default EditProductForm; 

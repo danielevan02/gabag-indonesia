@@ -18,6 +18,8 @@ import { UploaderProvider, UploadFn } from "@/components/upload/uploader-provide
 import makeAnimated from "react-select/animated";
 import UploadImage from "@/app/admin/catalog/sub-category/add/components/upload-image";
 import dynamic from "next/dynamic";
+import { Textarea } from "@/components/ui/textarea";
+import { MultiImageUploader } from "@/app/admin/catalog/product/[productId]/components/image-uploader";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
 // Types
@@ -46,11 +48,25 @@ interface SelectFormFieldProps<TFieldValues extends FieldValues> extends BaseFor
   disabled?: boolean;
 }
 
+interface TextareaFormFieldProps<TFieldValues extends FieldValues> extends BaseFormFieldProps<TFieldValues> {
+  type: 'textarea';
+  placeholder?: string;
+  register?: UseFormRegister<TFieldValues>;
+  disabled?: boolean;
+}
+
 interface PasswordFormFieldProps<TFieldValues extends FieldValues> extends BaseFormFieldProps<TFieldValues> {
   type: 'password';
   placeholder?: string;
   register?: UseFormRegister<TFieldValues>;
   disabled?: boolean;
+}
+
+interface MultiImageFormFieldProps<TFieldValues extends FieldValues> extends BaseFormFieldProps<TFieldValues> {
+  type: 'multi-image';
+  uploadFn: UploadFn;
+  triggerUpload?: boolean;
+  initialPhoto?: string[];
 }
 
 interface PhoneFormFieldProps<TFieldValues extends FieldValues> extends BaseFormFieldProps<TFieldValues> {
@@ -71,7 +87,8 @@ type FormFieldProps<TFieldValues extends FieldValues> =
   | SelectFormFieldProps<TFieldValues>
   | PasswordFormFieldProps<TFieldValues>
   | PhoneFormFieldProps<TFieldValues>
-  | ImageFormFieldProps<TFieldValues>;
+  | ImageFormFieldProps<TFieldValues>
+  | MultiImageFormFieldProps<TFieldValues>;
 
 // Sub-components
 const ErrorMessage = ({ message }: { message: string }) => (
@@ -145,11 +162,27 @@ export function FormField<TFieldValues extends FieldValues>({
           <div className="w-fit">
             <UploaderProvider 
               uploadFn={imageProps.uploadFn}
-              
+              autoUpload
             >
               <UploadImage 
-                triggerUpload={imageProps.triggerUpload}
                 initialPhoto={imageProps.initialPhoto}
+              />
+            </UploaderProvider>
+          </div>
+        );
+      }
+
+      case 'multi-image': {
+        const multiImageProps = props as MultiImageFormFieldProps<TFieldValues>;
+        return (
+          <div className="w-fit max-h-96 overflow-scroll">
+            <UploaderProvider 
+              uploadFn={multiImageProps.uploadFn}
+              autoUpload
+            >
+              <MultiImageUploader 
+                initialPhoto={multiImageProps.initialPhoto}
+                
               />
             </UploaderProvider>
           </div>
@@ -186,6 +219,19 @@ export function FormField<TFieldValues extends FieldValues>({
             )}
           />
         );
+      }
+
+      case 'textarea': {
+        const textareaProps = props as TextareaFormFieldProps<TFieldValues>;
+        return (
+          <Textarea
+            id={name}
+            placeholder={textareaProps.placeholder}
+            className="border-black py-6 text-xs max-h-72"
+            {...(textareaProps.register ? textareaProps.register(name) : {})}
+            disabled={textareaProps.disabled}
+          />
+        )
       }
 
       default: {
