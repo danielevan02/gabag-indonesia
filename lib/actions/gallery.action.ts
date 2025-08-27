@@ -3,7 +3,7 @@
 import { prisma } from "../db/prisma";
 import { revalidatePath } from "next/cache";
 
-export async function getGalleryImages() {
+export async function  getGalleryImages() {
   try {
     const images = await prisma.galleryImage.findMany({
       orderBy: {
@@ -13,11 +13,7 @@ export async function getGalleryImages() {
 
     return {
       success: true,
-      images: images.map(img => ({
-        id: img.id,
-        imageUrl: img.imageUrl,
-        createdAt: img.createdAt.toISOString()
-      }))
+      images
     };
   } catch (error) {
     console.error('Error fetching gallery images:', error);

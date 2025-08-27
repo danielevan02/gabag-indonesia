@@ -139,6 +139,10 @@
   @apply size-full max-h-[400px] min-h-[400px] md:max-h-full md:min-h-full object-cover rounded-md
 }
 
+.gallery-image-container {
+  @apply grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 max-h-64 overflow-scroll gap-2 justify-start
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

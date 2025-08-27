@@ -1,10 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { SingleImageDropzone } from "@/components/upload/single-image";
-import { useUploader } from "@/components/upload/uploader-provider";
-import { useEffect } from "react";
 
 interface UploadImageProps {
   initialPhoto?: string;

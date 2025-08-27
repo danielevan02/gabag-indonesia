@@ -3,16 +3,14 @@
 import ActionTable from "@/components/shared/table/action-table";
 import { deleteProduct } from "@/lib/actions/product.action";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Product, SubCategory } from "@prisma/client";
+import { Product, SubCategory, Variant } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import Image from "next/image";
 
 export type FullProduct = Product & {
   subCategory: SubCategory | null;
-  _count: {
-    variants: number;
-  };
+  variants: Variant[]
 };
 
 export const columns: ColumnDef<FullProduct>[] = [
@@ -77,7 +75,7 @@ export const columns: ColumnDef<FullProduct>[] = [
   },
   {
     header: "Variants",
-    cell: ({ row }) => <p className="">{row.original._count.variants}</p>
+    cell: ({ row }) => <p className="">{row.original.variants.length}</p>
   },
   {
     accessorKey: "createdAt",

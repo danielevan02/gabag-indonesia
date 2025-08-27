@@ -2,9 +2,6 @@
 
 import * as React from "react"
 import {
-  Frame,
-  Map,
-  PieChart,
   SquareTerminal,
   Ticket,
 } from "lucide-react"
