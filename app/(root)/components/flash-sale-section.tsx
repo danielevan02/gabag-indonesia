@@ -4,7 +4,6 @@ import { getAllProducts } from "@/lib/actions/product.action";
 
 export default async function FlashSaleSection() {
   const products = await getAllProducts();
-  console.log(products[0]);
   return (
     <section className="mt-20">
       <h3 className="text-2xl text-center md:text-start">Flash Sale Products</h3>

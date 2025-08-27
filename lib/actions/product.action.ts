@@ -140,7 +140,7 @@ export async function getProductBySlug(slug:string): Promise<Product> {
       discount: variant.discount as number | undefined,
       sku: variant.sku as string | undefined,
       regularPrice: Number(variant.regularPrice),
-      price: Number(variant.regularPrice) - Number(variant.regularPrice)*(variant.discount||0/100)
+      price: Number(variant.regularPrice) - Number(variant.regularPrice) * ((variant.discount||0)/100)
     })),
     orderItems: product?.orderItems.map((item) => ({
       ...item,
@@ -240,7 +240,7 @@ export async function createProduct(data: ProductFormType) {
 
 export async function updateProduct(data: ProductFormType & { id?: string }) {
   try {
-    const { subCategory, name, price, discount, image, description, id, hasVariant, variants } = data
+    const { subCategory, name, price, discount, image, description, id, hasVariant, variants, stock } = data
     
     if (!id) {
       throw new Error("Product ID is required")
@@ -251,13 +251,14 @@ export async function updateProduct(data: ProductFormType & { id?: string }) {
         id
       },
       data: {
-        name,
-        subCategoryId: subCategory?.value,
+        name: name!,
+        subCategoryId: subCategory?.value ?? "",
         regularPrice: hasVariant ? 0 : price,
         discount,
         images: image,
-        description,
+        description: description!,
         hasVariant,
+        stock,
         variants: hasVariant ? {
           deleteMany: {},
           create: variants?.map(variant => ({

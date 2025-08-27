@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 import { APP_DESCRIPTION, APP_NAME, BASE_URL } from "@/lib/constants";
 import { Toaster} from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
-import { SpeedInsights } from '@vercel/speed-insights/next';
 import { EdgeStoreProvider } from "@/lib/edge-store";
 
-const outift = Poppins({
+const outift = Outfit({
   subsets: ['latin'],
   weight: [
     '100',
@@ -37,10 +36,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${outift.className} antialiased`} suppressHydrationWarning>
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${outift.className}`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <SpeedInsights />
           <EdgeStoreProvider>
             <main>
               {children}

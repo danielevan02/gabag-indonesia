@@ -39,6 +39,7 @@ const ProductPage = async ({searchParams}: {
           height={1000}
           alt={categories?.name||"category photo"}
           className="h-full w-full lg:w-[80%] object-cover"
+          priority
         />
       </div>
 

@@ -18,7 +18,8 @@ const HomeCarousel = ({slideDuration}: {slideDuration?: number}) => {
   const carouselImg = [
     {desktop: 'dummy1.png', mobile: 'mobiledummy1.png'},
     {desktop: 'dummy2.png', mobile: 'mobiledummy2.png'},
-    {desktop: 'dummy3.jpg', mobile: 'mobiledummy3.jpg'},
+    {desktop: 'dummy3.png', mobile: 'mobiledummy3.jpg'},
+    {desktop: 'dummy4.png', mobile: 'mobiledummy3.jpg'},
   ]
   if (!mounted) {
     return (

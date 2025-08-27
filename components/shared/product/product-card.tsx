@@ -74,8 +74,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       <div className="p-1 md:p-3 flex-1 flex flex-col justify-between h-auto">
         <div className="flex flex-col">
-          <h4 className="text-foreground/50 uppercase text-xs md:text-sm font-semibold">{subCategory.name}</h4>
-          <h3 className="line-clamp-2 text-foreground/80 text-sm lg:text-base font-semibold tracking-wider min-h-14">{name}</h3>
+          <h4 className="text-foreground/50 uppercase text-xs font-semibold">{subCategory.name}</h4>
+          <h3 className="line-clamp-2 text-foreground/80 text-sm lg:text-base font-semibold min-h-14">{name}</h3>
         </div>
         <PriceTag 
           regularPrice={regularPrice} 
@@ -116,26 +116,26 @@ const PriceTag = ({price, regularPrice, hasDifferentVariantPrice, hasVariant, va
         hasDifferentVariantPrice ? (
           <div className="flex gap-1">
             <span>from</span>
-            <p>Rp{lowestPrice?.toLocaleString()}</p>
+            <p>Rp {lowestPrice?.toLocaleString()}</p>
           </div>
         ):(
           variants?.[0].regularPrice !== variants?.[0].price ? (
             <div className="flex flex-col md:flex-row gap-1">
-              <h4 className="line-through text-neutral-400 text-sm">Rp{variants?.[0].regularPrice.toLocaleString()}</h4>
-              <h4>Rp{variants?.[0].price.toLocaleString()}</h4>
+              <h4 className="line-through text-neutral-400 text-sm">Rp {variants?.[0].regularPrice.toLocaleString()}</h4>
+              <h4>Rp {variants?.[0].price.toLocaleString()}</h4>
             </div>
           ):(
-            <h4>Rp{variants?.[0].price.toLocaleString()}</h4>
+            <h4>Rp {variants?.[0].price.toLocaleString()}</h4>
           )
         )
       ):(
         price !== regularPrice ? (
           <div className="flex flex-col md:flex-row gap-1">
-            <h4 className="line-through text-neutral-400 text-sm">Rp{(regularPrice??0).toLocaleString()}</h4>
-            <h4>Rp{price.toLocaleString()}</h4>
+            <h4 className="line-through text-neutral-400 text-sm">Rp {(regularPrice??0).toLocaleString()}</h4>
+            <h4>Rp {price.toLocaleString()}</h4>
           </div>
         ):(
-          <h4>Rp{price.toLocaleString()}</h4>
+          <h4>Rp {price.toLocaleString()}</h4>
         )
       )}
     </>

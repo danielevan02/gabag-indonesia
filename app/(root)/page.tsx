@@ -41,9 +41,7 @@ const HomePage = async () => {
       </Suspense>
       
 
-      <section>
-
-      </section>
+      
     </div>
   );
 };

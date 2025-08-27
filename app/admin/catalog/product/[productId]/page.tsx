@@ -29,6 +29,13 @@ export default async function EditProductPage({
     );
   }
 
+  // Convert images to array if it's a string
+  const productImages = Array.isArray(product.images) 
+    ? product.images 
+    : product.images 
+      ? [product.images] 
+      : [];
+
   return (
     <div className="p-5 flex flex-col h-full">
       <p className="text-lg">Edit Product</p>
@@ -42,10 +49,11 @@ export default async function EditProductPage({
             label: product.subCategory.name,
             value: product.subCategory.id,
           } : null,
-          image: product.image || "",
-          price: product.price,
+          image: productImages,
+          price: Number(product.regularPrice),
           discount: product.discount || 0,
           description: product.description || "",
+          stock: product.stock,
         }}
       />
     </div>

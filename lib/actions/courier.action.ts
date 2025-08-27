@@ -35,7 +35,6 @@ type CourierRatesReq = {
 
 export async function getCourierRates({destination_area_id, destination_postal_code, items}: CourierRatesReq) {
   try {
-    console.log("masuk sini")
     const res = await fetch("https://api.biteship.com/v1/rates/couriers", {
       method: "POST",
       headers: {

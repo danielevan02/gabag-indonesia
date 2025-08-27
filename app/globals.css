@@ -1,22 +1,7 @@
 @import "tailwindcss";
-
-@plugin "tailwindcss-animate";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
-
-::-webkit-scrollbar {
-  display: none;
-}
-
-/* Untuk Firefox */
-html {
-  scrollbar-width: none;
-}
-
-/* Untuk Internet Explorer & Edge */
-body {
-  -ms-overflow-style: none;
-}
 
 @theme inline {
   --color-background: var(--background);
@@ -39,7 +24,6 @@ body {
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
-  --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive: var(--destructive);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
@@ -60,6 +44,9 @@ body {
 }
 
 :root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -73,7 +60,6 @@ body {
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -82,7 +68,6 @@ body {
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -91,18 +76,16 @@ body {
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
 }
 
 .dark {
-  --background: rgb(20, 20, 20);
+  --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
+  --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
+  --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -110,11 +93,10 @@ body {
   --muted-foreground: oklch(0.708 0 0);
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -126,8 +108,8 @@ body {
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
 }
 
 @layer base {
@@ -136,8 +118,25 @@ body {
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
+}
+
+.image-section-container {
+  @apply relative md:sticky flex flex-col-reverse md:flex-row size-full lg:max-w-md xl:max-w-xl md:max-h-[500px] lg:max-h-[440px] xl:max-h-[600px] xl:min-h-[600px] gap-2 md:left-0 md:top-56 lg:top-36 xl:top-48 overflow-hidden
+}
+
+
+.image-list-container {
+  @apply flex flex-row md:flex-col md:min-w-fit gap-3 max-h-full overflow-scroll snap-x md:snap-y snap-mandatory
+}
+
+.image-list-item {
+  @apply relative snap-start min-h-20 max-h-20 min-w-20 max-w-20 rounded-md overflow-hidden
+}
+
+.main-image {
+  @apply size-full max-h-[400px] min-h-[400px] md:max-h-full md:min-h-full object-cover rounded-md
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -177,16 +176,4 @@ body {
 
 .loader:after {
   animation-delay: 1s;
-}
-
-@keyframes push_401 {
-
-  0%,
-  50% {
-    transform: translate(-50%, 0%) scale(1)
-  }
-
-  100% {
-    transform: translate(-50%, -100%) scale(0)
-  }
 }
