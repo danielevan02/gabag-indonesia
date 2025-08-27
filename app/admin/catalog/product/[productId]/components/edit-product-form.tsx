@@ -2,9 +2,7 @@
 
 import { FormField } from "@/components/shared/input/form-field";
 import { Button } from "@/components/ui/button";
-import { UploadFn } from "@/components/upload/uploader-provider";
 import { updateProduct } from "@/lib/actions/product.action";
-import { useEdgeStore } from "@/lib/edge-store";
 import { productSchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader } from "lucide-react";
@@ -13,7 +11,8 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { ProductFormType } from "../../add/components/product-form";
-import { generateFileName } from "@/lib/utils";
+import { GalleryModal } from "@/components/gallery/gallery-modal";
+import Image from "next/image";
 
 interface EditProductFormProps {
   product: {
@@ -23,10 +22,11 @@ interface EditProductFormProps {
       value: string;
       label: string;
     } | null;
-    image: string;
+    image: string[];
     price: number;
     discount: number;
     description: string;
+    stock: number;
   };
   subCategoryList: {
     value: string;
@@ -35,17 +35,17 @@ interface EditProductFormProps {
 }
 
 const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => {
-  const { edgestore } = useEdgeStore();
   const [isLoading, startTransition] = useTransition();
-  const [triggerUpload, setTriggerUpload] = useState(false);
   const router = useRouter();
-  const [data, setData] = useState<ProductFormType>({} as ProductFormType);
+  const [images, setImages] = useState<string[]>(product.image);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
   const {
     register,
     formState: { errors },
     control,
     handleSubmit,
+    setValue,
   } = useForm({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -54,25 +54,20 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
       price: product.price,
       discount: product.discount,
       description: product.description,
+      stock: product.stock,
       image: product.image,
     },
   });
 
-  const handleUpload: UploadFn = async ({ file, signal, onProgressChange }) => {
+  const onSubmit = async (data: ProductFormType) => {
     startTransition(async () => {
-      await edgestore.publicImages.delete({ url: product.image });
-
-      const res = await edgestore.publicImages.upload({
-        file,
-        signal,
-        onProgressChange,
-        options: {
-          manualFileName: generateFileName('product', data.name, product.image),
-        }
-      });
-
       try {
-        const response = await updateProduct({ ...data, image: res.url, id: product.id });
+        const response = await updateProduct({ 
+          ...data, 
+          image: images,
+          id: product.id 
+        });
+        
         if (response.success) {
           toast.success(response.message);
           router.push("/admin/catalog/product");
@@ -80,18 +75,15 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
           toast.error(response.message);
         }
       } catch (error) {
-        console.log(error);
+        console.error('Error updating product:', error);
+        toast.error('Failed to update product');
       }
     });
-
-    return { url: "" };
   };
 
-  const onSubmit = async (data: ProductFormType) => {
-    setData(data);
-    
-    // this will trigger the handleUpload function
-    setTriggerUpload(true);
+  const handleImageSelect = (imageUrls: string[]) => {
+    setImages(imageUrls);
+    setValue('image', imageUrls);
   };
 
   return (
@@ -126,23 +118,52 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
         errors={errors}
         required
       />
-      <div className="w-fit">
-        <FormField
-          label="Image"
-          name="image"
-          type="multi-image"
-          uploadFn={handleUpload}
-          triggerUpload={triggerUpload}
-          errors={errors}
-          required
-          initialPhoto={product.image}
+      
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          {images.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-4">
+              {images.map((imageUrl, index) => (
+                <div key={index} className="relative h-32 w-32 flex-shrink-0">
+                  <Image
+                    src={imageUrl}
+                    alt={`Product image ${index + 1}`}
+                    fill
+                    className="object-cover rounded-md"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          <Button
+            type="button"
+            onClick={() => setIsGalleryOpen(true)}
+          >
+            {images.length > 0 ? 'Change Photos' : 'Add Photos'}
+          </Button>
+        </div>
+
+        <GalleryModal
+          isOpen={isGalleryOpen}
+          onClose={() => setIsGalleryOpen(false)}
+          onSelect={handleImageSelect}
+          initialSelectedImages={images}
         />
       </div>
+
       <FormField
         label="Discount (optional)"
         name="discount"
         type="number"
         placeholder="Please input the discount"
+        errors={errors}
+        register={register}
+      />
+      <FormField
+        label="Stock"
+        name="stock"
+        type="number"
+        placeholder="Please input the stock"
         errors={errors}
         register={register}
       />

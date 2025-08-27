@@ -58,8 +58,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
           max-h-64 
           md:min-h-96
           md:max-h-96
-          xl:min-h-[600px]
-          xl:max-h-[600px]
+          xl:min-h-[450px]
+          xl:max-h-[450px]
           w-full`
         }
       >
@@ -72,7 +72,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         />
       </div>
 
-      <div className="p-1 md:p-3 flex-1 flex flex-col justify-between h-auto">
+      <div className="p-1 mt-2 flex-1 flex flex-col justify-between h-auto">
         <div className="flex flex-col">
           <h4 className="text-foreground/50 uppercase text-xs font-semibold">{subCategory.name}</h4>
           <h3 className="line-clamp-2 text-foreground/80 text-sm lg:text-base font-semibold min-h-14">{name}</h3>

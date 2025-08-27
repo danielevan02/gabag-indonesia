@@ -62,7 +62,6 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
   });
 
   const handleUpload: UploadFn = async ({ file, signal, onProgressChange }) => {
-    console.log('masuksiniiiii');
     startTransition(async () => {
       await edgestore.publicImages.delete({url: subCategory.image});
 
@@ -91,7 +90,6 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
     return { url: "" };
   };
   const onSubmit = async (data: SubCategoryFormType) => {
-    console.log('masuk');
     setData(data);
     
     // this will trigger the handleUpload function

@@ -17,6 +17,8 @@ import { z } from "zod";
 import VariantForm from "./variant-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { GalleryModal } from "@/components/gallery/gallery-modal";
+import Image from "next/image";
 
 export type ProductFormType = z.infer<typeof productSchema>;
 
@@ -31,6 +33,7 @@ const ProductForm = ({
   const [triggerUpload, setTriggerUpload] = useState(false);
   const [isLoading, startTransition] = useTransition();
   const [hasVariant, setHasVariant] = useState(false);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
   const {
     register,
@@ -100,6 +103,11 @@ const ProductForm = ({
     });
   };
 
+  const handleImageSelect = (imageUrls: string[]) => {
+    setImages(imageUrls);
+    setValue('image', imageUrls);
+  };
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit, (errors) => console.log(errors))}
@@ -128,17 +136,37 @@ const ProductForm = ({
         disabled={isLoading}
       />
 
-      <FormField
-        label="Images"
-        name="image"
-        type="multi-image"
-        uploadFn={handleUpload}
-        triggerUpload={triggerUpload}
-        errors={errors}
-        required
-        register={register}
-        disabled={isLoading}
-      />
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          {images.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-4">
+              {images.map((imageUrl, index) => (
+                <div key={index} className="relative h-32 w-32 flex-shrink-0">
+                  <Image
+                    src={imageUrl}
+                    alt={`Product image ${index + 1}`}
+                    fill
+                    className="object-cover rounded-md"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          <Button
+            type="button"
+            onClick={() => setIsGalleryOpen(true)}
+          >
+            {images.length > 0 ? 'Change Photos' : 'Add Photos'}
+          </Button>
+        </div>
+
+        <GalleryModal
+          isOpen={isGalleryOpen}
+          onClose={() => setIsGalleryOpen(false)}
+          onSelect={handleImageSelect}
+          initialSelectedImages={images}
+        />
+      </div>
 
       <FormField
         label="Discount"

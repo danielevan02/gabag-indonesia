@@ -86,7 +86,7 @@ const FilterProduct: React.FC<FilterProductProps> = ({ subCategories }) => {
         md:block 
         sticky 
         top-28
-        px-4
+        px-1
         lg:top-36 
         transition-all 
         duration-300

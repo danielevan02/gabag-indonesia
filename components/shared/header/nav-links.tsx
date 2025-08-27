@@ -31,6 +31,7 @@ const NavLinks = ({device}: {device: string}) => {
                 "absolute opacity-0 group-hover:opacity-100 transition-all",
                 (path === link || (link !== "/" && path.startsWith(link))) && "opacity-100"
               )}
+              strokeWidth={1}
             />
             <Link
               prefetch

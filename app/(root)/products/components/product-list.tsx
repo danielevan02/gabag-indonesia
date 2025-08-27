@@ -21,6 +21,7 @@ const ProductList = async ({search, max, min, sort, subCategoryIds}: ProductList
         md:gap-5 
         grid-cols-2 
         lg:grid-cols-3
+        xl:grid-cols-4
         h-full
       `}
     >

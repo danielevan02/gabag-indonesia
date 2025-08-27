@@ -88,7 +88,7 @@ const OrderDetails = ({ order }: { order: FullOrderType }) => {
               Order Paid
             </p>
           </div>
-        ) : ['cancel', 'deny', 'cancel'].includes(order.paymentStatus!) ? (
+        ) : ['cancel', 'deny', 'expire'].includes(order.paymentStatus!) ? (
           <div className="relative my-7 flex flex-col justify-center">
             <div className="bg-gradient-to-r from-transparent via-foreground to-transparent h-px" />
             <p className="uppercase tracking-widest absolute px-1 w-fit text-sm left-1/2 -translate-x-1/2 bg-background text-red-600">

@@ -106,5 +106,6 @@ export const productSchema = z.object({
   image: z.array(z.string()).min(1, "Image is required").optional(),
   description: z.string().min(1, "Description is required").optional(),
   hasVariant: z.boolean().default(false),
-  variants: z.array(variantSchema).optional()
+  variants: z.array(variantSchema).optional(),
+  stock: z.coerce.number().min(0, "Stock must be greater than or equal to 0").optional()
 });
