@@ -8,7 +8,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import Image from "next/image";
 
-type FullProduct = Product & {
+export type FullProduct = Product & {
   subCategory: SubCategory | null;
   _count: {
     variants: number;
@@ -77,7 +77,7 @@ export const columns: ColumnDef<FullProduct>[] = [
   },
   {
     header: "Variants",
-    cell: ({ row }) => <p className="">{0}</p>
+    cell: ({ row }) => <p className="">{row.original._count.variants}</p>
   },
   {
     accessorKey: "createdAt",
