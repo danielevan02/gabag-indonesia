@@ -90,7 +90,7 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
       <div className="image-section-container">
         {/* IMAGE LIST CONTAINER */}
         <div className="image-list-container">
-          {imagesList.map((item, index) => (
+          {imagesList?.map((item, index) => (
             <div key={index} className="image-list-item" onMouseEnter={() => setMainImage(item)}>
               <Image
                 src={item}

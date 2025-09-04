@@ -14,7 +14,7 @@ import { ProductFormType } from "../../add/components/product-form";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Variant } from "@/types";
-import VariantForm from "./variant-form";
+import VariantForm from "../../variant-form";
 import Image from "next/image";
 import GalleryModal from "@/components/gallery/gallery-modal";
 
@@ -41,9 +41,10 @@ export interface EditProductFormProps {
 }
 
 const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => {
-  const [isLoading, startTransition] = useTransition();
   const router = useRouter();
+  const [isLoading, startTransition] = useTransition();
   const [hasVariant, setHasVariant] = useState(product.hasVariant);
+
   const {
     register,
     formState: { errors },
@@ -84,6 +85,7 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
         variants: []
       })
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasVariant])
   
   const { append, remove, fields } = useFieldArray({
@@ -127,6 +129,7 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
         placeholder="Please enter product name"
         register={register}
         errors={errors}
+        disabled={isLoading}
         required
       />
       <FormField
@@ -137,6 +140,7 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
         errors={errors}
         options={subCategoryList}
         control={control}
+        disabled={isLoading}
         required
       />
 
@@ -191,6 +195,7 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
         placeholder="Please input the discount"
         errors={errors}
         register={register}
+        disabled={isLoading}
       />
 
       <div className="flex flex-col gap-2 mb-5">
@@ -240,6 +245,7 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
             label="Price"
             name="price"
             type="number"
+            disabled={isLoading}
             placeholder="Please enter product price"
             register={register}
             errors={errors}
@@ -250,6 +256,7 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
             label="Stock"
             name="stock"
             type="number"
+            disabled={isLoading}
             placeholder="Please input the stock"
             errors={errors}
             register={register}
@@ -261,6 +268,7 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
         label="Description"
         name="description"
         type="textarea"
+        disabled={isLoading}
         placeholder="Please enter product description"
         register={register}
         errors={errors}

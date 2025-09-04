@@ -1,19 +1,19 @@
-// import { getAllSubCategories } from "@/lib/actions/subCategory.action";
-// import ProductForm from "./components/product-form";
+import { getAllSubCategories } from "@/lib/actions/subCategory.action";
+import ProductForm from "./components/product-form";
 
 export default async function AddProductPage() {
-  // const subCategories = await getAllSubCategories();
+  const subCategories = await getAllSubCategories();
 
-  // const subCategoryList = subCategories.map((subCategory) => ({
-  //   label: subCategory.name,
-  //   value: subCategory.id
-  // }));
+  const subCategoryList = subCategories.map((subCategory) => ({
+    label: subCategory.name,
+    value: subCategory.id
+  }));
 
   return (
     <div className="p-5 h-full max-h-full flex flex-col overflow-scroll">
       <p className="text-lg">Add New Product</p>
 
-      {/* <ProductForm subCategories={subCategoryList} /> */}
+      <ProductForm subCategories={subCategoryList} />3
     </div>
   );
 } 

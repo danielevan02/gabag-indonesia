@@ -1,266 +1,277 @@
-// "use client";
+"use client";
 
-// import { Button } from "@/components/ui/button";
-// import { FormField } from "@/components/shared/input/form-field";
-// import { createProduct } from "@/lib/actions/product.action";
-// import { useEdgeStore } from "@/lib/edge-store";
-// import { zodResolver } from "@hookform/resolvers/zod";
-// import { useRouter } from "next/navigation";
-// import { useState, useTransition } from "react";
-// import { useForm, useFieldArray } from "react-hook-form";
-// import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import slugify from 'react-slugify'
+import { ErrorMessage, FormField } from "@/components/shared/input/form-field";
+import { createProduct } from "@/lib/actions/product.action";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
+import { useForm, useFieldArray, SubmitErrorHandler, Controller, get } from "react-hook-form";
+import { toast } from "sonner";
 import { productSchema } from "@/lib/schema";
-// import { UploadFn } from "@/components/upload/uploader-provider";
-// import { Loader, Plus } from "lucide-react";
-// import { generateFileName } from "@/lib/utils";
+import { ImagePlus, Loader, Plus } from "lucide-react";
 import { z } from "zod";
-// import VariantForm from "./variant-form";
-// import { Checkbox } from "@/components/ui/checkbox";
-// import { Label } from "@/components/ui/label";
-// import { GalleryModal } from "@/components/gallery/gallery-modal";
-// import Image from "next/image";
+import { Label } from "@/components/ui/label";
+import Image from "next/image";
+import GalleryModal from "@/components/gallery/gallery-modal";
+import VariantForm from "../../variant-form";
+import { Switch } from "@/components/ui/switch";
 
 export type ProductFormType = z.infer<typeof productSchema>;
 
-// const ProductForm = ({
-//   subCategories,
-// }: {
-//   subCategories: { value: string; label: string }[];
-// }) => {
-//   const router = useRouter();
-//   const { edgestore } = useEdgeStore();
-//   const [images, setImages] = useState<string[]>([]);
-//   const [triggerUpload, setTriggerUpload] = useState(false);
-//   const [isLoading, startTransition] = useTransition();
-//   const [hasVariant, setHasVariant] = useState(false);
-//   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+const ProductForm = ({
+  subCategories,
+}: {
+  subCategories: { value: string; label: string }[];
+}) => {
+  const router = useRouter();
+  const [isLoading, startTransition] = useTransition();
+  const [hasVariant, setHasVariant] = useState(false);
 
-//   const {
-//     register,
-//     handleSubmit,
-//     formState: { errors },
-//     getValues,
-//     control,
-//     setValue,
-//   } = useForm<ProductFormType>({
-//     resolver: zodResolver(productSchema),
-//     defaultValues: {
-//       hasVariant: false,
-//       variants: [],
-//     },
-//   });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    control,
+  } = useForm<ProductFormType>({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      hasVariant: hasVariant,
+      variants: [],
+    },
+  });
 
-//   const { fields, append, remove } = useFieldArray({
-//     control,
-//     name: "variants",
-//   });
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "variants",
+  });
 
-//   const handleVariantChange = (checked: boolean) => {
-//     setHasVariant(checked);
-//     setValue("hasVariant", checked);
-//   };
+  useEffect(() => {
+      if(hasVariant){
+        reset({
+          hasVariant,
+          variants: [{
+            discount: undefined,
+            image: '',
+            name: '',
+            regularPrice: undefined,
+            sku: '',
+            stock: undefined
+          }]
+        })
+      } else {
+        reset({
+          hasVariant,
+          variants: []
+        })
+      }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [hasVariant])
 
-//   const handleUpload: UploadFn = async ({ file, signal, onProgressChange }) => {
-//     const res = await edgestore.publicImages.upload({
-//       file,
-//       signal,
-//       onProgressChange,
-//       options: {
-//         manualFileName: generateFileName("product", getValues("name") || "", ".png"),
-//         temporary: true
-//       },
-//     });
-//     setImages((prev) => [...prev, res.url]);
-//     return { url: "" };
-//   };
+  const onSubmit = async (data: ProductFormType) => {
+    startTransition(async () => {
+      try {
+        const response = await createProduct({
+          ...data,
+          slug: slugify(data.name),
+        });
+        if (response.success) {
+          toast.success(response.message);
+          router.push("/admin/catalog/product");
+        } else {
+          toast.error(response.message);
+        }
+      } catch (error) {
+        console.log(error);
+        toast.error("Failed to create product");
+      }
+    });
+  };
 
-//   const onSubmit = async (data: ProductFormType) => {
-//     startTransition(async () => {
-//       try {
-//         const response = await createProduct({
-//           ...data,
-//           image: images,
-//           slug: data.name?.toLowerCase().replace(/ /g, "-"),
-//         });
-//         if (response.success) {
-//           toast.success(response.message);
-//           router.push("/admin/catalog/product");
-//         } else {
-//           toast.error(response.message);
-//         }
-//       } catch (error) {
-//         console.log(error);
-//       }
-//     });
-//   };
+  const onError: SubmitErrorHandler<ProductFormType> = (error) => {
+    console.log(error);
+  };
 
-//   const addVariant = () => {
-//     append({
-//       name: "",
-//       price: 0,
-//       stock: 0,
-//       image: "",
-//     });
-//   };
+  return (
+    <form
+      onSubmit={handleSubmit(onSubmit, onError)}
+      className="flex flex-col my-5 flex-1 overflow-y-scroll px-1"
+    >
+      <FormField
+        label="Name"
+        name="name"
+        type="text"
+        register={register}
+        errors={errors}
+        required
+        placeholder="Enter product name"
+        disabled={isLoading}
+      />
 
-//   const handleImageSelect = (imageUrls: string[]) => {
-//     setImages(imageUrls);
-//     setValue('image', imageUrls);
-//   };
+      <FormField
+        label="Sub Category"
+        name="subCategory"
+        type="select"
+        control={control}
+        errors={errors}
+        required
+        placeholder="Select sub-category"
+        options={subCategories}
+        disabled={isLoading}
+      />
 
-//   return (
-//     <form
-//       onSubmit={handleSubmit(onSubmit, (errors) => console.log(errors))}
-//       className="space-y-4 mt-5"
-//     >
-//       <FormField
-//         label="Name"
-//         name="name"
-//         type="text"
-//         register={register}
-//         errors={errors}
-//         required
-//         placeholder="Enter product name"
-//         disabled={isLoading}
-//       />
+      <Controller
+        control={control}
+        name="image"
+        render={({ field }) => (
+          <div className="flex gap-2 flex-col mb-5">
+            <Label>Product Photo(s)</Label>
+            <p className="text-xs text-neutral-600">NOTE: You can add more than 1 image</p>
+            <div className="flex flex-col gap-2">
+              {field.value && field.value?.length !== 0 ? (
+                // SHOW THIS IF THERE IS IMAGES
+                <div className="w-full flex gap-2 justify-start flex-wrap">
+                  {field.value?.map((image, index) => (
+                    <div key={index} className="size-32 overflow-hidden rounded-md border">
+                      <Image
+                        src={image}
+                        alt={`image-product`}
+                        width={300}
+                        height={300}
+                        className="size-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                // SHOW THIS IF THERE IS NO IMAGES
+                <div className="flex flex-col items-center justify-center size-44 rounded-md border bg-accent gap-4">
+                  <ImagePlus />
+                  <span className="text-sm text-neutral-700">Add product images</span>
+                </div>
+              )}
 
-//       <FormField
-//         label="Sub Category"
-//         name="subCategory"
-//         type="select"
-//         control={control}
-//         errors={errors}
-//         required
-//         placeholder="Select sub-category"
-//         options={subCategories}
-//         disabled={isLoading}
-//       />
+              <GalleryModal
+                initialSelectedImages={field.value ? field.value:[]}
+                setInitialSelectedImages={field.onChange}
+                multiple
+              />
 
-//       <div className="space-y-4">
-//         <div className="flex items-center gap-4">
-//           {images.length > 0 && (
-//             <div className="flex gap-2 overflow-x-auto pb-4">
-//               {images.map((imageUrl, index) => (
-//                 <div key={index} className="relative h-32 w-32 flex-shrink-0">
-//                   <Image
-//                     src={imageUrl}
-//                     alt={`Product image ${index + 1}`}
-//                     fill
-//                     className="object-cover rounded-md"
-//                   />
-//                 </div>
-//               ))}
-//             </div>
-//           )}
-//           <Button
-//             type="button"
-//             onClick={() => setIsGalleryOpen(true)}
-//           >
-//             {images.length > 0 ? 'Change Photos' : 'Add Photos'}
-//           </Button>
-//         </div>
+              {get(errors, "image") && <ErrorMessage message={get(errors, "image.message")}/>}
+            </div>
+          </div>
+        )}
+      />
 
-//         <GalleryModal
-//           isOpen={isGalleryOpen}
-//           onClose={() => setIsGalleryOpen(false)}
-//           onSelect={handleImageSelect}
-//           initialSelectedImages={images}
-//         />
-//       </div>
+      <FormField
+        label="Discount (optional)"
+        description="If this product has variants, the discount will automatically apply to all of them."
+        name="discount"
+        type="number"
+        register={register}
+        errors={errors}
+        placeholder="Enter discount percentage"
+        disabled={isLoading}
+      />
 
-//       <FormField
-//         label="Discount"
-//         name="discount"
-//         type="number"
-//         register={register}
-//         errors={errors}
-//         placeholder="Enter discount percentage"
-//         disabled={isLoading}
-//       />
+      <div className="flex flex-col gap-2 mb-5">
+        <Label className="text-base">Has Variants?</Label>
+        <div className="flex gap-2 items-center">
+          <Label className="text-base text-neutral-600">No</Label>
+          <Switch checked={hasVariant} onCheckedChange={(e) => setHasVariant(e)} disabled={isLoading} />
+          <Label className="text-base text-neutral-600">Yes</Label>
+        </div>
+      </div>
 
-//       <FormField
-//         label="Description"
-//         name="description"
-//         type="textarea"
-//         register={register}
-//         errors={errors}
-//         required
-//         placeholder="Enter product description"
-//         disabled={isLoading}
-//       />
+      {hasVariant ? (
+        <div className="bg-neutral-100 p-3 rounded-md">
+          <Label className="text-lg mb-5">Variants</Label>
+          <div className="flex flex-col gap-3 overflow-y-scroll max-h-[80vh]">
+            {fields.map((field, index) => (
+              <VariantForm
+                control={control}
+                key={field.id}
+                remove={remove}
+                errors={errors}
+                index={index}
+                register={register}
+                fieldLength={fields.length}
+              />
+            ))}
+          </div>
+          <Button
+            className="mt-5 w-full"
+            onClick={() =>
+              append({
+                image: "",
+                name: "",
+                regularPrice: 0,
+                stock: 0,
+                discount: undefined,
+                sku: "",
+              })
+            }
+          >
+            Add Variant <Plus />
+          </Button>
+        </div>
+      ) : (
+        <>
+          <FormField
+            label="Price"
+            name="price"
+            type="number"
+            placeholder="Please enter product price"
+            register={register}
+            errors={errors}
+            disabled={isLoading}
+            required
+          />
 
-//       <div className="flex items-center space-x-2">
-//         <Checkbox
-//           id="hasVariant"
-//           checked={hasVariant}
-//           onCheckedChange={handleVariantChange}
-//           disabled={isLoading}
-//         />
-//         <Label htmlFor="hasVariant">Has Variants</Label>
-//       </div>
+          <FormField
+            label="Stock"
+            name="stock"
+            type="number"
+            placeholder="Please input the stock"
+            errors={errors}
+            register={register}
+            disabled={isLoading}
+          />
+        </>
+      )}
 
-//       {!hasVariant && (
-//         <FormField
-//           label="Price"
-//           name="price"
-//           type="number"
-//           register={register}
-//           errors={errors}
-//           required
-//           placeholder="Enter product price"
-//           disabled={isLoading}
-//         />
-//       )}
+      <FormField
+        label="Description"
+        name="description"
+        type="textarea"
+        placeholder="Please enter product description"
+        register={register}
+        errors={errors}
+        disabled={isLoading}
+        required
+      />
 
-//       {hasVariant && (
-//         <div className="space-y-4">
-//           <div className="flex justify-between items-center">
-//             <h3 className="text-lg font-medium">Variants</h3>
-//             <Button
-//               type="button"
-//               onClick={addVariant}
-//               disabled={isLoading}
-//             >
-//               <Plus className="h-4 w-4 mr-2" />
-//               Add Variant
-//             </Button>
-//           </div>
+      <div className="flex justify-end gap-2">
+        <Button
+          variant="destructive"
+          type="button"
+          disabled={isLoading}
+          onClick={() => router.push("/admin/catalog/product")}
+        >
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <Loader className="w-4 h-4 animate-spin" />
+          ) : (
+            "Create Product"
+          )}
+        </Button>
+      </div>
+    </form>
+  );
+};
 
-//           <div className="space-y-4">
-//             {fields.map((field, index) => (
-//               <VariantForm
-//                 key={field.id}
-//                 index={index}
-//                 onRemove={remove}
-//                 register={register}
-//                 errors={errors}
-//                 control={control}
-//                 setValue={setValue}
-//               />
-//             ))}
-//           </div>
-//         </div>
-//       )}
-
-//       <div className="flex justify-end gap-2">
-//         <Button
-//           variant="destructive"
-//           type="button"
-//           disabled={isLoading}
-//           onClick={() => router.push("/admin/catalog/product")}
-//         >
-//           Cancel
-//         </Button>
-//         <Button type="submit" disabled={isLoading}>
-//           {isLoading ? (
-//             <Loader className="w-4 h-4 animate-spin" />
-//           ) : (
-//             "Create Product"
-//           )}
-//         </Button>
-//       </div>
-//     </form>
-//   );
-// };
-
-// export default ProductForm;
+export default ProductForm;
