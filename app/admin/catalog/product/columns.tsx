@@ -10,26 +10,28 @@ import Image from "next/image";
 
 export type FullProduct = Product & {
   subCategory: SubCategory | null;
-  variants: Variant[]
+  variants: Variant[];
 };
 
 export const columns: ColumnDef<FullProduct>[] = [
   {
-    id: 'select',
-    header: ({table}) => (
+    id: "select",
+    header: ({ table }) => (
       <Checkbox
-        checked={table.getIsAllPageRowsSelected() || table.getIsSomeRowsSelected() && 'indeterminate'}
-        onCheckedChange={(val)=>table.toggleAllPageRowsSelected(!!val)}
+        checked={
+          table.getIsAllPageRowsSelected() || (table.getIsSomeRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="select all"
       />
     ),
-    cell: ({row}) => (
+    cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
-        onCheckedChange={(val)=>row.toggleSelected(!!val)}
+        onCheckedChange={(val) => row.toggleSelected(!!val)}
         aria-label="select row"
       />
-    )
+    ),
   },
   {
     header: "#",
@@ -38,60 +40,66 @@ export const columns: ColumnDef<FullProduct>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    cell: ({ row }) => (
-      <div className="line-clamp-1 capitalize">{row.getValue("name")}</div>
-    ),
+    cell: ({ row }) => <div className="line-clamp-1 capitalize">{row.getValue("name")}</div>,
   },
   {
     accessorKey: "image",
     header: "Image",
     cell: ({ row }) => (
       <div className="w-56 h-32 rounded-lg overflow-clip border">
-        <Image 
-          src={row.original.images[0]||'/images/placeholder.png'}
+        <Image
+          src={row.original.images[0] || "/images/placeholder.png"}
           alt={row.original.name}
           width={400}
           height={250}
           className="w-full h-full object-cover"
         />
       </div>
-    )
+    ),
   },
   {
     accessorKey: "price",
     header: "Price",
-    cell: ({ row }) => (
-      <p className="">Rp{row.original.regularPrice.toLocaleString("id-ID")}</p>
-    )
+    cell: ({ row }) => {
+      const price = Number(row.original.regularPrice);
+      return price !== 0 ? (
+        <p className="">Rp{row.original.regularPrice.toLocaleString("id-ID")}</p>
+      ) : (
+        <p className="text-foreground/50">No Price</p>
+      );
+    },
   },
   {
     accessorKey: "discount",
     header: "Discount",
-    cell: ({ row }) => <p className="">{row.original.discount}%</p>
+    cell: ({ row }) => <p className="">{row.original.discount}%</p>,
   },
   {
     header: "Sub Category",
-    cell: ({ row }) => <p className="">{row.original.subCategory?.name || "None"}</p>
+    cell: ({ row }) => <p className="">{row.original.subCategory?.name || "None"}</p>,
   },
   {
     header: "Variants",
-    cell: ({ row }) => <p className="">{row.original.variants.length}</p>
+    cell: ({ row }) => {
+      const variantLength = row.original.variants.length;
+      return variantLength !== 0 ? <p>{variantLength}</p> : <p className="text-foreground/50">No Variants</p>;
+    },
   },
   {
     accessorKey: "createdAt",
     header: "Created At",
-    cell: ({ row }) => <p>{format(row.original.createdAt, "EEEE, d MMMM yyyy")}</p>
+    cell: ({ row }) => <p>{format(row.original.createdAt, "EEEE, d MMMM yyyy")}</p>,
   },
   {
     id: "actions",
     cell: ({ row }) => (
-      <ActionTable 
+      <ActionTable
         type="product"
         deleteFunction={deleteProduct}
-        id={row.original.id} 
-        title="Delete Product" 
-        desc="Are you sure you want to delete this product? This action cannot be undone" 
+        id={row.original.id}
+        title="Delete Product"
+        desc="Are you sure you want to delete this product? This action cannot be undone"
       />
-    )
+    ),
   },
-]; 
+];

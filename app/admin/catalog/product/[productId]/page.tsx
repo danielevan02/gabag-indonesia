@@ -54,6 +54,8 @@ export default async function EditProductPage({
           discount: product.discount || 0,
           description: product.description || "",
           stock: product.stock,
+          hasVariant: product.hasVariant,
+          variants: product.variants||[]
         }}
       />
     </div>

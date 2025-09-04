@@ -5,20 +5,21 @@ import { addToCart } from "@/lib/actions/cart.action";
 import { useCartStore } from "@/lib/stores/cart-store";
 import { cn } from "@/lib/utils";
 import { Product, Variant } from "@/types";
-import { Loader, Minus, Plus } from "lucide-react";
+import { Loader, Minus, Plus, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
 const ProductDetailSection = ({ product }: { product: Product }) => {
   const router = useRouter();
   const { setOpenModal } = useCartStore();
+  const [imageModal, setImageModal] = useState("");
   const [variant, setVariant] = useState<Variant>();
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const lowestPrice = Math.min(...(product.variants?.map((v) => Number(v.price)) ?? [0]));
-  const [price, setPrice] = useState(lowestPrice === Infinity ? product.price : lowestPrice);
 
   const imagesList = [
     ...(product?.images || []),
@@ -26,9 +27,9 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
   ];
 
   const [mainImage, setMainImage] = useState(imagesList[0]);
-  
+
   const sold = product.orderItems?.reduce((initial, curr) => curr.qty + initial, 0) || 0;
-  
+
   const isMinusDisabled = (product.hasVariant && !variant) || isLoading || quantity === 1;
 
   const isPlusDisabled =
@@ -46,7 +47,7 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
     const res = await addToCart({
       image: variant?.image || product.images[0] || "/images/placeholder-product.png",
       name: variant ? product.name + " - " + variant?.name : product.name,
-      price: Number(price) - Number(price) * Number(variant?.discount || 0 / 100),
+      price: variant?.price || product.price,
       productId: product.id,
       variantId: variant?.id,
       qty: quantity,
@@ -98,27 +99,52 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
                 width={100}
                 className="size-full object-cover"
               />
-              <div className={cn("absolute inset-0 rounded-md", item === mainImage && "bg-black/30 ")}/>
+              <div
+                className={cn("absolute inset-0 rounded-md", item === mainImage && "bg-black/30 ")}
+              />
             </div>
           ))}
         </div>
 
         {/* MAIN IMAGE */}
-        <div className="flex-1 min-h-full w-full">
+        <div className="flex-1 min-h-full w-full cursor-pointer" onClick={() => setImageModal(mainImage)}>
           <Image
             src={mainImage}
             alt={product?.name || "Product Images"}
             height={1000}
             width={1000}
-            className="main-image"
+            className="main-image border"
             priority
           />
         </div>
+
+        {/* IMAGE MODAL WHEN CLICKED*/}
+        {imageModal && (
+          // THIS CREATE PORTAL IS TO MAKE THE MODAL PASSED TO THE BODY TAG SO IT ALWAYS ON TOP OF EVERYTHING
+          createPortal(
+            <div
+              className="fixed inset-0 z-[99] flex items-center justify-center bg-black/40 backdrop-blur-md"
+              onClick={() => setImageModal("")}
+            >
+              <div className="relative w-[30vw]">
+                <Image
+                  src={imageModal}
+                  alt="Image Modal"
+                  width={1000}
+                  height={1000}
+                  className="w-full"
+                />
+                <X className="hover:scale-125 transition-all absolute top-3 right-3 cursor-pointer" onClick={() => setImageModal("")} />
+              </div>
+            </div>,
+            document.body
+          )
+        )}
       </div>
 
       {/* PRODUCT DETAILS */}
       <div className="mt-5 min-w-80 flex-1 lg:max-w-96">
-        <h2 className="uppercase text-foreground/60 text-sm font-semibold">
+        <h2 className="uppercase text-foreground/40 text-sm font-semibold">
           {product?.subCategory?.name}
         </h2>
         <h1 className="md:text-xl font-medium mb-5">{product?.name}</h1>
@@ -134,7 +160,7 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
         {product?.hasVariant && (
           <>
             <span className="uppercase tracking-widest text-sm">Variants:</span>
-            <div className="flex gap-3 mt-3">
+            <div className="flex gap-3 mt-3 flex-wrap">
               {product?.variants?.map((item) => (
                 <div
                   key={item.id}
@@ -143,7 +169,6 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
                     if (item.stock > 0) {
                       setVariant(item);
                       setMainImage(item.image);
-                      setPrice(item.regularPrice);
                       setQuantity(1);
                     }
                   }}
@@ -154,7 +179,7 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
                     width={200}
                     height={200}
                     className={cn(
-                      "w-20 h-20 object-cover rounded-md hover:border-2 hover:border-black/50 transition-all",
+                      "min-w-20 max-w-20 aspect-square object-cover rounded-md hover:border-2 hover:border-black/50 transition-all",
                       variant === item && "border-2 border-black/50",
                       true && ""
                     )}
@@ -233,20 +258,20 @@ const PriceTag = ({ price, regularPrice, discount, variant, hasVariant }: PriceT
       ? null
       : regularPrice;
   const hasDiscount = discount != null && discount > 0;
-
   return (
     <>
       {hasDiscount ? (
         <div className="flex flex-row md:flex-col lg:flex-row gap-3 md:gap-0 lg:gap-3 mb-5 items-center md:items-start lg:items-center">
-          <h3 className="font-semibold md:text-lg tracking-wider">
+          <p className="font-semibold md:text-lg tracking-wider">
+            {/* IF VARIANT ISN'T CHOSEN, BUT HAS VARIANT THEN SHOW THIS */}
             {!variant && hasVariant && <span className="font-normal text-sm">from </span>}
             Rp {displayPrice.toLocaleString()}
-          </h3>
+          </p>
 
           {displayRegularPrice != null && (
-            <h3 className="line-through text-neutral-400 text-sm md:text-base">
+            <p className="line-through text-neutral-400 text-sm md:text-base">
               Rp {displayRegularPrice.toLocaleString()}
-            </h3>
+            </p>
           )}
 
           <p className="text-green-700 font-medium text-sm md:text-base">{discount}% off</p>

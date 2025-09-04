@@ -88,7 +88,7 @@ export const subCategorySchema = z.object({
 export const variantSchema = z.object({
   name: z.string().min(1, "Variant name is required"),
   sku: z.string().optional(),
-  price: z.coerce.number().min(0, "Price must be greater than or equal to 0"),
+  regularPrice: z.coerce.number().min(0, "Price must be greater than or equal to 0"),
   stock: z.coerce.number().min(0, "Stock must be greater than or equal to 0"),
   discount: z.coerce.number().min(0).max(100).optional(),
   image: z.string().min(1, "Variant image is required"),

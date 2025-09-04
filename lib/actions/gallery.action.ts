@@ -30,8 +30,6 @@ export async function saveGalleryImages(imageUrls: string[]) {
       throw new Error('No image URLs provided');
     }
 
-    console.log('Saving gallery images:', imageUrls);
-
     const images = await Promise.all(
       imageUrls.map(async (url) => {
         if (!url) {
@@ -49,11 +47,7 @@ export async function saveGalleryImages(imageUrls: string[]) {
     
     return {
       success: true,
-      images: images.map(img => ({
-        id: img.id,
-        imageUrl: img.imageUrl,
-        createdAt: img.createdAt.toISOString()
-      }))
+      images
     };
   } catch (error) {
     console.error('Error saving gallery images:', error);
@@ -61,5 +55,31 @@ export async function saveGalleryImages(imageUrls: string[]) {
       success: false,
       message: error instanceof Error ? error.message : "Failed to save images"
     };
+  }
+}
+
+export async function deleteGalleryImages(imageUrls: string[]) {
+  if(imageUrls.length===0) return
+  try {
+    const resp = await prisma.galleryImage.deleteMany({
+      where: {
+        imageUrl: {
+          in: imageUrls
+        }
+      }
+    })
+
+    revalidatePath('/admin/gallery')
+
+    return {
+      status: 200,
+      message: `Success delete ${resp.count} images`
+    }
+  } catch (error) {
+    console.log(error)
+    return {
+      status: 500,
+      message: "Failed deleting images"
+    }
   }
 }

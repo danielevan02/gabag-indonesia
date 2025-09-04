@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import {
+  BookImage,
   SquareTerminal,
-  Ticket,
 } from "lucide-react"
 
 import { NavMain } from "@/components/admin/nav-main"
@@ -42,9 +42,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ],
       },
       {
-        title: "Voucher",
-        url: "/admin/voucher",
-        icon: Ticket,
+        title: "Image Gallery",
+        url: "/admin/gallery",
+        icon: BookImage,
       },
     ],
   }

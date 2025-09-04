@@ -126,6 +126,9 @@
   @apply relative md:sticky flex flex-col-reverse md:flex-row size-full lg:max-w-md xl:max-w-xl md:max-h-[500px] lg:max-h-[440px] xl:max-h-[600px] xl:min-h-[600px] gap-2 md:left-0 md:top-56 lg:top-36 xl:top-48 overflow-hidden
 }
 
+.nav-container {
+  @apply sticky flex flex-col items-center justify-between w-full top-0 left-0 bg-background z-50
+}
 
 .image-list-container {
   @apply flex flex-row md:flex-col md:min-w-fit gap-3 max-h-full overflow-scroll snap-x md:snap-y snap-mandatory

@@ -99,16 +99,19 @@ interface PriceTagProps {
   discount?: number
 }
 
-const PriceTag = ({price, regularPrice, hasDifferentVariantPrice, hasVariant, variants, discount}: PriceTagProps) => {
+const PriceTag = ({price, regularPrice, hasVariant, variants, discount}: PriceTagProps) => {
   let lowestPrice;
   if(variants){
     lowestPrice = Math.min(...variants.map((v) => v.price))
   }
 
+  const hasDifferentVariantPrice = variants 
+  ? new Set(variants.map(v => v.price)).size > 1 
+  : false;
   return(
     <>
       {discount !== 0 ? (
-        <div className="bg-red-600 text-white px-2 py-px text-xs font-bold relative w-min my-1">{discount}%</div>
+        <div className="bg-red-600 text-white py-px text-xs font-bold relative min-w-9 w-min my-1 flex justify-center">{discount}%</div>
       ) : (
         <div className="h-6" />
       )}

@@ -1,23 +1,24 @@
 "use client";
 
-import { FormField } from "@/components/shared/input/form-field";
+import { ErrorMessage, FormField } from "@/components/shared/input/form-field";
 import { Button } from "@/components/ui/button";
 import { updateProduct } from "@/lib/actions/product.action";
 import { productSchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImagePlus, Loader } from "lucide-react";
+import { ImagePlus, Loader, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect, useState, useTransition } from "react";
+import { Controller, get, SubmitErrorHandler, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { ProductFormType } from "../../add/components/product-form";
 import { Label } from "@/components/ui/label";
-import GalleryModal from "@/components/gallery/gallery-modal-my";
-import { arrayMove, rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
-import SortableImage from "@/components/gallery/sortable-image";
-import { closestCorners, DndContext, DragEndEvent, UniqueIdentifier } from "@dnd-kit/core";
+import { Switch } from "@/components/ui/switch";
+import { Variant } from "@/types";
+import VariantForm from "./variant-form";
+import Image from "next/image";
+import GalleryModal from "@/components/gallery/gallery-modal";
 
-interface EditProductFormProps {
+export interface EditProductFormProps {
   product: {
     id: string;
     name: string;
@@ -30,6 +31,8 @@ interface EditProductFormProps {
     discount: number;
     description: string;
     stock: number;
+    hasVariant: boolean;
+    variants: Variant[];
   };
   subCategoryList: {
     value: string;
@@ -40,13 +43,13 @@ interface EditProductFormProps {
 const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => {
   const [isLoading, startTransition] = useTransition();
   const router = useRouter();
-  const [images, setImages] = useState<string[]>(product.image);
-
+  const [hasVariant, setHasVariant] = useState(product.hasVariant);
   const {
     register,
     formState: { errors },
     control,
     handleSubmit,
+    reset,
   } = useForm({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -56,8 +59,36 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
       discount: product.discount,
       description: product.description,
       stock: product.stock,
-      image: images,
+      image: product.image,
+      hasVariant: hasVariant,
+      variants: product.variants || []
     },
+  });
+
+  useEffect(() => {
+    if(hasVariant){
+      reset({
+        hasVariant,
+        variants: product.variants.length !== 0 ? product.variants : [{
+          discount: undefined,
+          image: '',
+          name: '',
+          regularPrice: undefined,
+          sku: '',
+          stock: undefined
+        }]
+      })
+    } else {
+      reset({
+        hasVariant,
+        variants: []
+      })
+    }
+  }, [hasVariant])
+  
+  const { append, remove, fields } = useFieldArray({
+    control,
+    name: "variants",
   });
 
   const onSubmit = async (data: ProductFormType) => {
@@ -65,7 +96,6 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
       try {
         const response = await updateProduct({
           ...data,
-          image: images,
           id: product.id,
         });
 
@@ -82,30 +112,13 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
     });
   };
 
-  // const handleImageSelect = (imageUrls: string[]) => {
-  //   setImages(imageUrls);
-  //   setValue('image', imageUrls);
-  // };
-
-  const getImageIndex = (id: UniqueIdentifier) => {
-    return images?.findIndex((img) => img === id);
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (active.id === over?.id) return;
-
-    setImages((prev) => {
-      const currentPosition = getImageIndex(active.id);
-      const newPosition = getImageIndex(over!.id);
-
-      return arrayMove(prev, currentPosition || 0, newPosition || 0);
-    });
+  const onError: SubmitErrorHandler<ProductFormType> = (error) => {
+    console.log(error);
   };
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit, onError)}
       className="flex flex-col my-5 flex-1 overflow-y-scroll px-1"
     >
       <FormField
@@ -126,27 +139,28 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
         control={control}
         required
       />
-      <FormField
-        label="Price"
-        name="price"
-        type="number"
-        placeholder="Please enter product price"
-        register={register}
-        errors={errors}
-        required
-      />
 
-      <div className="flex gap-2 flex-col mb-5">
-        <Label>Product Photo(s)</Label>
-        <p className="text-xs text-neutral-600">NOTE: You can add more than 1 image</p>
-        <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCorners}>
-          <div className="flex flex-col gap-2">
-            <SortableContext items={images || []} strategy={rectSortingStrategy}>
-              {images ? (
+      <Controller
+        control={control}
+        name="image"
+        render={({ field }) => (
+          <div className="flex gap-2 flex-col mb-5">
+            <Label>Product Photo(s)</Label>
+            <p className="text-xs text-neutral-600">NOTE: You can add more than 1 image</p>
+            <div className="flex flex-col gap-2">
+              {field.value?.length !== 0 ? (
                 // SHOW THIS IF THERE IS IMAGES
                 <div className="w-full flex gap-2 justify-start flex-wrap">
-                  {images.map((image) => (
-                    <SortableImage key={image} url={image} />
+                  {field.value?.map((image, index) => (
+                    <div key={index} className="size-32 overflow-hidden rounded-md border">
+                      <Image
+                        src={image}
+                        alt={`image-product`}
+                        width={300}
+                        height={300}
+                        className="size-full object-cover"
+                      />
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -156,61 +170,93 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
                   <span className="text-sm text-neutral-700">Add product images</span>
                 </div>
               )}
-            </SortableContext>
 
-            <GalleryModal initialSelectedImages={images} />
-          </div>
-        </DndContext>
-      </div>
+              <GalleryModal
+                initialSelectedImages={field.value ? field.value:[]}
+                setInitialSelectedImages={field.onChange}
+                multiple
+              />
 
-      {/* <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          {images.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto pb-4">
-              {images.map((imageUrl, index) => (
-                <div key={index} className="relative h-32 w-32 flex-shrink-0">
-                  <Image
-                    src={imageUrl}
-                    alt={`Product image ${index + 1}`}
-                    fill
-                    className="object-cover rounded-md"
-                  />
-                </div>
-              ))}
+              {get(errors, "image") && <ErrorMessage message={get(errors, "image.message")}/>}
             </div>
-          )}
-          <Button
-            type="button"
-            onClick={() => setIsGalleryOpen(true)}
-          >
-            {images.length > 0 ? 'Change Photos' : 'Add Photos'}
-          </Button>
-        </div>
-
-        <GalleryModal
-          isOpen={isGalleryOpen}
-          onClose={() => setIsGalleryOpen(false)}
-          onSelect={handleImageSelect}
-          initialSelectedImages={images}
-        />
-      </div> */}
+          </div>
+        )}
+      />
 
       <FormField
         label="Discount (optional)"
+        description="If this product has variants, the discount will automatically apply to all of them."
         name="discount"
         type="number"
         placeholder="Please input the discount"
         errors={errors}
         register={register}
       />
-      <FormField
-        label="Stock"
-        name="stock"
-        type="number"
-        placeholder="Please input the stock"
-        errors={errors}
-        register={register}
-      />
+
+      <div className="flex flex-col gap-2 mb-5">
+        <Label className="text-base">Has Variants?</Label>
+        <div className="flex gap-2 items-center">
+          <Label className="text-base text-neutral-600">No</Label>
+          <Switch checked={hasVariant} onCheckedChange={(e) => setHasVariant(e)} />
+          <Label className="text-base text-neutral-600">Yes</Label>
+        </div>
+      </div>
+
+      {hasVariant ? (
+        <div className="bg-neutral-100 p-3 rounded-md">
+          <Label className="text-lg mb-5">Variants</Label>
+          <div className="flex flex-col gap-3 overflow-y-scroll max-h-[80vh]">
+            {fields.map((field, index) => (
+              <VariantForm
+                control={control}
+                key={field.id}
+                remove={remove}
+                errors={errors}
+                index={index}
+                register={register}
+                fieldLength={fields.length}
+              />
+            ))}
+          </div>
+          <Button
+            className="mt-5 w-full"
+            onClick={() =>
+              append({
+                image: "",
+                name: "",
+                regularPrice: 0,
+                stock: 0,
+                discount: undefined,
+                sku: "",
+              })
+            }
+          >
+            Add Variant <Plus />
+          </Button>
+        </div>
+      ) : (
+        <>
+          <FormField
+            label="Price"
+            name="price"
+            type="number"
+            placeholder="Please enter product price"
+            register={register}
+            errors={errors}
+            required
+          />
+
+          <FormField
+            label="Stock"
+            name="stock"
+            type="number"
+            placeholder="Please input the stock"
+            errors={errors}
+            register={register}
+          />
+        </>
+      )}
+
       <FormField
         label="Description"
         name="description"
@@ -222,11 +268,16 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
       />
 
       <div className="flex justify-end gap-2">
-        <Button variant="destructive" onClick={() => router.back()} disabled={isLoading}>
+        <Button
+          variant="destructive"
+          onClick={() => router.back()}
+          disabled={isLoading}
+          className="uppercase"
+        >
           Cancel
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? <Loader className="w-4 h-4 animate-spin" /> : "Update"}
+        <Button type="submit" disabled={isLoading} className="uppercase">
+          {isLoading ? <Loader className="size-4 animate-spin" /> : "Update"}
         </Button>
       </div>
     </form>

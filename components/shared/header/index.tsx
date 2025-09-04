@@ -20,20 +20,7 @@ const Header = async () => {
   const cart = await getMyCart();
 
   return (
-    <div
-      className={`
-      sticky 
-      flex 
-      flex-col
-      items-center 
-      justify-between 
-      w-full
-      top-0 
-      left-0
-      bg-background 
-      z-50
-      `}
-    >
+    <div className="nav-container">
       <Link href="/" className="py-2">
         <Logo />
       </Link>

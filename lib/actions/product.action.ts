@@ -1,10 +1,10 @@
-'use server'
+"use server";
 
-import { prisma } from "../db/prisma"
+import { prisma } from "../db/prisma";
 import { Product } from "@/types";
-import { Event } from '@prisma/client'
-import { ProductFormType } from "@/app/admin/catalog/product/add/components/product-form"
-import { revalidatePath } from "next/cache"
+import { Event } from "@prisma/client";
+import { ProductFormType } from "@/app/admin/catalog/product/add/components/product-form";
+import { revalidatePath } from "next/cache";
 
 export async function getAllProducts(
   subCategory?: string,
@@ -13,7 +13,6 @@ export async function getAllProducts(
   sort?: string,
   price?: { min?: string; max?: string }
 ): Promise<Product[]> {
-
   const products = await prisma.product.findMany({
     where: {
       AND: [
@@ -23,30 +22,28 @@ export async function getAllProducts(
               subCategory: {
                 name: {
                   contains: subCategory,
-                  mode: 'insensitive'
-                }
+                  mode: "insensitive",
+                },
               },
             }
           : {},
         // Filter berdasarkan nama produk
-        search && search.length !== 0
-          ? { name: { contains: search, mode: "insensitive" } }
-          : {},
+        search && search.length !== 0 ? { name: { contains: search, mode: "insensitive" } } : {},
         // Filter berdasarkan kategori ID (produk yang memiliki kategori dalam array ini)
         subCategoriesId?.length
           ? {
               subCategoryId: {
-                in: subCategoriesId ,
+                in: subCategoriesId,
               },
             }
           : {},
         // Filter berdasarkan harga (min dan max)
         price?.min || price?.max
           ? {
-            price: {
-              gte: price?.min ? BigInt(price.min) : undefined,
-              lte: price?.max ? BigInt(price.max) : undefined,
-            },
+              price: {
+                gte: price?.min ? BigInt(price.min) : undefined,
+                lte: price?.max ? BigInt(price.max) : undefined,
+              },
             }
           : {},
       ],
@@ -54,15 +51,17 @@ export async function getAllProducts(
     include: {
       subCategory: true,
       event: true,
-      variants: true
+      variants: true,
     },
 
-    orderBy: sort ? {
-      createdAt: 'desc'
-    } : {
-      name: 'asc'
-    }
-  })
+    orderBy: sort
+      ? {
+          createdAt: "desc",
+        }
+      : {
+          name: "asc",
+        },
+  });
 
   return [
     ...products.map((product) => ({
@@ -72,7 +71,9 @@ export async function getAllProducts(
         discount: variant.discount as number | undefined,
         sku: variant.sku as string | undefined,
         regularPrice: Number(variant.regularPrice),
-        price: Number(variant.regularPrice) - Number(variant.regularPrice)*((variant.discount??0)/100)
+        price:
+          Number(variant.regularPrice) -
+          Number(variant.regularPrice) * (((variant.discount||product.discount) ?? 0) / 100),
       })),
       weight: Number(product.weight),
       length: Number(product.length),
@@ -82,20 +83,20 @@ export async function getAllProducts(
       eventId: product.eventId as string | undefined,
       regularPrice: Number(product.regularPrice),
       event: product.event as Event | undefined,
-      price: Number(product.regularPrice) - (Number(product.regularPrice)*product.discount/100)
-    }))
-  ]
+      price: Number(product.regularPrice) - (Number(product.regularPrice) * product.discount) / 100,
+    })),
+  ];
 }
 
-export async function searchProduct(keyword:string): Promise<Product[]> {
+export async function searchProduct(keyword: string): Promise<Product[]> {
   const products = await prisma.product.findMany({
     where: {
       name: {
-        contains : keyword,
-        mode: 'insensitive'
+        contains: keyword,
+        mode: "insensitive",
       },
     },
-  })
+  });
 
   return [
     ...products.map((product) => ({
@@ -107,16 +108,15 @@ export async function searchProduct(keyword:string): Promise<Product[]> {
       sku: product.sku as string | undefined,
       eventId: product.eventId as string | undefined,
       regularPrice: Number(product.regularPrice),
-      price: Number(product.regularPrice) - (Number(product.regularPrice)*product.discount/100)
-    }))
-  ]
+      price: Number(product.regularPrice) - (Number(product.regularPrice) * product.discount) / 100,
+    })),
+  ];
 }
 
-export async function getProductBySlug(slug:string): Promise<Product> {
-
+export async function getProductBySlug(slug: string): Promise<Product> {
   const product = await prisma.product.findFirst({
     where: {
-      slug
+      slug,
     },
     include: {
       subCategory: true,
@@ -125,14 +125,14 @@ export async function getProductBySlug(slug:string): Promise<Product> {
         where: {
           order: {
             paymentStatus: {
-              in: ['settlement', 'capture']
-            }
-          }
+              in: ["settlement", "capture"],
+            },
+          },
         },
-      }
-    }
-  })
-  
+      },
+    },
+  });
+
   return {
     ...product!,
     variants: product?.variants.map((variant) => ({
@@ -140,11 +140,13 @@ export async function getProductBySlug(slug:string): Promise<Product> {
       discount: variant.discount as number | undefined,
       sku: variant.sku as string | undefined,
       regularPrice: Number(variant.regularPrice),
-      price: Number(variant.regularPrice) - Number(variant.regularPrice) * ((variant.discount||0)/100)
+      price:
+        Number(variant.regularPrice) -
+        Number(variant.regularPrice) * (((variant.discount||product.discount) ?? 0) / 100),
     })),
     orderItems: product?.orderItems.map((item) => ({
       ...item,
-      weight: Number(item.weight)
+      weight: Number(item.weight),
     })),
     weight: Number(product?.weight),
     length: Number(product?.length),
@@ -153,18 +155,19 @@ export async function getProductBySlug(slug:string): Promise<Product> {
     sku: product?.sku as string | undefined,
     eventId: product?.eventId as string | undefined,
     regularPrice: Number(product?.regularPrice),
-    price: Number(product?.regularPrice) - (Number(product?.regularPrice)*(product?.discount||0)/100)
-  }
+    price:
+      Number(product?.regularPrice) -
+      (Number(product?.regularPrice) * (product?.discount || 0)) / 100,
+  };
 }
 
 export async function getNewArrivalProduct(): Promise<Product[]> {
-
   const products = await prisma.product.findMany({
     orderBy: {
-      createdAt: 'desc'
+      createdAt: "desc",
     },
-    take: 2
-  })
+    take: 2,
+  });
 
   return [
     ...products.map((product) => ({
@@ -176,31 +179,51 @@ export async function getNewArrivalProduct(): Promise<Product[]> {
       sku: product.sku as string | undefined,
       eventId: product.eventId as string | undefined,
       regularPrice: Number(product.regularPrice),
-      price: Number(product.regularPrice) - (Number(product.regularPrice)*product.discount/100)
-    }))
-  ]
+      price: Number(product.regularPrice) - (Number(product.regularPrice) * product.discount) / 100,
+    })),
+  ];
 }
 
-export async function getProductById(id: string) {
-  return await prisma.product.findFirst({
+export async function getProductById(id: string): Promise<Product> {
+  const product = await prisma.product.findFirst({
     where: {
-      id
+      id,
     },
     include: {
-      subCategory: {
-        select: {
-          id: true,
-          name: true
-        }
-      }
-    }
-  })
+      subCategory: true,
+      variants: true,
+    },
+  });
+
+  return {
+    ...product!,
+    variants: product?.variants.map((variant) => ({
+      ...variant,
+      discount: variant.discount as number | undefined,
+      sku: variant.sku as string | undefined,
+      regularPrice: Number(variant.regularPrice),
+      price:
+        Number(variant.regularPrice) -
+        Number(variant.regularPrice) * ((variant.discount || 0) / 100),
+    })),
+    eventId: product?.eventId as string | undefined,
+    sku: product?.sku as string | undefined,
+    weight: Number(product?.weight),
+    length: Number(product?.length),
+    width: Number(product?.width),
+    height: Number(product?.height),
+    regularPrice: Number(product?.regularPrice),
+    price:
+      Number(product?.regularPrice) -
+      (Number(product?.regularPrice) * (product!.discount || 0)) / 100,
+  };
 }
 
 export async function createProduct(data: ProductFormType) {
   try {
-    const { subCategory, name, price, discount, image, description, slug, hasVariant, variants } = data
-    
+    const { subCategory, name, price, discount, image, description, slug, hasVariant, variants } =
+      data;
+
     await prisma.product.create({
       data: {
         name: name!,
@@ -211,44 +234,57 @@ export async function createProduct(data: ProductFormType) {
         images: image,
         description: description!,
         hasVariant,
-        variants: hasVariant ? {
-          create: variants?.map(variant => ({
-            name: variant.name,
-            sku: variant.sku,
-            regularPrice: variant.price,
-            stock: variant.stock,
-            discount: variant.discount
-          }))
-        } : undefined
+        variants: hasVariant
+          ? {
+              create: variants?.map((variant) => ({
+                name: variant.name,
+                sku: variant.sku,
+                regularPrice: variant.regularPrice,
+                stock: variant.stock,
+                discount: variant.discount,
+              })),
+            }
+          : undefined,
       },
-    })
+    });
 
-    revalidatePath('/admin/catalog/product')
+    revalidatePath("/admin/catalog/product");
 
     return {
       success: true,
-      message: 'Product Created'
-    }
+      message: "Product Created",
+    };
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return {
       success: false,
-      message: 'Failed to Create Product'
-    }
+      message: "Failed to Create Product",
+    };
   }
 }
 
 export async function updateProduct(data: ProductFormType & { id?: string }) {
   try {
-    const { subCategory, name, price, discount, image, description, id, hasVariant, variants, stock } = data
-    
+    const {
+      subCategory,
+      name,
+      price,
+      discount,
+      image,
+      description,
+      id,
+      hasVariant,
+      variants,
+      stock,
+    } = data;
+
     if (!id) {
-      throw new Error("Product ID is required")
+      throw new Error("Product ID is required");
     }
 
-    await prisma.product.update({
+    const updatedProduct = await prisma.product.update({
       where: {
-        id
+        id,
       },
       data: {
         name: name!,
@@ -259,31 +295,41 @@ export async function updateProduct(data: ProductFormType & { id?: string }) {
         description: description!,
         hasVariant,
         stock,
-        variants: hasVariant ? {
-          deleteMany: {},
-          create: variants?.map(variant => ({
-            name: variant.name,
-            sku: variant.sku,
-            regularPrice: variant.price,
-            stock: variant.stock,
-            discount: variant.discount
-          }))
-        } : undefined
       },
-    })
+    });
 
-    revalidatePath('/admin/catalog/product')
+    if (hasVariant && variants?.length!==0) {
+      await prisma.variant.deleteMany({
+        where: {
+          productId: updatedProduct.id,
+        },
+      });
+
+      await prisma.variant.createMany({
+        data: variants!.map((v) => ({
+          productId: updatedProduct.id, // penting! relasi ke product
+          image: v.image,
+          name: v.name,
+          sku: v.sku,
+          regularPrice: v.regularPrice,
+          stock: v.stock,
+          discount: v.discount,
+        })),
+      });
+    }
+
+    revalidatePath("/admin/catalog/product");
 
     return {
       success: true,
-      message: 'Product Updated'
-    }
+      message: "Product Updated",
+    };
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return {
       success: false,
-      message: 'Failed to Update Product'
-    }
+      message: "Failed to Update Product",
+    };
   }
 }
 
@@ -291,22 +337,22 @@ export async function deleteProduct(id: string) {
   try {
     await prisma.product.delete({
       where: {
-        id
-      }
-    })
+        id,
+      },
+    });
 
-    revalidatePath('/admin/catalog/product')
+    revalidatePath("/admin/catalog/product");
 
     return {
       success: true,
-      message: 'Product Deleted'
-    }
+      message: "Product Deleted",
+    };
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return {
       success: false,
-      message: 'Failed to Delete Product'
-    }
+      message: "Failed to Delete Product",
+    };
   }
 }
 
@@ -315,22 +361,22 @@ export async function deleteManyProducts(ids: string[]) {
     await prisma.product.deleteMany({
       where: {
         id: {
-          in: ids
-        }
-      }
-    })
+          in: ids,
+        },
+      },
+    });
 
-    revalidatePath('/admin/catalog/product')
+    revalidatePath("/admin/catalog/product");
 
     return {
       success: true,
-      message: 'Products Deleted'
-    }
+      message: "Products Deleted",
+    };
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return {
       success: false,
-      message: 'Failed to Delete Products'
-    }
+      message: "Failed to Delete Products",
+    };
   }
 }

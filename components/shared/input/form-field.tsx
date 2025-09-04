@@ -9,17 +9,15 @@ import {
   Controller,
   FieldErrors,
   FieldValues,
+  get,
   Path,
   UseFormRegister,
 } from "react-hook-form";
 import "react-international-phone/style.css";
 import { InputPhone } from "../input-phone";
-import { UploaderProvider, UploadFn } from "@/components/upload/uploader-provider";
 import makeAnimated from "react-select/animated";
-import UploadImage from "@/app/admin/catalog/sub-category/add/components/upload-image";
 import dynamic from "next/dynamic";
 import { Textarea } from "@/components/ui/textarea";
-import { MultiImageUploader } from "@/app/admin/catalog/product/[productId]/components/image-uploader";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
 // Types
@@ -27,12 +25,13 @@ type SelectOption = { value: string; label: string };
 
 interface BaseFormFieldProps<TFieldValues extends FieldValues> {
   label: string;
+  description?: string;
   name: Path<TFieldValues>;
   required?: boolean;
   errors?: FieldErrors<TFieldValues>;
 }
 
-interface InputFormFieldProps<TFieldValues extends FieldValues> extends BaseFormFieldProps<TFieldValues> {
+export interface InputFormFieldProps<TFieldValues extends FieldValues> extends BaseFormFieldProps<TFieldValues> {
   type?: HTMLInputTypeAttribute;
   placeholder?: string;
   register?: UseFormRegister<TFieldValues>;
@@ -62,24 +61,10 @@ interface PasswordFormFieldProps<TFieldValues extends FieldValues> extends BaseF
   disabled?: boolean;
 }
 
-interface MultiImageFormFieldProps<TFieldValues extends FieldValues> extends BaseFormFieldProps<TFieldValues> {
-  type: 'multi-image';
-  uploadFn: UploadFn;
-  triggerUpload?: boolean;
-  initialPhoto?: string[];
-}
-
 interface PhoneFormFieldProps<TFieldValues extends FieldValues> extends BaseFormFieldProps<TFieldValues> {
   type: 'phone';
   register?: UseFormRegister<TFieldValues>;
   disabled?: boolean;
-}
-
-interface ImageFormFieldProps<TFieldValues extends FieldValues> extends BaseFormFieldProps<TFieldValues> {
-  type: 'image';
-  uploadFn: UploadFn;
-  triggerUpload?: boolean;
-  initialPhoto?: string;
 }
 
 type FormFieldProps<TFieldValues extends FieldValues> =
@@ -87,11 +72,9 @@ type FormFieldProps<TFieldValues extends FieldValues> =
   | SelectFormFieldProps<TFieldValues>
   | PasswordFormFieldProps<TFieldValues>
   | PhoneFormFieldProps<TFieldValues>
-  | ImageFormFieldProps<TFieldValues>
-  | MultiImageFormFieldProps<TFieldValues>;
 
 // Sub-components
-const ErrorMessage = ({ message }: { message: string }) => (
+export const ErrorMessage = ({ message }: { message: string }) => (
   <p className="text-xs text-red-600 flex items-center gap-1">
     <CircleAlert className="w-3 h-3" />
     {message}
@@ -112,6 +95,7 @@ export function FormField<TFieldValues extends FieldValues>({
   errors,
   required,
   type,
+  description,
   ...props
 }: FormFieldProps<TFieldValues>) {
   const [passShown, setPassShown] = useState(false);
@@ -152,39 +136,6 @@ export function FormField<TFieldValues extends FieldValues>({
                 onClick={() => setPassShown(true)}
               />
             )}
-          </div>
-        );
-      }
-
-      case 'image': {
-        const imageProps = props as ImageFormFieldProps<TFieldValues>;
-        return (
-          <div className="w-fit">
-            <UploaderProvider 
-              uploadFn={imageProps.uploadFn}
-              autoUpload
-            >
-              <UploadImage 
-                initialPhoto={imageProps.initialPhoto}
-              />
-            </UploaderProvider>
-          </div>
-        );
-      }
-
-      case 'multi-image': {
-        const multiImageProps = props as MultiImageFormFieldProps<TFieldValues>;
-        return (
-          <div className="w-fit max-h-96 overflow-scroll">
-            <UploaderProvider 
-              uploadFn={multiImageProps.uploadFn}
-              autoUpload
-            >
-              <MultiImageUploader 
-                initialPhoto={multiImageProps.initialPhoto}
-                
-              />
-            </UploaderProvider>
           </div>
         );
       }
@@ -252,9 +203,12 @@ export function FormField<TFieldValues extends FieldValues>({
 
   return (
     <div className="flex flex-col gap-2 mb-5">
-      <FormLabel label={label} required={required} />
+      <div>
+        <FormLabel label={label} required={required} />
+        {description && <p className="text-xs text-neutral-500">NOTE: {description}</p>}
+      </div>
       {renderField()}
-      {errors?.[name] && <ErrorMessage message={errors[name]?.message as string} />}
+      {get(errors, name) && <ErrorMessage message={get(errors, `${name}.message`)} />}
     </div>
   );
 }
