@@ -126,7 +126,7 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
               className="fixed inset-0 z-[99] flex items-center justify-center bg-black/40 backdrop-blur-md"
               onClick={() => setImageModal("")}
             >
-              <div className="relative w-[30vw]">
+              <div className="relative w-[90vw] lg:w-[30vw]">
                 <Image
                   src={imageModal}
                   alt="Image Modal"
@@ -157,14 +157,15 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
           hasVariant={product.hasVariant}
         />
 
+        {/* VARIANTS SECTION */}
         {product?.hasVariant && (
           <>
             <span className="uppercase tracking-widest text-sm">Variants:</span>
-            <div className="flex gap-3 mt-3 flex-wrap">
+            <div className="grid grid-cols-4 gap-2 mt-3">
               {product?.variants?.map((item) => (
                 <div
                   key={item.id}
-                  className="relative flex flex-col items-center gap-1 rounded-lg"
+                  className="relative col-span-1 flex flex-col items-center gap-1 rounded-lg"
                   onClick={() => {
                     if (item.stock > 0) {
                       setVariant(item);
@@ -173,19 +174,25 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
                     }
                   }}
                 >
-                  <Image
-                    src={item.image}
-                    alt={item.name}
-                    width={200}
-                    height={200}
-                    className={cn(
-                      "min-w-20 max-w-20 aspect-square object-cover rounded-md hover:border-2 hover:border-black/50 transition-all",
-                      variant === item && "border-2 border-black/50",
-                      true && ""
-                    )}
-                  />
+                  <div className="relative">
+                    <Image
+                      src={item.image}
+                      alt={item.name}
+                      width={200}
+                      height={200}
+                      className={cn(
+                        "size-full object-cover rounded-md hover:border-2 hover:border-black/50 transition-all",
+                        variant === item && "border-2 border-black/50",
+                        true && ""
+                      )}
+                    />
+                  {item.stock < 1 && (
+                    <div className="absolute inset-0 rounded-md bg-white/70 flex items-center justify-center p-3">
+                      <p className="text-center text-sm text-red-600">Out of Stock!</p>
+                    </div>
+                  )}
+                  </div>
                   <h3 className="text-xs text-neutral-500 dark:text-neutral-300">{item.name}</h3>
-                  {item.stock < 1 && <div className="absolute inset-0 rounded-md bg-white/50" />}
                 </div>
               ))}
             </div>
