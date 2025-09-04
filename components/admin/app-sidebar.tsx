@@ -3,6 +3,7 @@
 import * as React from "react"
 import {
   BookImage,
+  Calendar,
   SquareTerminal,
 } from "lucide-react"
 
@@ -46,6 +47,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/admin/gallery",
         icon: BookImage,
       },
+      {
+        title: "Events",
+        url: "/admin/events",
+        icon: Calendar
+      }
     ],
   }
   return (

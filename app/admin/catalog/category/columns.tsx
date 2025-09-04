@@ -61,7 +61,7 @@ export const columns: ColumnDef<Category>[] = [
     id: "actions",
     cell: ({ row }) => (
       <ActionTable 
-        type="products"
+        type="category"
         deleteFunction={deleteCategory}
         id={row.original.id} 
         title="Delete Product" 

@@ -1,19 +1,19 @@
-/* eslint-disable */
-// @ts-nocheck
 "use client";
 
-import { FormField } from "@/components/shared/input/form-field";
+import { ErrorMessage, FormField } from "@/components/shared/input/form-field";
 import { Button } from "@/components/ui/button";
-// import { updateSubCategory } from "@/lib/actions/subCategory.action";
-import { useEdgeStore } from "@/lib/edge-store";
+import { updateSubCategory } from "@/lib/actions/subCategory.action";
 import { subCategorySchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader } from "lucide-react";
+import { ImagePlus, Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
-// import { toast } from "sonner";
+import { useTransition } from "react";
+import { Controller, get, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { SubCategoryFormType } from "../../page";
+import { Label } from "@/components/ui/label";
+import Image from "next/image";
+import GalleryModal from "@/components/gallery/gallery-modal";
 
 interface EditSubCategoryFormProps {
   subCategory: {
@@ -37,11 +37,8 @@ interface EditSubCategoryFormProps {
 }
 
 const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormProps) => {
-  const { edgestore } = useEdgeStore();
   const [isLoading, startTransition] = useTransition();
-  const [triggerUpload, setTriggerUpload] = useState(false);
   const router = useRouter();
-  const [data, setData] = useState<SubCategoryFormType>();
 
   const {
     register,
@@ -59,40 +56,20 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
     },
   });
 
-  // const handleUpload = async () => {
-  //   startTransition(async () => {
-  //     await edgestore.publicImages.delete({url: subCategory.image});
-
-  //     const res = await edgestore.publicImages.upload({
-  //       file,
-  //       signal,
-  //       onProgressChange,
-  //       options: {
-  //         manualFileName: generateFileName('sub-category', data.name, subCategory.image),
-  //       }
-  //     });
-
-  //     try {
-  //       const response = await updateSubCategory({ ...data, image: '', id: subCategory.id });
-  //       if (response.success) {
-  //         toast.success(response.message);
-  //         router.push("/admin/catalog/sub-category");
-  //       } else {
-  //         toast.error(response.message);
-  //       }
-  //     } catch (error) {
-  //       console.log(error);
-  //     }
-  //   });
-
-  //   return { url: "" };
-  // };
-
   const onSubmit = async (data: SubCategoryFormType) => {
-    setData(data);
-    
-    // this will trigger the handleUpload function
-    setTriggerUpload(true);
+    startTransition(async () => {
+      try {
+        const response = await updateSubCategory({ ...data, id: subCategory.id });
+        if (response.success) {
+          toast.success(response.message);
+          router.push("/admin/catalog/sub-category");
+        } else {
+          toast.error(response.message);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    });
   };
 
   return (
@@ -106,9 +83,9 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
         placeholder="Please enter sub category name"
         register={register}
         errors={errors}
-
         required
       />
+
       <FormField
         label="Select Category"
         name="category"
@@ -119,6 +96,7 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
         control={control}
         required
       />
+
       <FormField
         label="Select Products"
         name="products"
@@ -129,6 +107,46 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
         options={subCategory.products}
         control={control}
       />
+
+      <Controller
+        control={control}
+        name="image"
+        render={({ field }) => (
+          <div className="flex gap-2 flex-col mb-5">
+            <Label>Sub-Category Photo(s)</Label>
+            <div className="flex flex-col gap-2">
+              {field.value?.length !== 0 ? (
+                // SHOW THIS IF THERE IS IMAGES
+                <div className="w-full flex gap-2 justify-start flex-wrap">
+                  <div className="size-32 overflow-hidden rounded-md border">
+                    <Image
+                      src={field.value||'/images/placeholder-product.png'}
+                      alt="subcategory-image"
+                      width={300}
+                      height={300}
+                      className="size-full object-cover"
+                    />
+                  </div>
+                </div>
+              ) : (
+                // SHOW THIS IF THERE IS NO IMAGES
+                <div className="flex flex-col items-center justify-center size-44 rounded-md border bg-accent gap-4">
+                  <ImagePlus />
+                  <span className="text-sm text-neutral-700">Add Sub-category Images</span>
+                </div>
+              )}
+
+              <GalleryModal
+                initialSelectedImages={field.value ? [field.value]:[]}
+                setInitialSelectedImages={field.onChange}
+              />
+
+              {get(errors, "image") && <ErrorMessage message={get(errors, "image.message")}/>}
+            </div>
+          </div>
+        )}
+      />
+
       <FormField
         label="Discount (optional)"
         name="discount"

@@ -280,11 +280,10 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
           variant="destructive"
           onClick={() => router.back()}
           disabled={isLoading}
-          className="uppercase"
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={isLoading} className="uppercase">
+        <Button type="submit" disabled={isLoading}>
           {isLoading ? <Loader className="size-4 animate-spin" /> : "Update"}
         </Button>
       </div>

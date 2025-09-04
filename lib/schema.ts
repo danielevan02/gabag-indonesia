@@ -51,7 +51,6 @@ export const orderSchema = z.object({
 export const categorySchema = z.object({
   name: z.string().min(1, 'Please enter the name of the category'),
   image: z.string().min(1, 'Please pick an image for the sub category'),
-  discount: z.number().min(0, "Please enter between 0 - 100").max(100, 'Please enter between 0 - 100'),
 })
 
 export const productsSchema = z.object({
