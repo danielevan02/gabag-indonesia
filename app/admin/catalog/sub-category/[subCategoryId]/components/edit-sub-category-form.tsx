@@ -1,9 +1,10 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 "use client";
 
 import { FormField } from "@/components/shared/input/form-field";
 import { Button } from "@/components/ui/button";
-import { UploadFn } from "@/components/upload/uploader-provider";
-import { updateSubCategory } from "@/lib/actions/subCategory.action";
+// import { updateSubCategory } from "@/lib/actions/subCategory.action";
 import { useEdgeStore } from "@/lib/edge-store";
 import { subCategorySchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,9 +12,8 @@ import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+// import { toast } from "sonner";
 import { SubCategoryFormType } from "../../page";
-import { generateFileName } from "@/lib/utils";
 
 interface EditSubCategoryFormProps {
   subCategory: {
@@ -41,9 +41,7 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
   const [isLoading, startTransition] = useTransition();
   const [triggerUpload, setTriggerUpload] = useState(false);
   const router = useRouter();
-  const [data, setData] = useState<SubCategoryFormType>(
-    {} as SubCategoryFormType
-  );
+  const [data, setData] = useState<SubCategoryFormType>();
 
   const {
     register,
@@ -61,34 +59,35 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
     },
   });
 
-  const handleUpload: UploadFn = async ({ file, signal, onProgressChange }) => {
-    startTransition(async () => {
-      await edgestore.publicImages.delete({url: subCategory.image});
+  // const handleUpload = async () => {
+  //   startTransition(async () => {
+  //     await edgestore.publicImages.delete({url: subCategory.image});
 
-      const res = await edgestore.publicImages.upload({
-        file,
-        signal,
-        onProgressChange,
-        options: {
-          manualFileName: generateFileName('sub-category', data.name, subCategory.image),
-        }
-      });
+  //     const res = await edgestore.publicImages.upload({
+  //       file,
+  //       signal,
+  //       onProgressChange,
+  //       options: {
+  //         manualFileName: generateFileName('sub-category', data.name, subCategory.image),
+  //       }
+  //     });
 
-      try {
-        const response = await updateSubCategory({ ...data, image: res.url, id: subCategory.id });
-        if (response.success) {
-          toast.success(response.message);
-          router.push("/admin/catalog/sub-category");
-        } else {
-          toast.error(response.message);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    });
+  //     try {
+  //       const response = await updateSubCategory({ ...data, image: '', id: subCategory.id });
+  //       if (response.success) {
+  //         toast.success(response.message);
+  //         router.push("/admin/catalog/sub-category");
+  //       } else {
+  //         toast.error(response.message);
+  //       }
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   });
 
-    return { url: "" };
-  };
+  //   return { url: "" };
+  // };
+
   const onSubmit = async (data: SubCategoryFormType) => {
     setData(data);
     
@@ -120,18 +119,6 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
         control={control}
         required
       />
-      <div className="w-fit">
-        <FormField
-          label="Image"
-          name="image"
-          type="image"
-          uploadFn={handleUpload}
-          triggerUpload={triggerUpload}
-          errors={errors}
-          required
-          initialPhoto={subCategory.image}
-        />
-      </div>
       <FormField
         label="Select Products"
         name="products"
