@@ -1,19 +1,20 @@
+
+/* eslint-disable */
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/shared/input/form-field";
-import { createSubCategory } from "@/lib/actions/subCategory.action";
+// import { createSubCategory } from "@/lib/actions/subCategory.action";
 import { useEdgeStore } from "@/lib/edge-store";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+// import { toast } from "sonner";
 import { subCategorySchema } from "@/lib/schema";
 import { SubCategoryFormType } from "../../page";
-import { UploadFn } from "@/components/upload/uploader-provider";
 import { Loader } from "lucide-react";
-import { generateFileName } from "@/lib/utils";
+// import { generateFileName } from "@/lib/utils";
 
 const SubCategoryForm = ({
   category,
@@ -39,32 +40,32 @@ const SubCategoryForm = ({
     resolver: zodResolver(subCategorySchema),
   });
 
-  const handleUpload: UploadFn = async ({ file, signal, onProgressChange }) => {
-    startTransition(async () => {
-      const res = await edgestore.publicImages.upload({
-        file,
-        signal,
-        onProgressChange,
-        options: {
-          manualFileName: generateFileName('sub-category', data.name, '.png')
-        }
-      });
+  // const handleUpload = async ({ file, signal, onProgressChange }) => {
+  //   startTransition(async () => {
+  //     const res = await edgestore.publicImages.upload({
+  //       file,
+  //       signal,
+  //       onProgressChange,
+  //       options: {
+  //         manualFileName: generateFileName('sub-category', data.name, '.png')
+  //       }
+  //     });
 
-      try {
-        const response = await createSubCategory({ ...data, image: res.url });
-        if (response.success) {
-          toast.success(response.message);
-          router.push("/admin/catalog/sub-category");
-        } else {
-          toast.error(response.message);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    });
+  //     try {
+  //       const response = await createSubCategory({ ...data, image: res.url });
+  //       if (response.success) {
+  //         toast.success(response.message);
+  //         router.push("/admin/catalog/sub-category");
+  //       } else {
+  //         toast.error(response.message);
+  //       }
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   });
 
-    return { url: "" };
-  };
+  //   return { url: "" };
+  // };
 
   const onSubmit = async (data: SubCategoryFormType) => {
     setData(data);
@@ -95,17 +96,6 @@ const SubCategoryForm = ({
         required
         placeholder="Select category"
         options={category}
-        disabled={isLoading}
-      />
-
-      <FormField
-        label="Image"
-        name="image"
-        type="image"
-        errors={errors}
-        required
-        uploadFn={handleUpload}
-        triggerUpload={triggerUpload}
         disabled={isLoading}
       />
 
