@@ -37,7 +37,7 @@ export default async function EditProductPage({
       : [];
 
   return (
-    <div className="p-5 flex flex-col h-full">
+    <div className="form-page">
       <p className="text-lg">Edit Product</p>
 
       <EditProductForm

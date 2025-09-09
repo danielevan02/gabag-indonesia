@@ -30,7 +30,7 @@ export default async function EditSubCategoryPage({
   }
 
   return (
-    <div className="p-5 flex flex-col h-full">
+    <div className="form-page">
       <p className="text-lg">Edit Sub Category</p>
 
       <EditSubCategoryForm

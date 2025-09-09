@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Category } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import Image from "next/image";
+import BlurImage from "@/components/shared/blur-image";
 
 export const columns: ColumnDef<Category>[] = [
   {
@@ -42,11 +42,12 @@ export const columns: ColumnDef<Category>[] = [
     header: "Image",
     cell: ({ row }) => (
       <div className="w-56 h-32 rounded-lg overflow-clip border">
-        <Image 
+        <BlurImage
           src={row.getValue('image')}
+          dynamic
           alt={row.original.name}
-          width={400}
-          height={250}
+          width={100}
+          height={100}
           className="w-full h-full object-cover"
         />
       </div>

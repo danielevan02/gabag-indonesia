@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "../db/prisma";
+import prisma from "../db/prisma";
 import { Product } from "@/types";
 import { Event } from "@prisma/client";
 import { ProductFormType } from "@/app/admin/catalog/product/add/components/product-form";
@@ -59,7 +59,7 @@ export async function getAllProducts(
           createdAt: "desc",
         }
       : {
-          name: "asc",
+          createdAt: "desc",
         },
   });
 

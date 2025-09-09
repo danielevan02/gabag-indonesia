@@ -1,6 +1,7 @@
+import BlurImage from "@/components/shared/blur-image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getNewArrivalProduct } from "@/lib/actions/product.action";
-import Image from "next/image";
+
 import Link from "next/link";
 
 const NewArrivalSection = async () => {
@@ -18,9 +19,10 @@ const NewArrivalSection = async () => {
             key={product.slug}
             className="w-full flex flex-col items-center"
           >
-            <Image
+            <BlurImage
               src={product.images[0]}
               alt={product.name}
+              dynamic
               width={500}
               height={500}
               className={`

@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { AppSidebar } from "@/components/admin/app-sidebar";
+import BlurImage from "@/components/shared/blur-image";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -10,7 +11,6 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import QueryProvider from "@/lib/query-provider";
 import { Globe } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 
 import { redirect } from "next/navigation";
@@ -38,7 +38,7 @@ export default async function RootLayout({
                   <h1 className="text-2xl md:text-lg tracking-widest uppercase">
                     Admin Panel
                   </h1>
-                  <Image
+                  <BlurImage
                     src="/images/black-logo.svg"
                     alt="Gabag's Logo"
                     width={130}

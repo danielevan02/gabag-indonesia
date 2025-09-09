@@ -1,11 +1,11 @@
 import FilterProduct from "./components/filter-product";
 import MobileFilterProduct from "./components/mobile-filter-product";
 import { Metadata } from "next";
-import Image from "next/image";
 import { getCategory } from "@/lib/actions/category.action";
 import { getSubCategories } from "@/lib/actions/subCategory.action";
 import ProductList, { ProductListFallback } from "./components/product-list";
 import { Suspense } from "react";
+import BlurImage from "@/components/shared/blur-image";
 
 export const metadata: Metadata={
   title: 'Products',
@@ -33,12 +33,13 @@ const ProductPage = async ({searchParams}: {
     <div className="mx-3 xl:mx-10 flex flex-col items-center">
 
       <div className="flex justify-center mt-2 mb-10 w-full h-40 md:h-96 xl:h-[460px]">
-        <Image
+        <BlurImage
           src={categories?.image||""}
-          width={1000}
-          height={1000}
+          width={700}
+          height={700}
           alt={categories?.name||"category photo"}
           className="h-full w-full lg:w-[80%] object-cover"
+          dynamic
           priority
         />
       </div>

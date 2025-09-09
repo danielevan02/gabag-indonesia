@@ -10,10 +10,10 @@ export default async function AddProductPage() {
   }));
 
   return (
-    <div className="p-5 h-full max-h-full flex flex-col overflow-scroll">
+    <div className="form-page">
       <p className="text-lg">Add New Product</p>
 
-      <ProductForm subCategories={subCategoryList} />3
+      <ProductForm subCategories={subCategoryList} />
     </div>
   );
 } 

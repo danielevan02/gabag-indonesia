@@ -2,10 +2,10 @@
 
 import Autoplay from "embla-carousel-autoplay";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import Image from "next/image";
 import {useMediaQuery} from 'react-responsive'
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import BlurImage from "@/components/shared/blur-image";
 
 const HomeCarousel = ({slideDuration}: {slideDuration?: number}) => {
   const isDesktop = useMediaQuery({query: '(min-width: 600px)'})
@@ -40,12 +40,12 @@ const HomeCarousel = ({slideDuration}: {slideDuration?: number}) => {
         <CarouselContent className="rounded-4xl">
           {carouselImg.map((item) => (
             <CarouselItem key={item.desktop}>
-              <Image
+              <BlurImage
                 src={`/dummy/${isDesktop ? item.desktop:item.mobile}`}
                 className="w-full max-h-[700px] object-cover rounded-md"
                 alt={isDesktop ? item.desktop:item.mobile}
-                width={1920}
-                height={1080}
+                width={700}
+                height={700}
                 priority
               />
             </CarouselItem>

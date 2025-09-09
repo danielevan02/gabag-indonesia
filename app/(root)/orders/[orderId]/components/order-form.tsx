@@ -3,7 +3,6 @@
 
 "use client";
 
-import Image from "next/image";
 import 'react-international-phone/style.css';
 import { Button } from "@/components/ui/button";
 import { orderSchema } from "@/lib/schema";
@@ -23,6 +22,7 @@ import Script from "next/script";
 import InputForm from "./input-form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import BlurImage from '@/components/shared/blur-image';
 
 declare global {
   interface Window {
@@ -354,12 +354,13 @@ const OrderForm: React.FC<OrderFormProps> = ({
           {cartItem.map((item, index) => (
             <div className="flex gap-2 justify-between" key={index}>
               <div className="w-16 h-16 rounded-md relative">
-                <Image
+                <BlurImage
                   src={item.image}
                   alt={item.name}
                   height={100}
                   width={100}
                   className="h-full w-full object-cover rounded-md"
+                  dynamic
                 />
                 <p className="absolute -top-1 -right-1 bg-neutral-500 px-1 rounded-full text-white text-xs">
                   {item.qty}

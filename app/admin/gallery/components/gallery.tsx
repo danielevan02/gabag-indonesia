@@ -103,7 +103,6 @@ export default function Gallery({ images }: { images: GalleryImage[] }) {
                   width={200}
                   height={200}
                   className="size-full object-cover"
-                  priority
                 />
                 {manage && (
                   <Checkbox

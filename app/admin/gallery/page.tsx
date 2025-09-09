@@ -5,7 +5,7 @@ export default async function GalleryPage() {
   const {images} = await getGalleryImages()
   const haveImages = images && images.length !==0
   return (
-    <div className="p-5 h-full max-h-full flex flex-col">
+    <div className="form-page">
       <p className="text-lg font-semibold">Image Gallery</p>
       { haveImages ? (
         <Gallery images={images}/>

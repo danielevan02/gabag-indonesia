@@ -1,12 +1,12 @@
 "use client";
 
+import BlurImage from "@/components/shared/blur-image";
 import { Button } from "@/components/ui/button";
 import { addToCart } from "@/lib/actions/cart.action";
 import { useCartStore } from "@/lib/stores/cart-store";
 import { cn } from "@/lib/utils";
 import { Product, Variant } from "@/types";
 import { Loader, Minus, Plus, X } from "lucide-react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createPortal } from "react-dom";
@@ -92,12 +92,13 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
         <div className="image-list-container">
           {imagesList?.map((item, index) => (
             <div key={index} className="image-list-item" onMouseEnter={() => setMainImage(item)}>
-              <Image
+              <BlurImage
                 src={item}
                 alt="Product Images"
-                height={100}
-                width={100}
+                height={70}
+                width={70}
                 className="size-full object-cover"
+                dynamic
               />
               <div
                 className={cn("absolute inset-0 rounded-md", item === mainImage && "bg-black/30 ")}
@@ -108,12 +109,13 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
 
         {/* MAIN IMAGE */}
         <div className="flex-1 min-h-full w-full cursor-pointer" onClick={() => setImageModal(mainImage)}>
-          <Image
+          <BlurImage
             src={mainImage}
             alt={product?.name || "Product Images"}
-            height={1000}
-            width={1000}
+            height={700}
+            width={700}
             className="main-image border"
+            dynamic
             priority
           />
         </div>
@@ -127,12 +129,13 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
               onClick={() => setImageModal("")}
             >
               <div className="relative w-[90vw] lg:w-[30vw]">
-                <Image
+                <BlurImage
                   src={imageModal}
                   alt="Image Modal"
-                  width={1000}
-                  height={1000}
+                  width={700}
+                  height={700}
                   className="w-full"
+                  dynamic
                 />
                 <X className="hover:scale-125 transition-all absolute top-3 right-3 cursor-pointer" onClick={() => setImageModal("")} />
               </div>
@@ -175,11 +178,12 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
                   }}
                 >
                   <div className="relative">
-                    <Image
+                    <BlurImage
                       src={item.image}
+                      dynamic
                       alt={item.name}
-                      width={200}
-                      height={200}
+                      width={100}
+                      height={100}
                       className={cn(
                         "size-full object-cover rounded-md hover:border-2 hover:border-black/50 transition-all",
                         variant === item && "border-2 border-black/50",

@@ -2,7 +2,7 @@
 
 import { auth, signIn, signOut } from "@/auth"
 import { redirect } from "next/navigation";
-import { prisma } from "../db/prisma";
+import prisma from "../db/prisma";
 import { Address } from "@/types";
 import { convertToPlainObject } from "../utils";
 import { SignUpType } from "@/app/(auth)/sign-up/sign-up-form";

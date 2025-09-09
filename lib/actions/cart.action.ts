@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { cookies } from "next/headers";
 import { convertToPlainObject, formatError } from "../utils";
 import { CartItem } from "@/types";
-import { prisma } from "../db/prisma";
+import prisma from "../db/prisma";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 

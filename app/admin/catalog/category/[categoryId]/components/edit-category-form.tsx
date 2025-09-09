@@ -78,8 +78,8 @@ export default function EditCategoryForm({ category }: { category: Category }) {
                     <Image
                       src={field.value || "/images/placeholder-product.png"}
                       alt="subcategory-image"
-                      width={300}
-                      height={300}
+                      width={100}
+                      height={100}
                       className="size-full object-cover"
                     />
                   </div>

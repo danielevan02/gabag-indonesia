@@ -13,15 +13,15 @@ const NotFoundPage = () => {
         <Image
           src={notFound}
           alt='notFoundLogo'
-          width={1000}
-          height={1000}
+          width={500}
+          height={500}
           className='absolute -top-16 lg:-top-20 left-1/2 -translate-x-1/2 w-44 h-32 lg:w-72 lg:h-52 object-cover'
         />
         <Image
           src={baby}
           alt='notFoundPicture'
-          width={1000}
-          height={1000}
+          width={500}
+          height={500}
           className='w-60 h-52 lg:w-96 lg:h-72 object-cover'
         />
         <div className='flex flex-col max-w-md text-wrap gap-5'>

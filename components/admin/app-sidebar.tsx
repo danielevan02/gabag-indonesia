@@ -49,7 +49,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       },
       {
         title: "Events",
-        url: "/admin/events",
+        url: "/admin/event",
         icon: Calendar
       }
     ],

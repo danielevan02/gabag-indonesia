@@ -1,21 +1,20 @@
+
 "use client";
 
 import ActionTable from "@/components/shared/table/action-table";
-import { deleteSubCategory } from "@/lib/actions/subCategory.action";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Category, SubCategory } from "@prisma/client";
+import { Event as PrismaEvent } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import BlurImage from "@/components/shared/blur-image";
+import { deleteEvent } from "@/lib/actions/event.action";
 
-type FullSubCategory = SubCategory & {
-  category: Category
+type FullEvent = PrismaEvent & {
   _count: {
     products: number
   }
 }
 
-export const columns: ColumnDef<FullSubCategory>[] = [
+export const columns: ColumnDef<FullEvent>[] = [
   {
     id: 'select',
     header: ({table}) => (
@@ -45,33 +44,13 @@ export const columns: ColumnDef<FullSubCategory>[] = [
     ),
   },
   {
-    accessorKey: "image",
-    header: "Image",
-    cell: ({ row }) => (
-      <div className="w-56 h-32 rounded-lg overflow-clip border">
-        <BlurImage
-          dynamic 
-          src={row.getValue('image')}
-          alt={row.original.name}
-          width={100}
-          height={100}
-          className="w-full h-full object-cover"
-        />
-      </div>
-    )
-  },
-  {
     accessorKey: "discount",
     header: "Discount",
-    cell: ({ row }) => <p className="">{row.original.discount}%</p>
-  },
-  {
-    header: "Category",
-    cell: ({ row }) => <p className="">{row.original.category.name}</p>
+    cell: ({ row }) => <p>{row.original.discount}%</p>
   },
   {
     header: "Products",
-    cell: ({ row }) => <p className="">{row.original._count.products}</p>
+    cell: ({ row }) => <p>{row.original._count.products}</p>
   },
   {
     accessorKey: "createdAt",
@@ -82,11 +61,12 @@ export const columns: ColumnDef<FullSubCategory>[] = [
     id: "actions",
     cell: ({ row }) => (
       <ActionTable 
-        type="sub-category"
-        deleteFunction={deleteSubCategory}
+        type="event"
+        catalog={false}
+        deleteFunction={deleteEvent}
         id={row.original.id} 
-        title="Delete Product" 
-        desc="Are you sure you want to delete this product? this action cannot be undone" 
+        title="Delete Event" 
+        desc="Are you sure you want to delete this event? this action cannot be undone" 
       />
     )
   },

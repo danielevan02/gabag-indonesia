@@ -1,9 +1,9 @@
 import ProductCard from "@/components/shared/product/product-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getAllProducts } from "@/lib/actions/product.action";
+import { getFlashSaleProducts } from "@/lib/actions/event.action";
 
 export default async function FlashSaleSection() {
-  const products = await getAllProducts();
+  const products = await getFlashSaleProducts();
   return (
     <section className="mt-20">
       <h3 className="text-2xl text-center md:text-start">Flash Sale Products</h3>

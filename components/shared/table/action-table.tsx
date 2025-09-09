@@ -19,12 +19,13 @@ interface ActionTableProps {
   desc: string;
   title: string;
   deleteFunction: (id: string) => Promise<unknown>
-  type: string
+  type: string;
+  catalog?: boolean
 }
 
-const ActionTable: React.FC<ActionTableProps> = ({ id, desc, title, deleteFunction, type }) => {
+const ActionTable: React.FC<ActionTableProps> = ({ id, desc, title, deleteFunction, type, catalog }) => {
   const [deleteModal, setDeleteModal] = useState(false);
-  const href = `/admin/catalog/${type}/${id}`
+  const href = catalog || catalog == null ? `/admin/catalog/${type}/${id}` : `/admin/${type}/${id}`
 
   const menus = [
     {label: 'Edit', icon:<IconPencil/>, href: href},

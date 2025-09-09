@@ -50,8 +50,8 @@ export const columns: ColumnDef<FullProduct>[] = [
         <Image
           src={row.original.images[0] || "/images/placeholder.png"}
           alt={row.original.name}
-          width={400}
-          height={250}
+          width={100}
+          height={100}
           className="w-full h-full object-cover"
         />
       </div>

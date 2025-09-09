@@ -1,7 +1,7 @@
 'use server'
 
 import { SubCategoryFormType } from "@/app/admin/catalog/sub-category/page"
-import { prisma } from "../db/prisma"
+import prisma from "../db/prisma"
 import { revalidatePath } from "next/cache"
 
 export async function getSubCategories(categoryId: string){

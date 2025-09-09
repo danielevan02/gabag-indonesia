@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
 import { Variant } from "@/types";
 import { Event, SubCategory } from "@prisma/client";
-import Image from "next/image";
 import Link from "next/link";
+import BlurImage from "../blur-image";
 
 interface ProductCardProps {
   name: string;
@@ -63,12 +63,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
           w-full`
         }
       >
-        <Image
+        <BlurImage
           src={image}
           className="w-full object-cover h-full group-hover:scale-110 transition-all"
           alt="Product"
-          height={500}
-          width={500}
+          height={200}
+          width={200}
+          dynamic
         />
       </div>
 

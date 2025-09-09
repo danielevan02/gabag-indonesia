@@ -9,7 +9,7 @@ export default async function EditCategoryPage({ params }: { params: tParams }) 
   const category = await getCategoryById(categoryId);
 
   return category ? (
-    <div className="p-5 flex flex-col h-full">
+    <div className="form-page">
       <p className="text-lg">Edit Category</p>
       <EditCategoryForm category={category} />
     </div>

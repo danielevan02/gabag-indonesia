@@ -11,7 +11,7 @@ export type SubCategoryFormType = z.infer<typeof subCategorySchema>;
 export default async function AdminSubCategoryPage() {
   const subCategories = await getAllSubCategories();
   return (
-    <div className="p-5 h-full max-h-full flex flex-col">
+    <div className="form-page">
       <div className="flex justify-between items-center">
         <h1 className="font-medium text-2xl">Sub Category List</h1>
         <Button>

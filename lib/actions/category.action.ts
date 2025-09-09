@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "../db/prisma";
+import prisma from "../db/prisma";
 import { CategoryFormType } from "@/app/admin/catalog/category/[categoryId]/components/edit-category-form";
 
 export async function getAllCategories() {

@@ -40,33 +40,6 @@ const SubCategoryForm = ({
     resolver: zodResolver(subCategorySchema),
   });
 
-  // const handleUpload = async ({ file, signal, onProgressChange }) => {
-  //   startTransition(async () => {
-  //     const res = await edgestore.publicImages.upload({
-  //       file,
-  //       signal,
-  //       onProgressChange,
-  //       options: {
-  //         manualFileName: generateFileName('sub-category', data.name, '.png')
-  //       }
-  //     });
-
-  //     try {
-  //       const response = await createSubCategory({ ...data, image: res.url });
-  //       if (response.success) {
-  //         toast.success(response.message);
-  //         router.push("/admin/catalog/sub-category");
-  //       } else {
-  //         toast.error(response.message);
-  //       }
-  //     } catch (error) {
-  //       console.log(error);
-  //     }
-  //   });
-
-  //   return { url: "" };
-  // };
-
   const onSubmit = async (data: SubCategoryFormType) => {
     setData(data);
     
