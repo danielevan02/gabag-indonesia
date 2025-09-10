@@ -1,7 +1,7 @@
 "use client";
 
 import GalleryModal from "@/components/gallery/gallery-modal";
-import BlurImage from "@/components/shared/blur-image";
+import Image from "next/image";
 import { ErrorMessage, FormField } from "@/components/shared/input/form-field";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
@@ -66,13 +66,13 @@ export default function VariantForm({
             <div className="flex items-center justify-start gap-2">
               {field.value ? (
                 <div className="size-36 overflow-hidden rounded-md border">
-                  <BlurImage
+                  <Image
                     src={field.value}
                     alt="Variant Image"
                     width={100}
                     height={100}
                     className="size-full object-cover"
-                    dynamic
+                    
                   />
                 </div>
               ) : (

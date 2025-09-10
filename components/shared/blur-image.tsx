@@ -9,7 +9,6 @@ type BlurImageProps = {
   height: number;
   className?: string;
   dynamic?: boolean;
-  priority?: boolean
 };
 
 export default async function BlurImage({
@@ -19,7 +18,6 @@ export default async function BlurImage({
   height,
   className,
   dynamic = false,
-  priority = false
 }: BlurImageProps) {
   let buffer: Buffer;
 
@@ -44,7 +42,6 @@ export default async function BlurImage({
       height={height}
       placeholder="blur"
       blurDataURL={base64}
-      priority={priority}
     />
   );
 }

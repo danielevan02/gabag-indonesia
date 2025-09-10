@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { AppSidebar } from "@/components/admin/app-sidebar";
-import BlurImage from "@/components/shared/blur-image";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -38,7 +38,7 @@ export default async function RootLayout({
                   <h1 className="text-2xl md:text-lg tracking-widest uppercase">
                     Admin Panel
                   </h1>
-                  <BlurImage
+                  <Image
                     src="/images/black-logo.svg"
                     alt="Gabag's Logo"
                     width={130}

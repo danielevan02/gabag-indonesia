@@ -58,6 +58,10 @@ export const columns: ColumnDef<FullProduct>[] = [
     ),
   },
   {
+    accessorKey: 'stock',
+    header: "Stock"
+  },
+  {
     accessorKey: "price",
     header: "Price",
     cell: ({ row }) => {
@@ -88,7 +92,7 @@ export const columns: ColumnDef<FullProduct>[] = [
   {
     accessorKey: "createdAt",
     header: "Created At",
-    cell: ({ row }) => <p>{format(row.original.createdAt, "EEEE, d MMMM yyyy")}</p>,
+    cell: ({ row }) => <p>{format(row.original.createdAt, "dd/MM/yyyy")}</p>,
   },
   {
     id: "actions",

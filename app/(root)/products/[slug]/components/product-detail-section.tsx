@@ -1,6 +1,6 @@
 "use client";
 
-import BlurImage from "@/components/shared/blur-image";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { addToCart } from "@/lib/actions/cart.action";
 import { useCartStore } from "@/lib/stores/cart-store";
@@ -92,30 +92,26 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
         <div className="image-list-container">
           {imagesList?.map((item, index) => (
             <div key={index} className="image-list-item" onMouseEnter={() => setMainImage(item)}>
-              <BlurImage
+              <Image
                 src={item}
                 alt="Product Images"
                 height={70}
                 width={70}
                 className="size-full object-cover"
-                dynamic
               />
-              <div
-                className={cn("absolute inset-0 rounded-md", item === mainImage && "bg-black/30 ")}
-              />
+              <div className={cn("absolute inset-0 rounded-md", item === mainImage && "bg-black/30 ")}/>
             </div>
           ))}
         </div>
 
         {/* MAIN IMAGE */}
         <div className="flex-1 min-h-full w-full cursor-pointer" onClick={() => setImageModal(mainImage)}>
-          <BlurImage
+          <Image
             src={mainImage}
             alt={product?.name || "Product Images"}
-            height={700}
-            width={700}
+            height={400}
+            width={400}
             className="main-image border"
-            dynamic
             priority
           />
         </div>
@@ -129,13 +125,13 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
               onClick={() => setImageModal("")}
             >
               <div className="relative w-[90vw] lg:w-[30vw]">
-                <BlurImage
+                <Image
                   src={imageModal}
                   alt="Image Modal"
                   width={700}
                   height={700}
                   className="w-full"
-                  dynamic
+                  
                 />
                 <X className="hover:scale-125 transition-all absolute top-3 right-3 cursor-pointer" onClick={() => setImageModal("")} />
               </div>
@@ -178,9 +174,9 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
                   }}
                 >
                   <div className="relative">
-                    <BlurImage
+                    <Image
                       src={item.image}
-                      dynamic
+                      
                       alt={item.name}
                       width={100}
                       height={100}

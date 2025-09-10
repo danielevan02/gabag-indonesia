@@ -22,7 +22,8 @@ import Script from "next/script";
 import InputForm from "./input-form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import BlurImage from '@/components/shared/blur-image';
+import Image from 'next/image';
+import { Input } from '@/components/ui/input';
 
 declare global {
   interface Window {
@@ -56,6 +57,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
   const [shipping, setShipping] = useState<{ price: number; courier: string }>();
   const [isLoading, startTransition] = useTransition();
   const [courierLoading, courierTransition] = useTransition();
+  const [voucher, setVoucher] = useState('')
 
   let lastPrice = totalPrice;
   if (shipping) {
@@ -349,18 +351,20 @@ const OrderForm: React.FC<OrderFormProps> = ({
         </Button>
       </form>
       <div className="block lg:sticky top-36 right-0 overflow-hidden flex-1 lg:max-w-lg p-5 h-fit">
+
         <h2 className="font-semibold text-lg mb-5">Your Cart</h2>
+
         <div className="flex flex-col gap-3 max-h-72 overflow-scroll pt-1">
           {cartItem.map((item, index) => (
             <div className="flex gap-2 justify-between" key={index}>
               <div className="w-16 h-16 rounded-md relative">
-                <BlurImage
+                <Image
                   src={item.image}
                   alt={item.name}
                   height={100}
                   width={100}
                   className="h-full w-full object-cover rounded-md"
-                  dynamic
+                  
                 />
                 <p className="absolute -top-1 -right-1 bg-neutral-500 px-1 rounded-full text-white text-xs">
                   {item.qty}
@@ -374,7 +378,12 @@ const OrderForm: React.FC<OrderFormProps> = ({
             </div>
           ))}
         </div>
+
         <div className="mt-10 flex flex-col gap-5">
+          <div className='flex items-center gap-2'>
+            <Input value={voucher} placeholder='Input your voucher here' onChange={(e) => setVoucher(e.target.value)} />
+            <Button>Apply Voucher</Button>
+          </div>
           <div className="flex justify-between">
             <p className="text-sm">Subtotal</p>
             <p className="text-sm">Rp {itemsPrice.toLocaleString()}</p>

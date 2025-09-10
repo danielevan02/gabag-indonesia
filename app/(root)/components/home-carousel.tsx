@@ -5,7 +5,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import {useMediaQuery} from 'react-responsive'
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import BlurImage from "@/components/shared/blur-image";
+import Image from "next/image";
 
 const HomeCarousel = ({slideDuration}: {slideDuration?: number}) => {
   const isDesktop = useMediaQuery({query: '(min-width: 600px)'})
@@ -40,7 +40,7 @@ const HomeCarousel = ({slideDuration}: {slideDuration?: number}) => {
         <CarouselContent className="rounded-4xl">
           {carouselImg.map((item) => (
             <CarouselItem key={item.desktop}>
-              <BlurImage
+              <Image
                 src={`/dummy/${isDesktop ? item.desktop:item.mobile}`}
                 className="w-full max-h-[700px] object-cover rounded-md"
                 alt={isDesktop ? item.desktop:item.mobile}

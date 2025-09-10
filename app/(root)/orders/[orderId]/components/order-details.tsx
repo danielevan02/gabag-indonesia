@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import BlurImage from "@/components/shared/blur-image";
+import Image from "next/image";
 import StatusBadge from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -110,13 +110,13 @@ const OrderDetails = ({ order }: { order: FullOrderType }) => {
           {order.orderItems.map((item, index) => (
             <div className="flex gap-2 justify-between" key={index}>
               <div className="w-16 h-16 rounded-md relative">
-                <BlurImage
+                <Image
                   src={item.image}
                   alt={item.name}
                   height={100}
                   width={100}
                   className="h-full w-full object-cover rounded-md"
-                  dynamic
+                  
                 />
                 <p className="absolute -top-1 -right-1 bg-neutral-500 px-1 rounded-full text-white text-xs">
                   {item.qty}

@@ -1,8 +1,7 @@
-import BlurImage from "@/components/shared/blur-image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getNewArrivalProduct } from "@/lib/actions/product.action";
-
 import Link from "next/link";
+import BlurImage from "@/components/shared/blur-image";
 
 const NewArrivalSection = async () => {
   const newArrival = await getNewArrivalProduct()
@@ -22,9 +21,8 @@ const NewArrivalSection = async () => {
             <BlurImage
               src={product.images[0]}
               alt={product.name}
-              dynamic
-              width={500}
-              height={500}
+              width={300}
+              height={300}
               className={`
                   w-full 
                   min-h-96 
@@ -35,6 +33,7 @@ const NewArrivalSection = async () => {
                   lg:max-h-[600px]
                   object-cover
                 `}
+              dynamic
             />
             <h2 className="text-center mt-3 lg:text-xl font-semibold w-72 lg:w-96">
               {product.name}

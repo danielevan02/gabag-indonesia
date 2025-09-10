@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import GalleryModal from "@/components/gallery/gallery-modal";
 import VariantForm from "../../variant-form";
 import { Switch } from "@/components/ui/switch";
-import BlurImage from "@/components/shared/blur-image";
+import Image from "next/image";
 
 export type ProductFormType = z.infer<typeof productSchema>;
 
@@ -135,8 +135,8 @@ const ProductForm = ({
                 <div className="w-full flex gap-2 justify-start flex-wrap">
                   {field.value?.map((image, index) => (
                     <div key={index} className="size-32 overflow-hidden rounded-md border">
-                      <BlurImage
-                        dynamic
+                      <Image
+                        
                         src={image}
                         alt={`image-product`}
                         width={300}

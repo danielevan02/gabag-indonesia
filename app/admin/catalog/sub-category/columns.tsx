@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Category, SubCategory } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import BlurImage from "@/components/shared/blur-image";
+import Image from "next/image";
 
 type FullSubCategory = SubCategory & {
   category: Category
@@ -49,8 +49,8 @@ export const columns: ColumnDef<FullSubCategory>[] = [
     header: "Image",
     cell: ({ row }) => (
       <div className="w-56 h-32 rounded-lg overflow-clip border">
-        <BlurImage
-          dynamic 
+        <Image
+           
           src={row.getValue('image')}
           alt={row.original.name}
           width={100}

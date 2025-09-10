@@ -1,7 +1,7 @@
-import BlurImage from "@/components/shared/blur-image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getAllSubCategories } from "@/lib/actions/subCategory.action";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 import Link from "next/link";
 
 const CategorySection = async () => {
@@ -22,13 +22,13 @@ const CategorySection = async () => {
               )}
             >
               <div className="w-full min-h-72 max-h-72 overflow-hidden">
-                <BlurImage
+                <Image
                   src={category.image!}
                   alt={category.name}
-                  width={100}
-                  height={100}
+                  width={200}
+                  height={200}
                   className="w-full h-full object-cover group-hover:scale-110 transition-all object-center"
-                  dynamic
+                  
                 />
               </div>
               <h3 className="text-center font-semibold">{category.name}</h3>
@@ -41,13 +41,11 @@ const CategorySection = async () => {
         {subCategories.map((category) => (
           <Link href="/" key={category.id} className="flex flex-col gap-2">
             <div className="min-w-56 min-h-56 max-h-56 overflow-hidden">
-              <BlurImage
+              <Image
                 src={category.image!}
                 alt={category.name}
-                width={500}
-                height={500}
-                className="w-full h-full object-cover object-center"
-                dynamic
+                width={200}
+                height={200}
               />
             </div>
             <h3 className="text-center font-bold text-sm">{category.name}</h3>
