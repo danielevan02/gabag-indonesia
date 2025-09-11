@@ -17,8 +17,8 @@ export async function getAllOrders(userId?: string) {
       include: {
         orderItems: {
           select: {
-            id: true
-          }
+            id: true,
+          },
         },
       },
       orderBy: {
@@ -134,8 +134,8 @@ export async function makePayment({
     const firstName = name.split(" ")[0];
     const lastName = name.split(" ")[name.split(" ").length - 1];
 
-    const token = await createTransaction({
-      payment_type: 'gopay',
+    const res = await createTransaction({
+      payment_type: "gopay",
       transaction_details: {
         order_id: orderId,
         gross_amount: subTotal + shippingPrice,
@@ -163,11 +163,13 @@ export async function makePayment({
       ],
     });
 
-    return {
-      success: true,
-      message: "Payment Successful",
-      token: token as string,
-    };
+    if (res && "token" in res) {
+      return {
+        success: true,
+        message: "Payment Successful",
+        token: res.token, // sekarang aman
+      };
+    }
   } catch (error) {
     console.log(formatError(error));
     return {
@@ -213,16 +215,15 @@ export async function finalizeOrder({
             totalPrice,
             shippingInfo: shippingInfo,
             courier,
-            paymentStatus: "pending"
+            paymentStatus: "pending",
           },
           include: {
-            orderItems: true
-          }
+            orderItems: true,
+          },
         });
-        
+
         if (!updatedOrder) throw new Error("There is no order found");
 
-        
         const cart = await getMyCart();
         if (updatedOrder?.orderItems.length === 0) {
           for (const item of cart?.items as CartItem[]) {
@@ -265,26 +266,26 @@ export async function finalizeOrder({
 }
 
 type UpdatePaymentStatus = {
-  orderId: string,
-  paymentStatus: string
-}
+  orderId: string;
+  paymentStatus: string;
+};
 
-export async function updatePaymentStatus({orderId, paymentStatus}:UpdatePaymentStatus) {
+export async function updatePaymentStatus({ orderId, paymentStatus }: UpdatePaymentStatus) {
   try {
     await prisma.$transaction(async (tx) => {
       const order = await tx.order.update({
-        where: {id: orderId},
+        where: { id: orderId },
         data: {
           paymentStatus,
-          isPaid: ['capture', 'settlement'].includes(paymentStatus),
-          paidAt: ['capture', 'settlement'].includes(paymentStatus) ? new Date() : undefined,
+          isPaid: ["capture", "settlement"].includes(paymentStatus),
+          paidAt: ["capture", "settlement"].includes(paymentStatus) ? new Date() : undefined,
         },
         include: {
-          orderItems: true
-        }
-      })
+          orderItems: true,
+        },
+      });
 
-      if (['capture', 'settlement'].includes(paymentStatus)) {
+      if (["capture", "settlement"].includes(paymentStatus)) {
         for (const item of order.orderItems) {
           if (item.variantId) {
             await tx.variant.update({
@@ -307,9 +308,9 @@ export async function updatePaymentStatus({orderId, paymentStatus}:UpdatePayment
           }
         }
       }
-    })
-    revalidatePath('/orders')
+    });
+    revalidatePath("/orders");
   } catch (error) {
-    console.log(formatError(error))
+    console.log(formatError(error));
   }
 }

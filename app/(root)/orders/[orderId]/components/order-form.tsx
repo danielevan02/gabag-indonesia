@@ -164,7 +164,8 @@ const OrderForm: React.FC<OrderFormProps> = ({
         cartItem,
       });
 
-      if (res.token) {
+      console.log("THIS IS THE TOKEN FROM ORDER FORM",res?.token)
+      if (res?.token) {
         await finalizeOrder({
           courier: shipping.courier,
           shippingPrice: shipping.price,

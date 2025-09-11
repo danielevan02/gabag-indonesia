@@ -24,6 +24,7 @@ const CartModal = ({ cart, userId }: { cart?: Cart; userId?: string }) => {
       return toast.error("There is no cart items")
     }
     if (!userId) {
+      router.push("/sign-in")
       return toast.error("There is no userId! Please login or create account!");
     }
     startTransition(async () => {
