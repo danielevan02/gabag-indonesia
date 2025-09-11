@@ -136,3 +136,13 @@ export const eventSchema = z.object({
     )
     .nullable(),
 });
+
+export const voucherSchema = z.object({
+  code: z.string().min(1, "Please enter the code"),
+  type: z.enum(["FIXED", "PERCENT"]),
+  value: z.coerce.number().min(0, "Value must be greater than or equal to 0"),
+  expires: z.date(),
+  qty: z.coerce.number().min(0, "Quantity must be greater than or equal to 0"),
+  min: z.coerce.number().optional(),
+  autoApply: z.boolean().default(false),
+})

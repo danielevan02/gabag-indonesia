@@ -5,6 +5,7 @@ import {
   BookImage,
   Calendar,
   SquareTerminal,
+  TicketPercent,
 } from "lucide-react"
 
 import { NavMain } from "@/components/admin/nav-main"
@@ -51,7 +52,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Events",
         url: "/admin/event",
         icon: Calendar
-      }
+      },
+      {
+        title: "Voucher",
+        url: "/admin/voucher",
+        icon: TicketPercent
+      },
     ],
   }
   return (

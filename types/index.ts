@@ -182,8 +182,9 @@ export type CustomerDetails = {
 };
 
 export type TransactionParams = {
+  payment_type: string;
   transaction_details: TransactionDetails;
-  item_details: ItemDetail[];
+  item_details?: ItemDetail[];
   customer_details: CustomerDetails;
 }
 

@@ -135,6 +135,7 @@ export async function makePayment({
     const lastName = name.split(" ")[name.split(" ").length - 1];
 
     const token = await createTransaction({
+      payment_type: 'gopay',
       transaction_details: {
         order_id: orderId,
         gross_amount: subTotal + shippingPrice,
@@ -142,8 +143,8 @@ export async function makePayment({
       customer_details: {
         first_name: firstName,
         last_name: lastName,
-        email: email,
-        phone: phone,
+        email,
+        phone,
       },
       item_details: [
         ...item_details,
