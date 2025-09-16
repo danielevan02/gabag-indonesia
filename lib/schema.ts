@@ -122,9 +122,9 @@ export const productSchema = z.object({
   variants: z.array(variantSchema).optional(),
   stock: z.coerce.number().min(0, "Stock must be greater than or equal to 0").optional(),
   weight: z.coerce.number().min(0, "Please input the weight"),
-  height: z.coerce.number().optional(),
-  length: z.coerce.number().optional(),
-  width: z.coerce.number().optional()
+  height: z.coerce.number().min(0, "Please input the height"),
+  length: z.coerce.number().min(0, "Please input the length"),
+  width: z.coerce.number().min(0, "Please input the width"),
 });
 
 export const eventSchema = z.object({

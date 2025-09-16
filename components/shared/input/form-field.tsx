@@ -98,6 +98,7 @@ export function FormField<TFieldValues extends FieldValues>({
   description,
   ...props
 }: FormFieldProps<TFieldValues>) {
+
   const [passShown, setPassShown] = useState(false);
   const renderField = () => {
     switch (type) {

@@ -114,7 +114,6 @@ export async function searchProduct(keyword: string): Promise<Product[]> {
 }
 
 export async function getProductBySlug(slug: string): Promise<Product> {
-  console.log("BY SLUG YANG JALAN")
   const product = await prisma.product.findFirst({
     where: {
       slug,

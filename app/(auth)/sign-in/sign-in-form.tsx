@@ -43,7 +43,7 @@ const SignInForm = () => {
   }
   return (
     <form className="flex flex-col" onSubmit={handleSubmit(onSubmit)}>
-      <FormField<LoginType>
+      <FormField
         label="Email"
         name="email"
         placeholder="enter your email..."
@@ -52,9 +52,10 @@ const SignInForm = () => {
         register={register}
       />
 
-      <FormField<LoginType>
+      <FormField
         label="Password"
         name="password"
+        type='password'
         placeholder="enter your password..."
         errors={errors}
         register={register}

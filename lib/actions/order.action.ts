@@ -115,7 +115,6 @@ export async function createOrder(notes?: string) {
     const userId = session.user?.id;
 
     if (!userId) throw new Error("User not found");
-    console.log("APAKAH ADA ORDER ID", cart?.orderId);
     if (cart?.orderId) return redirect(`/orders/${cart.orderId}`);
 
     if (!cart || cart.items.length === 0) {

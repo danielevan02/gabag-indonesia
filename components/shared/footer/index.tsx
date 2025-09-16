@@ -174,19 +174,19 @@ const Footer = () => {
           <p className="text-center tracking-widest">OUR PAYMENT METHOD</p>
           <div className="grid grid-cols-4 lg:grid-cols-8 gap-3 mx-20 items-center">
             {paymentIcon.map((item) => (
-              <Image
-                src={item}
-                alt="Payment Method"
-                width={50}
-                height={50}
-                key={item}
-                className={cn(
-                  "col-span-1 object-cover",
-                  (item === "/images/payment/qris.png" || item === "/images/payment/gopay.png") &&
-                    "bg-white rounded-md p-px"
-                )}
-                style={{height: 'auto', width: 'auto'}}
-              />
+              <div key={item} className="col-span-1">
+                <Image
+                  src={item}
+                  alt="Payment Method"
+                  width={50}
+                  height={50}
+                  className={cn(
+                    "size-full object-cover",
+                    (item === "/images/payment/qris.png" || item === "/images/payment/gopay.png") &&
+                      "bg-white rounded-md p-px"
+                  )}
+                />
+              </div>
             ))}
           </div>
         </div>

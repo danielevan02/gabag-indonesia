@@ -23,7 +23,6 @@ export async function generateMetadata({ params }: {params: tParams}): Promise<M
 const ProductDetailsPage = async ({ params }: {params: tParams}) => {
   const { slug }: {slug: string} = await params;
   const product = await getProductBySlug(slug);
-  console.log(typeof product.length)
   const products = await getAllProducts(product.subCategory?.name)
   
   if (!product) {
