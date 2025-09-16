@@ -95,7 +95,13 @@ export async function getOrderById(orderId: string) {
 
   return convertToPlainObject({
     ...order,
-    orderItems: order?.orderItems.map((item) => ({ ...item, weight: Number(item.weight) })),
+    orderItems: order?.orderItems.map((item) => ({ 
+      ...item, 
+      weight: Number(item.weight),
+      height: Number(item.height) || 1,
+      length: Number(item.length) || 1,
+      width: Number(item.width) || 1
+    })),
     shippingInfo: order?.shippingInfo as ShippingInfo,
   });
 }
