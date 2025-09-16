@@ -11,7 +11,14 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { IconSearch, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
@@ -21,25 +28,38 @@ import { cn } from "@/lib/utils";
 import ModalContent from "./modal-content";
 import TablePagination from "./pagination";
 import { toast } from "sonner";
+import { Truck } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   searchPlaceholder: string;
-  deleteManyFn: (ids: string[])=>Promise<unknown>
-  deleteTitle?: string
+  deleteManyFn: (ids: string[]) => Promise<unknown>;
+  deleteTitle?: string;
+  searchColumn?: string; // Add optional search column prop
 }
 
-export function DataTable<TData, TValue>({ columns, data, searchPlaceholder, deleteManyFn, deleteTitle }: DataTableProps<TData, TValue>) {
-  const [openModal, setOpenModal] = useState(false)
-  const [rowSelection, setRowSelection] = useState({})
+export function DataTable<TData, TValue>({
+  columns,
+  data,
+  searchPlaceholder,
+  deleteManyFn,
+  deleteTitle,
+  searchColumn,
+}: DataTableProps<TData, TValue>) {
+  const [openModal, setOpenModal] = useState(false);
+  const [rowSelection, setRowSelection] = useState({});
+  const [globalFilter, setGlobalFilter] = useState("");
+
   const mutation = useMutation({
-    mutationFn: (selectedId: string[]) => deleteManyFn(selectedId)
-  })
+    mutationFn: (selectedId: string[]) => deleteManyFn(selectedId),
+  });
+
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 15
-  })
+    pageSize: 15,
+  });
+
   const table = useReactTable({
     data,
     columns,
@@ -49,32 +69,82 @@ export function DataTable<TData, TValue>({ columns, data, searchPlaceholder, del
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: setPagination,
     onRowSelectionChange: setRowSelection,
-    state:{
+    onGlobalFilterChange: setGlobalFilter,
+    state: {
       pagination,
-      rowSelection
-    }
+      rowSelection,
+      globalFilter,
+    },
   });
 
-  const selectedRows = table.getFilteredSelectedRowModel().rows.length
+  const selectedRows = table.getFilteredSelectedRowModel().rows.length;
+
+  // Find the first searchable column if searchColumn is not provided
+  const getSearchableColumn = () => {
+    if (searchColumn && table.getColumn(searchColumn)) {
+      return table.getColumn(searchColumn);
+    }
+
+    // Try common column names
+    const commonColumnNames = ["name", "title", "id", "email"];
+    for (const columnName of commonColumnNames) {
+      const column = table.getColumn(columnName);
+      if (column) return column;
+    }
+
+    // Return first column if no common names found
+    return table.getAllColumns().find((col) => col.getCanFilter());
+  };
+
+  const searchableColumn = getSearchableColumn();
 
   const handleManyDelete = () => {
-    if(selectedRows === 0) return
-    const rows = table.getFilteredSelectedRowModel().rows.map((item) => item.original)
+    if (selectedRows === 0) return;
+    const rows = table.getFilteredSelectedRowModel().rows.map((item) => item.original);
     //@ts-expect-error there is no id in TData
-    const selectedId = rows.map((row) => row.id)
+    const selectedId = rows.map((row) => row.id);
     try {
       mutation.mutate(selectedId, {
         onSuccess: () => {
-          toast.success(`Success delete ${selectedRows} rows`)
-          setOpenModal(false)
+          toast.success(`Success delete ${selectedRows} rows`);
+          setOpenModal(false);
         },
-        onError: (error) => console.log(error)
-      })
-      table.resetRowSelection(true)
+        onError: (error) => console.log(error),
+      });
+      table.resetRowSelection(true);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
+  };
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+
+    if (searchableColumn) {
+      // Use specific column filter
+      try {
+        searchableColumn.setFilterValue(value);
+      } catch (error) {
+        console.warn("Error setting column filter, falling back to global filter:", error);
+        setGlobalFilter(value);
+      }
+    } else {
+      // Fallback to global filter
+      setGlobalFilter(value);
+    }
+  };
+
+  const getSearchValue = () => {
+    if (searchableColumn) {
+      try {
+        return (searchableColumn.getFilterValue() as string) || "";
+      } catch (error) {
+        console.warn("Error getting column filter value:", error);
+        return globalFilter;
+      }
+    }
+    return globalFilter;
+  };
 
   return (
     <>
@@ -84,32 +154,39 @@ export function DataTable<TData, TValue>({ columns, data, searchPlaceholder, del
           <Input
             placeholder={searchPlaceholder}
             className="pr-10"
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
+            value={getSearchValue()}
+            onChange={handleSearchChange}
           />
         </div>
-        
-        <Button 
-          variant='destructive' 
-          className={cn("opacity-0 transition-all pointer-events-none",
-            selectedRows !== 0 && 'opacity-100 pointer-events-auto'
+
+        <div
+          className={cn(
+            "opacity-0 transition-all pointer-events-none flex items-center gap-2",
+            selectedRows !== 0 && "opacity-100 pointer-events-auto"
           )}
-          onClick={()=>setOpenModal(true)}
         >
-          <IconTrash/>
-          Delete {`${selectedRows} row(s)`}
-        </Button>
+          <Button>
+            <Truck />
+            Create Shipment for {`${selectedRows} order(s)`}
+          </Button>
+          <Button variant="destructive" onClick={() => setOpenModal(true)}>
+            <IconTrash />
+            Delete {`${selectedRows} row(s)`}
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-md border relative overflow-y-auto flex-1">
         <Table>
-          <TableHeader className="sticky top-0 bg-white shadow shadow-neutral-200 z-50">
+          <TableHeader className="sticky top-0 bg-white shadow shadow-neutral-200">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead key={header.id}>
-                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
                     </TableHead>
                   );
                 })}
@@ -121,7 +198,9 @@ export function DataTable<TData, TValue>({ columns, data, searchPlaceholder, del
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
                   ))}
                 </TableRow>
               ))
@@ -137,7 +216,7 @@ export function DataTable<TData, TValue>({ columns, data, searchPlaceholder, del
       </div>
 
       <div className="flex items-center justify-center mt-5">
-        <TablePagination table={table}/>
+        <TablePagination table={table} />
       </div>
 
       <ModalContent

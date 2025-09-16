@@ -113,8 +113,8 @@ export default function SearchBar() {
                     <Image
                       src={product.images[0]}
                       alt={product.name}
-                      width={200}
-                      height={200}
+                      width={50}
+                      height={50}
                       className="min-w-12 max-w-12 h-12 object-cover rounded-md mr-3"
                     />
                   )}

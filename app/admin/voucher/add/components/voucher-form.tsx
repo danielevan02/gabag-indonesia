@@ -3,20 +3,20 @@
 import { ProductFormType } from "@/app/admin/catalog/product/add/components/product-form";
 import { FormField } from "@/components/shared/input/form-field";
 import { Button } from "@/components/ui/button";
-import { createEvents } from "@/lib/actions/event.action";
+// import { createEvents } from "@/lib/actions/event.action";
 import { voucherSchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
-import { toast } from "sonner";
+// import { toast } from "sonner";
 import { z } from "zod";
 
 export type VoucherFormType = z.infer<typeof voucherSchema>;
 
 export default function VoucherForm({
-  products,
+  // products,
 }: {
   products: {
     value: string;
@@ -30,12 +30,14 @@ export default function VoucherForm({
     register,
     handleSubmit,
     formState: { errors },
-    control,
+    // control,
   } = useForm<VoucherFormType>({
     resolver: zodResolver(voucherSchema),
   });
 
-  const onSubmit = async (data: VoucherFormType) => {
+  const onSubmit = async (
+    // data: VoucherFormType
+  ) => {
     startTransition(async () => {
       
     });

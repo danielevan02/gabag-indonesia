@@ -122,8 +122,8 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
                     <Image
                       src={field.value||'/images/placeholder-product.png'}
                       alt="subcategory-image"
-                      width={300}
-                      height={300}
+                      width={100}
+                      height={100}
                       className="size-full object-cover"
                     />
                   </div>

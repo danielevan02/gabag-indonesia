@@ -291,7 +291,6 @@ export const sample = {
       slug: "backpack-sling-double-compartment",
       images: ["/dummy/product4.jpeg"],
       hasVariant: true,
-      hasDifferentVariantPrice: true,
       weight: 0.6,
       subCategoryId: '3d4761d8-087a-4022-974c-59fe60cda9dd',
       description: `

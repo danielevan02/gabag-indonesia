@@ -32,8 +32,8 @@ export default function SortableImage({
       <Image
         src={url}
         alt={`product-image`}
-        height={300}
-        width={300}
+        height={200}
+        width={200}
         className="size-full object-cover"
       />
 

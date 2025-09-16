@@ -72,8 +72,8 @@ const Footer = () => {
                     <Image
                       src={item.image}
                       alt="Our apps download"
-                      height={100}
-                      width={200}
+                      height={50}
+                      width={100}
                       className="w-44 object-cover"
                     />
                   </Link>
@@ -120,8 +120,8 @@ const Footer = () => {
                     <Image
                       src={item.image}
                       alt="Download Our Apps"
-                      height={200}
-                      width={400}
+                      height={50}
+                      width={100}
                       className="w-40 object-cover"
                     />
                   </Link>
@@ -177,8 +177,8 @@ const Footer = () => {
               <Image
                 src={item}
                 alt="Payment Method"
-                width={100}
-                height={100}
+                width={50}
+                height={50}
                 key={item}
                 className={cn(
                   "col-span-1 object-cover",

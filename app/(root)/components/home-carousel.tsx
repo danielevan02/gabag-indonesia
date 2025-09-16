@@ -44,8 +44,8 @@ const HomeCarousel = ({slideDuration}: {slideDuration?: number}) => {
                 src={`/dummy/${isDesktop ? item.desktop:item.mobile}`}
                 className="w-full max-h-[700px] object-cover rounded-md"
                 alt={isDesktop ? item.desktop:item.mobile}
-                width={700}
-                height={700}
+                width={600}
+                height={600}
                 priority
               />
             </CarouselItem>

@@ -43,8 +43,7 @@ export default async function EditProductPage({
       <EditProductForm
         subCategoryList={subCategoryList}
         product={{
-          id: product.id,
-          name: product.name,
+          ...product,
           subCategory: product.subCategory ? {
             label: product.subCategory.name,
             value: product.subCategory.id,
@@ -53,9 +52,7 @@ export default async function EditProductPage({
           price: Number(product.regularPrice),
           discount: product.discount || 0,
           description: product.description || "",
-          stock: product.stock,
-          hasVariant: product.hasVariant,
-          variants: product.variants||[]
+          variants: product.variants||[],
         }}
       />
     </div>

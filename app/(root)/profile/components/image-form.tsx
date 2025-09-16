@@ -76,8 +76,8 @@ const ImageForm = ({ user }: { user: User }) => {
         <Image
           src={ image || user?.image || "/images/user-placeholder.png"}
           alt={user?.name || "User Profile"}
-          width={720}
-          height={720}
+          width={200}
+          height={200}
           className="w-full h-full object-cover"
         />
 

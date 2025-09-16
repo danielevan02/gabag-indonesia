@@ -67,7 +67,6 @@ export const productsSchema = z.object({
     .max(100, "Please enter between 0 - 100")
     .default(0),
   hasVariant: z.boolean().default(false),
-  hasDifferentVariantPrice: z.boolean().default(false),
   width: z.number().default(0),
   length: z.number().default(0),
   height: z.number().default(0),
@@ -122,6 +121,10 @@ export const productSchema = z.object({
   hasVariant: z.boolean().default(false),
   variants: z.array(variantSchema).optional(),
   stock: z.coerce.number().min(0, "Stock must be greater than or equal to 0").optional(),
+  weight: z.coerce.number().min(0, "Please input the weight"),
+  height: z.coerce.number().optional(),
+  length: z.coerce.number().optional(),
+  width: z.coerce.number().optional()
 });
 
 export const eventSchema = z.object({

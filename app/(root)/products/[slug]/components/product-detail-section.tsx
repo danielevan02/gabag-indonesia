@@ -53,6 +53,9 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
       qty: quantity,
       slug: product.slug,
       weight: product.weight || 0,
+      height: product.height,
+      length: product.length,
+      width: product.width
     });
     setIsLoading(false);
     setOpenModal(true);
@@ -131,7 +134,6 @@ const ProductDetailSection = ({ product }: { product: Product }) => {
                   width={700}
                   height={700}
                   className="w-full"
-                  
                 />
                 <X className="hover:scale-125 transition-all absolute top-3 right-3 cursor-pointer" onClick={() => setImageModal("")} />
               </div>

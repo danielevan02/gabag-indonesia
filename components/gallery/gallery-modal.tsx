@@ -230,8 +230,8 @@ export default function GalleryModal({
                       <Image
                         src={gallery.imageUrl}
                         alt="gallery-image"
-                        height={300}
-                        width={300}
+                        height={100}
+                        width={100}
                         className="size-full object-cover"
                       />
                     </div>

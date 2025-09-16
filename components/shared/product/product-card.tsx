@@ -12,7 +12,6 @@ interface ProductCardProps {
   image: string;
   slug: string;
   hasVariant: boolean
-  hasDifferentVariantPrice: boolean
   className?: string;
   subCategory: SubCategory
   event?: Event
@@ -25,7 +24,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
   name,
   regularPrice,
   hasVariant,
-  hasDifferentVariantPrice,
   variants,
   price,
   slug,
@@ -81,7 +79,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <PriceTag 
           regularPrice={regularPrice} 
           price={price} 
-          hasDifferentVariantPrice={hasDifferentVariantPrice} 
           hasVariant={hasVariant}
           variants={variants}
           discount={discount}
@@ -95,7 +92,6 @@ interface PriceTagProps {
   price: number; 
   regularPrice: number;
   hasVariant: boolean;
-  hasDifferentVariantPrice: boolean;
   variants?: Variant[]
   discount?: number
 }

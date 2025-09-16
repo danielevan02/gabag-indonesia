@@ -13,7 +13,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
 import debounce from "lodash/debounce";
-import { finalizeOrder, makePayment } from "@/lib/actions/order.action";
+import { finalizeOrder, makePayment, updatePaymentStatus } from "@/lib/actions/order.action";
 import { getCourierRates, getMapsId } from "@/lib/actions/courier.action";
 import { CircleAlert, Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -91,10 +91,10 @@ const OrderForm: React.FC<OrderFormProps> = ({
     () =>
       debounce(async () => {
         // this is the input for searching location by city and district
-        const res = await getMapsId(`${watch("city")} ${watch("district")}`);
+        const res = await getMapsId(`${watch("city")} ${watch("district")} ${watch("postal_code")}`);
         setArea((prev) => (prev === res[0] ? prev : res[0]));
       }, 1000),
-    [watch("city"), watch("district")]
+    [watch("city"), watch("district"), watch("postal_code")]
   );
 
   // FOR SEARCHING AREA
@@ -127,6 +127,9 @@ const OrderForm: React.FC<OrderFormProps> = ({
           value: item.price,
           quantity: item.qty,
           weight: item.weight || 0,
+          height: item.height || 1,
+          length: item.length || 1,
+          width: item.width || 1
         }));
   
         try {
@@ -164,7 +167,6 @@ const OrderForm: React.FC<OrderFormProps> = ({
         cartItem,
       });
 
-      console.log("THIS IS THE TOKEN FROM ORDER FORM",res?.token)
       if (res?.token) {
         await finalizeOrder({
           courier: shipping.courier,
@@ -184,7 +186,10 @@ const OrderForm: React.FC<OrderFormProps> = ({
           },
         })
         window.snap.pay(res.token, {
-          onSuccess: () => router.push('/orders')
+          onSuccess: async () => {
+            await updatePaymentStatus({orderId, paymentStatus: "settlement"})
+            router.push('/orders')
+          },
         });
       } else {
         toast.error("Payment failed, there is no token");

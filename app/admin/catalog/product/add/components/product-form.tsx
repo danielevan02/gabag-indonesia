@@ -136,11 +136,10 @@ const ProductForm = ({
                   {field.value?.map((image, index) => (
                     <div key={index} className="size-32 overflow-hidden rounded-md border">
                       <Image
-                        
                         src={image}
                         alt={`image-product`}
-                        width={300}
-                        height={300}
+                        width={100}
+                        height={100}
                         className="size-full object-cover"
                       />
                     </div>
@@ -243,6 +242,45 @@ const ProductForm = ({
         </>
       )}
 
+      <FormField
+        label="Weight (grams)"
+        name="weight"
+        type="number"
+        placeholder="Please enter product weight"
+        register={register}
+        errors={errors}
+        disabled={isLoading}
+        required
+      />
+      <div className="flex gap-2 items-center">
+        <FormField
+          label="Width (cm)"
+          name="weight"
+          type="number"
+          placeholder="Please enter product weight"
+          register={register}
+          errors={errors}
+          disabled={isLoading}
+        /> x 
+        <FormField
+          label="Height (cm)"
+          name="height"
+          type="number"
+          placeholder="Please enter product height"
+          register={register}
+          errors={errors}
+          disabled={isLoading}
+        /> x 
+        <FormField
+          label="Length (cm)"
+          name="length"
+          type="number"
+          placeholder="Please enter product length"
+          register={register}
+          errors={errors}
+          disabled={isLoading}
+        />
+      </div>
       <FormField
         label="Description"
         name="description"

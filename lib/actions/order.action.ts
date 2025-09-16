@@ -7,14 +7,42 @@ import { convertToPlainObject, formatError } from "../utils";
 import { CartItem, ItemDetail, ShippingInfo } from "@/types";
 import { revalidatePath } from "next/cache";
 import { createTransaction } from "../midtrans/transaction";
+import { redirect } from "next/navigation";
 
 export async function getAllOrders(userId?: string) {
   if (userId) {
-    return prisma.order.findMany({
+    const data = await prisma.order.findMany({
       where: {
         userId,
+        paymentStatus: {
+          not: "",
+        },
       },
       include: {
+        orderItems: {
+          select: {
+            id: true,
+          },
+        },
+        user: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+    return data;
+  } else {
+    return prisma.order.findMany({
+      include: {
+        user: {
+          select: {
+            name: true,
+          },
+        },
         orderItems: {
           select: {
             id: true,
@@ -25,12 +53,33 @@ export async function getAllOrders(userId?: string) {
         createdAt: "desc",
       },
     });
-  } else {
-    return prisma.order.findMany({
-      include: {
-        orderItems: true,
+  }
+}
+
+export async function deleteManyOrders(ids: string[]) {
+  try {
+    return await prisma.order.deleteMany({
+      where: {
+        id: {
+          in: ids,
+        },
       },
     });
+  } catch (error) {
+    console.log("ERROR_DELETE_MANY_ORDER ", error);
+  }
+}
+
+export async function deleteOrder(id: string) {
+  try {
+    await prisma.order.delete({
+      where: {
+        id,
+      },
+    });
+  } catch (error) {
+    console.log("DELETE_ORDER_ERROR:", error);
+    return null;
   }
 }
 
@@ -60,6 +109,8 @@ export async function createOrder(notes?: string) {
     const userId = session.user?.id;
 
     if (!userId) throw new Error("User not found");
+    console.log("APAKAH ADA ORDER ID", cart?.orderId);
+    if (cart?.orderId) return redirect(`/orders/${cart.orderId}`);
 
     if (!cart || cart.items.length === 0) {
       return { success: false, message: "There is no cart or product, please shop first" };
@@ -125,7 +176,7 @@ export async function makePayment({
 
   const item_details = cartItem.map((item) => ({
     id: item.variantId ? item.variantId : item.productId,
-    name: item.name,
+    name: item.name.slice(0, 40),
     price: item.price,
     quantity: item.qty,
   })) satisfies ItemDetail[];
@@ -225,15 +276,16 @@ export async function finalizeOrder({
         if (!updatedOrder) throw new Error("There is no order found");
 
         const cart = await getMyCart();
+
         if (updatedOrder?.orderItems.length === 0) {
-          for (const item of cart?.items as CartItem[]) {
-            await tx.orderItem.create({
-              data: {
-                orderId,
-                ...item,
-              },
-            });
-          }
+          const orderItemsData = (cart?.items as CartItem[]).map((item) => ({
+            orderId,
+            ...item,
+          }));
+
+          await tx.orderItem.createMany({
+            data: orderItemsData,
+          });
         }
 
         await tx.cart.update({
@@ -286,30 +338,87 @@ export async function updatePaymentStatus({ orderId, paymentStatus }: UpdatePaym
       });
 
       if (["capture", "settlement"].includes(paymentStatus)) {
-        for (const item of order.orderItems) {
-          if (item.variantId) {
-            await tx.variant.update({
-              where: { id: item.variantId },
-              data: {
-                stock: {
-                  decrement: item.qty,
-                },
-              },
-            });
-          } else {
-            await tx.product.update({
-              where: { id: item.productId },
-              data: {
-                stock: {
-                  decrement: item.qty,
-                },
-              },
-            });
-          }
-        }
+        // Group items by variant vs product
+        const variantUpdates = order.orderItems
+          .filter((item) => item.variantId)
+          .map((item) => ({ id: item.variantId, qty: item.qty }));
+
+        const productUpdates = order.orderItems
+          .filter((item) => !item.variantId)
+          .map((item) => ({ id: item.productId, qty: item.qty }));
+
+        // Update variants in parallel
+        const variantPromises = variantUpdates.map((item) =>
+          tx.variant.update({
+            where: { id: item.id as string },
+            data: {
+              stock: { decrement: item.qty },
+            },
+          })
+        );
+
+        // Update products in parallel
+        const productPromises = productUpdates.map((item) =>
+          tx.product.update({
+            where: { id: item.id },
+            data: {
+              stock: { decrement: item.qty },
+            },
+          })
+        );
+
+        // Execute all updates in parallel
+        await Promise.all([...variantPromises, ...productPromises]);
       }
     });
     revalidatePath("/orders");
+  } catch (error) {
+    console.log(formatError(error));
+  }
+}
+
+export async function getOrderItemByOrderId(orderId: string) {
+  try {
+    const items = await prisma.orderItem.findMany({
+      where: {
+        orderId,
+      },
+    });
+
+    return [
+      ...items.map((item) => ({
+        ...item,
+        weight: Number(item.weight),
+        length: item.length ? Number(item.length) : null,
+        width: item.width ? Number(item.width) : null,
+        height: item.height ? Number(item.height) : null,
+        price: Number(item.price),
+      })),
+    ];
+  } catch (error) {
+    console.log(formatError(error));
+  }
+}
+
+export async function updateOrderShipment({
+  id,
+  deliveredAt,
+  trackingOrder,
+}: {
+  id: string;
+  trackingOrder: string;
+  deliveredAt: Date;
+}) {
+  try {
+    const deliveryDate = new Date(deliveredAt);
+    await prisma.order.update({
+      where: { id },
+      data: {
+        trackingOrder,
+        deliveredAt: deliveryDate,
+        isDelivered: true,
+      },
+    });
   } catch (error) {
     console.log(formatError(error));
   }

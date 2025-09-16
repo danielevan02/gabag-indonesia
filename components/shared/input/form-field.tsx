@@ -191,6 +191,7 @@ export function FormField<TFieldValues extends FieldValues>({
           <Input
             id={name}
             type={type}
+            step={type === 'number' ? "0.01":undefined}
             placeholder={inputProps.placeholder}
             className="border-black py-6 text-xs"
             {...(inputProps.register ? inputProps.register(name) : {})}

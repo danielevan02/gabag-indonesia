@@ -35,11 +35,10 @@ const ProductPage = async ({searchParams}: {
       <div className="flex justify-center mt-2 mb-10 w-full h-40 md:h-96 xl:h-[460px]">
         <Image
           src={categories?.image||""}
-          width={700}
-          height={700}
+          width={600}
+          height={600}
           alt={categories?.name||"category photo"}
           className="h-full w-full lg:w-[80%] object-cover"
-          
           priority
         />
       </div>

@@ -114,6 +114,7 @@ export async function searchProduct(keyword: string): Promise<Product[]> {
 }
 
 export async function getProductBySlug(slug: string): Promise<Product> {
+  console.log("BY SLUG YANG JALAN")
   const product = await prisma.product.findFirst({
     where: {
       slug,
@@ -147,6 +148,9 @@ export async function getProductBySlug(slug: string): Promise<Product> {
     orderItems: product?.orderItems.map((item) => ({
       ...item,
       weight: Number(item.weight),
+      width: Number(item.width),   
+      length: Number(item.length),
+      height: Number(item.height), 
     })),
     weight: Number(product?.weight),
     length: Number(product?.length),
@@ -276,6 +280,10 @@ export async function updateProduct(data: ProductFormType & { id?: string }) {
       hasVariant,
       variants,
       stock,
+      weight, 
+      height,
+      length,
+      width
     } = data;
 
     if (!id) {
@@ -294,6 +302,10 @@ export async function updateProduct(data: ProductFormType & { id?: string }) {
         images: image,
         description: description!,
         hasVariant,
+        height,
+        width,
+        length,
+        weight,
         stock,
       },
     });

@@ -50,7 +50,6 @@ export const columns: ColumnDef<FullSubCategory>[] = [
     cell: ({ row }) => (
       <div className="w-56 h-32 rounded-lg overflow-clip border">
         <Image
-           
           src={row.getValue('image')}
           alt={row.original.name}
           width={100}

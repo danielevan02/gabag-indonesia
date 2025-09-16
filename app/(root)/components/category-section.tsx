@@ -18,7 +18,6 @@ const CategorySection = async () => {
               key={category.id}
               className={cn(
                 "flex flex-col gap-2 group col-span-4",
-
               )}
             >
               <div className="w-full min-h-72 max-h-72 overflow-hidden">

@@ -11,7 +11,6 @@ export type Product = {
   stock: number;
   discount: number;
   hasVariant: boolean;
-  hasDifferentVariantPrice: boolean;
   height: number;
   length: number;
   sku?: string;
@@ -48,8 +47,11 @@ export type User = Omit<UserPrisma, "address"> & {
   address: Address
 }
 
-type OrderItem = Omit<PrismaOrderItem, "weight"> & {
-  weight: number
+type OrderItem = Omit<PrismaOrderItem, "weight" | "length" | "width" | "height"> & {
+  weight: number;
+  length?: number;
+  width?: number;
+  height?: number;
 }
 
 export type FullOrderType = Order & {
@@ -65,6 +67,9 @@ export type CartItem = {
   variantId?:  string
   slug: string
   image: string
+  height?: number
+  length?: number
+  width?: number
 }
 
 export type Cart = {
@@ -208,3 +213,101 @@ export type MidtransTransactionResult = {
   transaction_time: string;
   va_numbers: VANumber[];
 };
+
+export type Item = {
+  name: string;          
+  description?: string;  
+  sku?: string;          
+  value: number;         
+  quantity: number;      
+  weight: number;        
+  height?: number;       
+  length?: number;       
+  width?: number;        
+};
+
+export type OrderResponse = {
+  success: boolean;
+  message: string;
+  object: string;
+  id: string;
+  draft_order_id: string | null;
+  shipper: {
+    name: string;
+    email: string;
+    phone: string;
+    organization: string;
+  };
+  origin: {
+    contact_name: string;
+    contact_phone: string;
+    coordinate: {
+      latitude: number;
+      longitude: number;
+    };
+    address: string;
+    note: string;
+    postal_code: number;
+  };
+  destination: {
+    contact_name: string;
+    contact_phone: string;
+    contact_email: string;
+    address: string;
+    note: string;
+    proof_of_delivery: {
+      use: boolean;
+      fee: number;
+      note: string | null;
+      link: string | null;
+    };
+    cash_on_delivery: {
+      id: string;
+      amount: number;
+      amount_currency: string;
+      fee: number;
+      fee_currency: string;
+      note: string | null;
+      type: string;
+    };
+    coordinate: {
+      latitude: number;
+      longitude: number;
+    };
+    postal_code: number;
+  };
+  courier: {
+    tracking_id: string;
+    waybill_id: string | null;
+    company: string;
+    name: string | null; // Deprecated
+    phone: string | null; // Deprecated
+    driver_name: string | null;
+    driver_phone: string | null;
+    driver_photo_url: string | null;
+    driver_plate_number: string | null;
+    type: string;
+    link: string | null;
+    insurance: {
+      amount: number;
+      amount_currency: string;
+      fee: number;
+      fee_currency: string;
+      note: string;
+    };
+    routing_code: string | null;
+  };
+  delivery: {
+    datetime: Date
+    note: string | null;
+    type: string;
+    distance: number;
+    distance_unit: string;
+  };
+  reference_id: string | null;
+  items: Item[]
+  currency: string;
+  price: number;
+  note: string;
+  status: string;
+}

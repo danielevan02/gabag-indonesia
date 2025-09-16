@@ -33,6 +33,10 @@ export interface EditProductFormProps {
     stock: number;
     hasVariant: boolean;
     variants: Variant[];
+    weight: number;
+    width?: number;
+    length?: number;
+    height?: number;
   };
   subCategoryList: {
     value: string;
@@ -50,6 +54,7 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
     formState: { errors },
     control,
     handleSubmit,
+    watch,
     reset,
   } = useForm({
     resolver: zodResolver(productSchema),
@@ -62,9 +67,15 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
       stock: product.stock,
       image: product.image,
       hasVariant: hasVariant,
+      weight: product.weight,
+      height: product.height,
+      length: product.length,
+      width: product.width,
       variants: product.variants || []
     },
   });
+
+  console.log(watch("weight"))
 
   useEffect(() => {
     if(hasVariant){
@@ -264,6 +275,47 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
           />
         </>
       )}
+
+      <FormField
+        label="Weight (grams)"
+        name="weight"
+        type="number"
+        placeholder="Please enter product weight"
+        register={register}
+        errors={errors}
+        disabled={isLoading}
+        required
+      />
+
+      <div className="flex gap-2 items-center">
+        <FormField
+          label="Length (cm)"
+          name="length"
+          type="number"
+          placeholder="Please enter product length"
+          register={register}
+          errors={errors}
+          disabled={isLoading}
+        /> x
+        <FormField
+          label="Width (cm)"
+          name="width"
+          type="number"
+          placeholder="Please enter product weight"
+          register={register}
+          errors={errors}
+          disabled={isLoading}
+        /> x 
+        <FormField
+          label="Height (cm)"
+          name="height"
+          type="number"
+          placeholder="Please enter product height"
+          register={register}
+          errors={errors}
+          disabled={isLoading}
+        />
+      </div>
 
       <FormField
         label="Description"

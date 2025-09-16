@@ -4,6 +4,7 @@ import * as React from "react"
 import {
   BookImage,
   Calendar,
+  ScrollText,
   SquareTerminal,
   TicketPercent,
 } from "lucide-react"
@@ -58,6 +59,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/admin/voucher",
         icon: TicketPercent
       },
+      {
+        title: "Order",
+        url: "/admin/order",
+        icon: ScrollText
+      }
     ],
   }
   return (
