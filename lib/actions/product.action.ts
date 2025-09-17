@@ -1,7 +1,6 @@
 "use server";
 
 import prisma from "../db/prisma";
-import { Product } from "@/types";
 import { ProductFormType } from "@/app/admin/catalog/product/add/components/product-form";
 import { revalidatePath } from "next/cache";
 import { serializeType } from "../utils";
@@ -77,8 +76,8 @@ export async function getAllProducts(
   }));
 }
 
-export async function searchProduct(keyword: string): Promise<Product[]> {
-  const products = await prisma.product.findMany({
+export async function searchProduct(keyword: string) {
+  const data = await prisma.product.findMany({
     where: {
       name: {
         contains: keyword,
@@ -87,19 +86,12 @@ export async function searchProduct(keyword: string): Promise<Product[]> {
     },
   });
 
-  return [
-    ...products.map((product) => ({
-      ...product,
-      weight: Number(product.weight),
-      length: Number(product.length),
-      width: Number(product.width),
-      height: Number(product.height),
-      sku: product.sku as string | undefined,
-      eventId: product.eventId as string | undefined,
-      regularPrice: Number(product.regularPrice),
-      price: Number(product.regularPrice) - (Number(product.regularPrice) * product.discount) / 100,
-    })),
-  ];
+  const convertedData = serializeType(data)
+
+  return convertedData.map((product) => ({
+    ...product,
+    price: product.regularPrice - product.regularPrice*(product.discount/100)
+  }))
 }
 
 export async function getProductBySlug(slug: string) {
@@ -136,28 +128,22 @@ export async function getProductBySlug(slug: string) {
   }
 }
 
-export async function getNewArrivalProduct(): Promise<Product[]> {
-
-  const products = await prisma.product.findMany({
+export async function getNewArrivalProduct() {
+  const data = await prisma.product.findMany({
+    select: {
+      slug: true,
+      images: true,
+      name: true
+    },
     orderBy: {
       createdAt: "desc",
     },
     take: 2,
   });
 
-  return [
-    ...products.map((product) => ({
-      ...product,
-      weight: Number(product.weight),
-      length: Number(product.length),
-      width: Number(product.width),
-      height: Number(product.height),
-      sku: product.sku as string | undefined,
-      eventId: product.eventId as string | undefined,
-      regularPrice: Number(product.regularPrice),
-      price: Number(product.regularPrice) - (Number(product.regularPrice) * product.discount) / 100,
-    })),
-  ];
+  const convertedData = serializeType(data)
+
+  return convertedData
 }
 
 export async function getProductByIdAndAllSubCategory(id: string) {
@@ -179,14 +165,13 @@ export async function getProductByIdAndAllSubCategory(id: string) {
     await getAllSubCategories()
   ])
 
-
   const convertedData = serializeType(product);
 
   let productPrice;
   if(convertedData?.regularPrice) {
     productPrice = convertedData.regularPrice - convertedData.regularPrice*(convertedData.discount/100)
   }
-  
+
   return {
     ...convertedData,
     price: productPrice,

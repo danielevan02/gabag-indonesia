@@ -19,8 +19,8 @@ export default function EventForm({
   products,
 }: {
   products: {
-    value: string;
-    label: string;
+    id: string;
+    name: string;
   }[];
 }) {
   const router = useRouter();

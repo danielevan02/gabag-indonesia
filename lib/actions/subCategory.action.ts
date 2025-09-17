@@ -14,7 +14,7 @@ export async function getSubCategories(categoryId: string){
 }
 
 export async function getSubCategoryById(id: string) {
-  return await prisma.subCategory.findFirst({
+  const data = await prisma.subCategory.findFirst({
     where: {
       id
     },
@@ -33,6 +33,8 @@ export async function getSubCategoryById(id: string) {
       }
     }
   })
+
+  return serializeType(data)
 }
 
 export async function getAllSubCategories() {
@@ -89,12 +91,12 @@ export async function createSubCategory(data: SubCategoryFormType) {
       await tx.subCategory.create({
         data: {
           name,
-          categoryId: category.value,
+          categoryId: category.id,
           discount,
           image,
           products: {
             connect: products?.map((product) => ({
-              id: product.value
+              id: product.id
             })) ?? []
           }
         },
@@ -103,7 +105,7 @@ export async function createSubCategory(data: SubCategoryFormType) {
       await tx.product.updateMany({
         where: {
           id: {
-            in: products?.map((p)=>p.value) ?? []
+            in: products?.map((p)=>p.id) ?? []
           }
         },
         data: {
@@ -114,7 +116,7 @@ export async function createSubCategory(data: SubCategoryFormType) {
       await tx.variant.updateMany({
         where: {
           productId: {
-            in: products?.map((p)=>p.value) ?? []
+            in: products?.map((p)=>p.id) ?? []
           }
         },
         data: {
@@ -153,12 +155,12 @@ export async function updateSubCategory(data: SubCategoryFormType & { id?: strin
         },
         data: {
           name,
-          categoryId: category.value,
+          categoryId: category.id,
           discount,
           image,
           products: {
             connect: products?.map((product) => ({
-              id: product.value
+              id: product.id
             })) ?? []
           }
         },
@@ -167,7 +169,7 @@ export async function updateSubCategory(data: SubCategoryFormType & { id?: strin
       await tx.product.updateMany({
         where: {
           id: {
-            in: products?.map((p) => p.value) ?? []
+            in: products?.map((p) => p.id) ?? []
           }
         },
         data: {
@@ -178,7 +180,7 @@ export async function updateSubCategory(data: SubCategoryFormType & { id?: strin
       await tx.variant.updateMany({
         where: {
           productId: {
-            in: products?.map((p) => p.value) ?? []
+            in: products?.map((p) => p.id) ?? []
           }
         },
         data: {

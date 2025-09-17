@@ -81,16 +81,16 @@ export const subCategorySchema = z.object({
   discount: z.coerce.number().optional(),
   category: z.object(
     {
-      label: z.string(),
-      value: z.string(),
+      id: z.string(),
+      name: z.string(),
     },
     { message: "Please choose a category" }
   ),
   products: z
     .array(
       z.object({
-        label: z.string(),
-        value: z.string(),
+        id: z.string(),
+        name: z.string(),
       })
     )
     .optional(),

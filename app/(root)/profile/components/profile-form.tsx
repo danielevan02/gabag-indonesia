@@ -3,14 +3,15 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { updateProfile } from "@/lib/actions/user.action";
+import { getCurrentUser, updateProfile } from "@/lib/actions/user.action";
 import { nameSchema, phoneSchema } from "@/lib/schema";
-import { User } from "@/types";
 import { Loader, Pencil } from "lucide-react";
 import { HTMLInputTypeAttribute, useState } from "react";
 import { toast } from "sonner";
 
-const ProfileForm = ({ user }: { user: User }) => {
+const ProfileForm = ({ user }: { user: Awaited<ReturnType<typeof getCurrentUser>> }) => {
+  // for telling typescript that user is always defined
+  user = user!
   return (
     <div className="w-full flex flex-col gap-5">
       <div className="flex w-full items-center mb-5 gap-3">

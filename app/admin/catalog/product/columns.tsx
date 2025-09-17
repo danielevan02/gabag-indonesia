@@ -1,19 +1,15 @@
 "use client";
 
 import ActionTable from "@/components/shared/table/action-table";
-import { deleteProduct } from "@/lib/actions/product.action";
+import { deleteProduct, getAllProducts } from "@/lib/actions/product.action";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Product, SubCategory, Variant } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import Image from "next/image";
 
-export type FullProduct = Product & {
-  subCategory: SubCategory | null;
-  variants: Variant[];
-};
+export type Product = Awaited<ReturnType<typeof getAllProducts>>[number]
 
-export const columns: ColumnDef<FullProduct>[] = [
+export const columns: ColumnDef<Product>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -65,7 +61,7 @@ export const columns: ColumnDef<FullProduct>[] = [
     accessorKey: "price",
     header: "Price",
     cell: ({ row }) => {
-      const price = Number(row.original.regularPrice);
+      const price = Number(row.original);
       return price !== 0 ? (
         <p className="">Rp{row.original.regularPrice.toLocaleString("id-ID")}</p>
       ) : (
@@ -80,7 +76,7 @@ export const columns: ColumnDef<FullProduct>[] = [
   },
   {
     header: "Sub Category",
-    cell: ({ row }) => <p className="">{row.original.subCategory?.name || "None"}</p>,
+    cell: ({ row }) => <p className="">{row.original.subCategory.name|| "None"}</p>,
   },
   {
     header: "Variants",

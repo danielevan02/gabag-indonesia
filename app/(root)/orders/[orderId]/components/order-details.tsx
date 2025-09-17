@@ -5,10 +5,11 @@ import Image from "next/image";
 import StatusBadge from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { FullOrderType, ShippingInfo } from "@/types";
+import { ShippingInfo } from "@/types";
 import { format } from "date-fns";
 import Script from "next/script";
 import { toast } from "sonner";
+import { getOrderById } from "@/lib/actions/order.action";
 
 declare global {
   interface Window {
@@ -16,9 +17,9 @@ declare global {
   }
 }
 
-const OrderDetails = ({ order }: { order: FullOrderType }) => {
+const OrderDetails = ({ order }: { order: Awaited<ReturnType<typeof getOrderById>> }) => {
   const shippingInfo = order.shippingInfo as ShippingInfo;
-  const subtotal = order.orderItems.reduce((prev, curr) => prev + Number(curr.price) * curr.qty, 0);
+  const subtotal = order.orderItems?.reduce((prev, curr) => prev + Number(curr.price) * curr.qty, 0);
 
   const handlePayment = async () => {
     if (!order.transactionToken) {
@@ -61,7 +62,7 @@ const OrderDetails = ({ order }: { order: FullOrderType }) => {
           </div>
           <div className="col-span-1">
             <h3 className="mb-3 font-semibold">Order Created</h3>
-            <p className="text-sm">{format(order.createdAt, "EEEE, d MMMM yyyy")}</p>
+            <p className="text-sm">{format(order.createdAt!, "EEEE, d MMMM yyyy")}</p>
           </div>
           <div className="col-span-1">
             <h3 className="mb-3 font-semibold">Order Notes</h3>
@@ -107,7 +108,7 @@ const OrderDetails = ({ order }: { order: FullOrderType }) => {
       <div className="block lg:sticky top-36 right-0 overflow-hidden flex-1 lg:max-w-lg p-5 h-fit">
         <h2 className="font-semibold text-lg mb-5">Your Order</h2>
         <div className="flex flex-col gap-3 max-h-72 overflow-scroll pt-1">
-          {order.orderItems.map((item, index) => (
+          {order.orderItems?.map((item, index) => (
             <div className="flex gap-2 justify-between" key={index}>
               <div className="w-16 h-16 rounded-md relative">
                 <Image
@@ -135,7 +136,7 @@ const OrderDetails = ({ order }: { order: FullOrderType }) => {
         <div className="mt-10 flex flex-col gap-5">
           <div className="flex justify-between">
             <p className="text-sm">Subtotal</p>
-            <p className="text-sm">Rp {subtotal.toLocaleString()}</p>
+            <p className="text-sm">Rp {subtotal?.toLocaleString()}</p>
           </div>
           <div className="flex justify-between">
             <p className="text-sm">Tax Price</p>

@@ -23,7 +23,7 @@ export type ProductFormType = z.infer<typeof productSchema>;
 const ProductForm = ({
   subCategories,
 }: {
-  subCategories: { value: string; label: string }[];
+  subCategories: { id: string; name: string }[];
 }) => {
   const router = useRouter();
   const [isLoading, startTransition] = useTransition();

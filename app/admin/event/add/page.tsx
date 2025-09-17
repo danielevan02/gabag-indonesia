@@ -5,8 +5,8 @@ export default async function AddEventPage() {
   const products = await getAllProducts()
 
   const productsList = products.map((item) => ({
-    value: item.id,
-    label: item.name
+    id: item.id,
+    name: item.name
   }))
   return (
     <div className="form-page">

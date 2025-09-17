@@ -3,15 +3,14 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { updateProfile } from "@/lib/actions/user.action";
+import { getCurrentUser, updateProfile } from "@/lib/actions/user.action";
 import { useEdgeStore } from "@/lib/edge-store";
-import { User } from "@/types";
 import { Loader } from "lucide-react";
 import Image from "next/image";
 import { ChangeEvent, useState, useTransition } from "react";
 import { toast } from "sonner";
 
-const ImageForm = ({ user }: { user: User }) => {
+const ImageForm = ({ user }: { user: Awaited<ReturnType<typeof getCurrentUser>> }) => {
   const [image, setImage] = useState('')
   const [file, setFile] = useState<File>()
   const [progress, setProgress] = useState<number>()

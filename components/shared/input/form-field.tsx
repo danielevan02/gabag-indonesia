@@ -152,32 +152,29 @@ export function FormField<TFieldValues extends FieldValues>({
           <Controller
             control={selectProps.control}
             name={name}
-            render={({ field: { onBlur, onChange, value } }) => {
-              console.log("INI HASILNYA", value);
-              return (
-                <Select
-                  styles={{
-                    control: (base) => ({
-                      ...base,
-                      borderColor: "black",
-                      borderRadius: 7,
-                      paddingTop: 5,
-                      paddingBottom: 5,
-                    }),
-                  }}
-                  components={animatedComponent}
-                  isMulti={selectProps.isMulti}
-                  placeholder={selectProps.placeholder}
-                  value={value}
-                  onBlur={onBlur}
-                  onChange={onChange}
-                  options={selectProps.options}
-                  isDisabled={selectProps.disabled}
-                  // @ts-expect-error this is just ts error
-                  getOptionLabel={(option) => option.name} getOptionValue={(option) => option.id}
-                />
-              );
-            }}
+            render={({ field: { onBlur, onChange, value } }) => (
+              <Select
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    borderColor: "black",
+                    borderRadius: 7,
+                    paddingTop: 5,
+                    paddingBottom: 5,
+                  }),
+                }}
+                components={animatedComponent}
+                isMulti={selectProps.isMulti}
+                placeholder={selectProps.placeholder}
+                value={value}
+                onBlur={onBlur}
+                onChange={onChange}
+                options={selectProps.options}
+                isDisabled={selectProps.disabled}
+                // @ts-expect-error this is just ts error
+                getOptionLabel={(option) => option.name} getOptionValue={(option) => option.id}
+              />
+            )}
           />
         );
       }

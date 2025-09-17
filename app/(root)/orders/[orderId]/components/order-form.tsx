@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { orderSchema } from "@/lib/schema";
 import { Address, Areas, CartItem, Rates } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { User } from "@prisma/client";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -24,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
+import { getCurrentUser } from '@/lib/actions/user.action';
 
 declare global {
   interface Window {
@@ -34,7 +34,7 @@ declare global {
 export type OrderFormType = z.infer<typeof orderSchema>;
 
 interface OrderFormProps {
-  user?: User;
+  user?: Awaited<ReturnType<typeof getCurrentUser>>;
   cartItem: CartItem[];
   itemsPrice: number;
   taxPrice: number;

@@ -21,17 +21,7 @@ const BeautySection = async () => {
           <ProductCard
             key={product.slug}
             {...product}
-            image={product.images[0]}
-            subCategory={product.subCategory!}
-            className={`
-                min-w-56 
-                max-w-56 
-                md:min-w-80 
-                md:max-w-80 
-                lg:min-w-96
-                lg:max-w-96
-                snap-start
-              `}
+            className="product-card-container"
           />
         ))}
       </div>

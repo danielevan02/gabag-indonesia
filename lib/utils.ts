@@ -14,7 +14,7 @@ type SerializeValue<T> = T extends null
     : T extends bigint
       ? number
     : T extends Date
-      ? string
+      ? Date
     : T extends (infer U)[]
       ? SerializeValue<U>[]
       : T extends Record<string, unknown>
@@ -35,9 +35,9 @@ export function serializeType<T>(data: T): SerializeValue<T> {
     return Number(data) as SerializeValue<T>;
   }
 
-  // Handle Date objects
+  // Handle Date objects - keep as Date
   if (data instanceof Date) {
-    return data.toISOString() as SerializeValue<T>;
+    return data as SerializeValue<T>;
   }
 
   // Handle bigint
@@ -54,7 +54,7 @@ export function serializeType<T>(data: T): SerializeValue<T> {
       } else if (value instanceof Prisma.Decimal) {
         result[key] = Number(value);
       } else if (value instanceof Date) {
-        result[key] = value.toISOString();
+        result[key] = value; // Keep Date as Date
       } else if (typeof value === "bigint") {
         result[key] = Number(value);
       } else if (Array.isArray(value)) {

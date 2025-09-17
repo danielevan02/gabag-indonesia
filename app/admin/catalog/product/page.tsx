@@ -19,7 +19,6 @@ export default async function AdminProductPage() {
       <div className='overflow-hidden flex flex-col flex-1'>
         <DataTable
           columns={columns}
-          // @ts-expect-error just a prisma error because decimal and number
           data={products}
           deleteManyFn={deleteManyProducts}
           searchPlaceholder="Search Products"

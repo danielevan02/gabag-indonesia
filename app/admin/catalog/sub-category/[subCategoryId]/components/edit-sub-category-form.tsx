@@ -2,7 +2,7 @@
 
 import { ErrorMessage, FormField } from "@/components/shared/input/form-field";
 import { Button } from "@/components/ui/button";
-import { updateSubCategory } from "@/lib/actions/subCategory.action";
+import { getSubCategoryById, updateSubCategory } from "@/lib/actions/subCategory.action";
 import { subCategorySchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ImagePlus, Loader } from "lucide-react";
@@ -16,23 +16,10 @@ import Image from "next/image";
 import GalleryModal from "@/components/gallery/gallery-modal";
 
 interface EditSubCategoryFormProps {
-  subCategory: {
+  subCategory: Awaited<ReturnType<typeof getSubCategoryById>>
+  categoryList: {
     id: string;
     name: string;
-    category: {
-      value: string;
-      label: string;
-    };
-    image: string;
-    discount: number;
-    products: {
-      value: string;
-      label: string;
-    }[];
-  };
-  categoryList: {
-    value: string;
-    label: string;
   }[];
 }
 
@@ -48,18 +35,18 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
   } = useForm({
     resolver: zodResolver(subCategorySchema),
     defaultValues: {
-      name: subCategory.name,
-      category: subCategory.category,
-      products: subCategory.products,
-      discount: subCategory.discount,
-      image: subCategory.image,
+      name: subCategory?.name,
+      category: subCategory?.category,
+      products: subCategory?.products,
+      discount: subCategory?.discount,
+      image: subCategory?.image,
     },
   });
 
   const onSubmit = async (data: SubCategoryFormType) => {
     startTransition(async () => {
       try {
-        const response = await updateSubCategory({ ...data, id: subCategory.id });
+        const response = await updateSubCategory({ ...data, id: subCategory?.id });
         if (response.success) {
           toast.success(response.message);
           router.push("/admin/catalog/sub-category");
@@ -104,7 +91,7 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
         type="select"
         errors={errors}
         isMulti
-        options={subCategory.products}
+        options={subCategory?.products}
         control={control}
       />
 

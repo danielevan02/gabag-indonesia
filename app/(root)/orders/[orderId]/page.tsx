@@ -3,7 +3,6 @@ import { getAllOrders, getOrderById } from "@/lib/actions/order.action";
 import { getCurrentUser } from "@/lib/actions/user.action";
 import OrderForm from "./components/order-form";
 import OrderDetails from "./components/order-details";
-import { FullOrderType } from "@/types";
 import { Metadata } from "next";
 
 type tParams = Promise<{ orderId: string }>;
@@ -45,7 +44,7 @@ const OrderDetailPage = async ({ params }: { params: tParams }) => {
         `}
     >
       {(order&&order.paymentStatus&&order.shippingInfo&&order.transactionToken) ? (
-        <OrderDetails order={{...order as FullOrderType}}/>
+        <OrderDetails order={order}/>
       ):(
         <OrderForm
           user={user}

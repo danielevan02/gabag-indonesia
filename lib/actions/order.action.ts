@@ -88,22 +88,17 @@ export async function getOrderById(orderId: string) {
   // cacheTag('orderById')
   // cacheLife('days')
 
-  const order = await prisma.order.findFirst({
+  const data = await prisma.order.findFirst({
     where: { id: orderId },
     include: { orderItems: true },
   });
 
-  return serializeType({
-    ...order,
-    orderItems: order?.orderItems.map((item) => ({ 
-      ...item, 
-      weight: Number(item.weight),
-      height: Number(item.height) || 1,
-      length: Number(item.length) || 1,
-      width: Number(item.width) || 1
-    })),
-    shippingInfo: order?.shippingInfo as ShippingInfo,
-  });
+  const convertedData = serializeType(data)
+
+  return {
+    ...convertedData,
+    shippingInfo: convertedData?.shippingInfo as ShippingInfo,
+  };
 }
 
 export async function createOrder(notes?: string) {

@@ -20,8 +20,8 @@ const SubCategoryForm = ({
   category,
   products,
 }: {
-  category: { value: string; label: string }[];
-  products: { value: string; label: string }[];
+  category: { id: string; name: string }[];
+  products: { id: string; name: string }[];
 }) => {
   const router = useRouter();
   const { edgestore } = useEdgeStore();

@@ -17,8 +17,8 @@ export default async function EditSubCategoryPage({
   ]);
 
   const categoryList = categories.map((category) => ({
-    value: category.id,
-    label: category.name,
+    id: category.id,
+    name: category.name,
   }));
 
   if (!subCategory) {
@@ -35,20 +35,7 @@ export default async function EditSubCategoryPage({
 
       <EditSubCategoryForm
         categoryList={categoryList}
-        subCategory={{
-          id: subCategory.id,
-          name: subCategory.name,
-          category: {
-            label: subCategory.category.name,
-            value: subCategory.category.id,
-          },
-          image: subCategory.image || "",
-          discount: subCategory.discount || 0,
-          products: subCategory.products.map((product) => ({
-            label: product.name,
-            value: product.id,
-          })),
-        }}
+        subCategory={subCategory}
       />
     </div>
   );

@@ -4,9 +4,8 @@ import ProductForm from "./components/product-form";
 export default async function AddProductPage() {
   const subCategories = await getAllSubCategories();
 
-  const subCategoryList = subCategories.map((subCategory) => ({
-    label: subCategory.name,
-    value: subCategory.id
+  const subCategoryList = subCategories.map(({id, name}) => ({
+    id, name
   }));
 
   return (

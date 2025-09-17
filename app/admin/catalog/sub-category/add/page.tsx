@@ -7,13 +7,13 @@ export default async function AddSubCategoryPage() {
   const products = await getAllProducts()
 
   const categoryList = categories.map((category) => ({
-    label: category.name,
-    value: category.id
+    name: category.name,
+    id: category.id
   }))
 
   const productList = products.filter((product) => !product.subCategoryId).map((product) => ({
-    label: product.name,
-    value: product.id
+    name: product.name,
+    id: product.id
   }))
 
   return(
