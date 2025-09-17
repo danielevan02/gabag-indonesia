@@ -2,9 +2,9 @@
 
 import prisma from "../db/prisma";
 import { Product } from "@/types";
-import { Event } from "@prisma/client";
 import { ProductFormType } from "@/app/admin/catalog/product/add/components/product-form";
 import { revalidatePath } from "next/cache";
+import { serializeType } from "../utils";
 
 export async function getAllProducts(
   subCategory?: string,
@@ -12,8 +12,8 @@ export async function getAllProducts(
   subCategoriesId?: string[],
   sort?: string,
   price?: { min?: string; max?: string }
-): Promise<Product[]> {
-  const products = await prisma.product.findMany({
+) {
+  const data = await prisma.product.findMany({
     where: {
       AND: [
         // Filter berdasarkan kategori (cari produk yang memiliki kategori dengan nama tertentu)
@@ -63,29 +63,17 @@ export async function getAllProducts(
         },
   });
 
-  return [
-    ...products.map((product) => ({
-      ...product,
-      variants: product?.variants.map((variant) => ({
-        ...variant,
-        discount: variant.discount as number | undefined,
-        sku: variant.sku as string | undefined,
-        regularPrice: Number(variant.regularPrice),
-        price:
-          Number(variant.regularPrice) -
-          Number(variant.regularPrice) * (((variant.discount||product.discount) ?? 0) / 100),
-      })),
-      weight: Number(product.weight),
-      length: Number(product.length),
-      width: Number(product.width),
-      height: Number(product.height),
-      sku: product.sku as string | undefined,
-      eventId: product.eventId as string | undefined,
-      regularPrice: Number(product.regularPrice),
-      event: product.event as Event | undefined,
-      price: Number(product.regularPrice) - (Number(product.regularPrice) * product.discount) / 100,
+  const convertedData = serializeType(data);
+
+  return convertedData.map((product) => ({
+    ...product,
+    price: product.regularPrice - product.regularPrice * (product.discount / 100),
+    image: product.images[0],
+    variants: product.variants.map((variant) => ({
+      ...variant,
+      price: variant.regularPrice - variant.regularPrice * ((variant.discount ?? 0) / 100),
     })),
-  ];
+  }));
 }
 
 export async function searchProduct(keyword: string): Promise<Product[]> {
@@ -142,14 +130,14 @@ export async function getProductBySlug(slug: string): Promise<Product> {
       regularPrice: Number(variant.regularPrice),
       price:
         Number(variant.regularPrice) -
-        Number(variant.regularPrice) * (((variant.discount||product.discount) ?? 0) / 100),
+        Number(variant.regularPrice) * (((variant.discount || product.discount) ?? 0) / 100),
     })),
     orderItems: product?.orderItems.map((item) => ({
       ...item,
       weight: Number(item.weight),
-      width: Number(item.width),   
+      width: Number(item.width),
       length: Number(item.length),
-      height: Number(item.height), 
+      height: Number(item.height),
     })),
     weight: Number(product?.weight),
     length: Number(product?.length),
@@ -224,7 +212,8 @@ export async function getProductById(id: string): Promise<Product> {
 
 export async function createProduct(data: ProductFormType) {
   try {
-    const { subCategory, name, price, image, description, slug, hasVariant, variants, ...rest } = data;
+    const { subCategory, name, price, image, description, slug, hasVariant, variants, ...rest } =
+      data;
 
     await prisma.product.create({
       data: {
@@ -278,10 +267,10 @@ export async function updateProduct(data: ProductFormType & { id?: string }) {
       hasVariant,
       variants,
       stock,
-      weight, 
+      weight,
       height,
       length,
-      width
+      width,
     } = data;
 
     if (!id) {
@@ -308,7 +297,7 @@ export async function updateProduct(data: ProductFormType & { id?: string }) {
       },
     });
 
-    if (hasVariant && variants?.length!==0) {
+    if (hasVariant && variants?.length !== 0) {
       await prisma.variant.deleteMany({
         where: {
           productId: updatedProduct.id,

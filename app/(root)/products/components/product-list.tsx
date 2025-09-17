@@ -11,7 +11,9 @@ interface ProductListProps {
 }
 
 const ProductList = async ({search, max, min, sort, subCategoryIds}: ProductListProps) => {
+
   const products = await getAllProducts(undefined, search, subCategoryIds, sort, {max, min})
+
   return (
     <div
       className={`
@@ -29,10 +31,8 @@ const ProductList = async ({search, max, min, sort, subCategoryIds}: ProductList
         products.map((product) => (
           <ProductCard
             key={product.slug}
-            {...product}
-            image={product.images[0]}
-            subCategory={product.subCategory!}
             className="col-span-1"
+            {...product}
           />
         ))
       ) : (
