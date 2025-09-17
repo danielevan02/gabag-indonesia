@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import { cookies } from "next/headers";
-import { convertToPlainObject, formatError } from "../utils";
+import { serializeType, formatError } from "../utils";
 import { CartItem } from "@/types";
 import prisma from "../db/prisma";
 import { revalidatePath } from "next/cache";
@@ -39,7 +39,7 @@ export async function getMyCart() {
 
   if (!cart) return undefined;
 
-  return convertToPlainObject({
+  return serializeType({
     ...cart,
     items: cart.items as CartItem[],
     itemsPrice: cart.itemsPrice.toString(),

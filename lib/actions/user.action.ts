@@ -4,7 +4,7 @@ import { auth, signIn, signOut } from "@/auth"
 import { redirect } from "next/navigation";
 import prisma from "../db/prisma";
 import { Address } from "@/types";
-import { convertToPlainObject } from "../utils";
+import { serializeType } from "../utils";
 import { SignUpType } from "@/app/(auth)/sign-up/sign-up-form";
 import {hash} from 'bcrypt-ts-edge'
 import {v4 as uuidv4} from 'uuid'
@@ -191,7 +191,7 @@ export async function getUserById(id?: string){
   })
 
   if(user){
-    return convertToPlainObject({
+    return serializeType({
       ...user,
       address: user?.address as Address
     })
@@ -208,7 +208,7 @@ export async function getCurrentUser(){
   })
 
   if(user){
-    return convertToPlainObject({
+    return serializeType({
       ...user,
       address: user.address as Address
     })

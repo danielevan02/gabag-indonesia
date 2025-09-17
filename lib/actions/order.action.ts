@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { getMyCart } from "./cart.action";
 import prisma from "../db/prisma";
-import { convertToPlainObject, formatError } from "../utils";
+import { serializeType, formatError } from "../utils";
 import { CartItem, ItemDetail, ShippingInfo } from "@/types";
 import { revalidatePath } from "next/cache";
 import { createTransaction } from "../midtrans/transaction";
@@ -93,7 +93,7 @@ export async function getOrderById(orderId: string) {
     include: { orderItems: true },
   });
 
-  return convertToPlainObject({
+  return serializeType({
     ...order,
     orderItems: order?.orderItems.map((item) => ({ 
       ...item, 

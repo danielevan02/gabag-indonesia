@@ -154,6 +154,14 @@
   display: none;
 }
 
+.horizontal-line {
+  @apply mb-5 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-900 to-transparent opacity-25 dark:via-white
+}
+
+.product-card-image-container {
+  @apply overflow-hidden min-h-64 max-h-64 md:min-h-96 md:max-h-96 xl:min-h-[450px] xl:max-h-[450px] w-full
+}
+
 /* Hide scrollbar for IE, Edge and Firefox */
 .no-scrollbar {
   -ms-overflow-style: none;

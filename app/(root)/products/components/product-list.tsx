@@ -36,7 +36,7 @@ const ProductList = async ({search, max, min, sort, subCategoryIds}: ProductList
           />
         ))
       ) : (
-        <p className="text-lg text-neutral-500 text-center mt-36 col-span-3">
+        <p className="text-lg text-neutral-500 text-center mt-36 col-span-4">
           There is no products.
         </p>
       )}
@@ -53,12 +53,12 @@ export const ProductListFallback = () => {
         gap-2 
         md:gap-5 
         grid-cols-2 
-        lg:grid-cols-3
+        lg:grid-cols-4
         h-full
       `}
     >
       {[...Array(6)].map((_, index) => (
-        <Skeleton key={index} className="col-span-1 min-w-sm aspect-[1/1.7]"/>
+        <Skeleton key={index} className="col-span-1 aspect-[1/1.9]"/>
       ))}
     </div>
   )
