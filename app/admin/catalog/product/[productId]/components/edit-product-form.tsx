@@ -2,7 +2,7 @@
 
 import { ErrorMessage, FormField } from "@/components/shared/input/form-field";
 import { Button } from "@/components/ui/button";
-import { updateProduct } from "@/lib/actions/product.action";
+import { getProductByIdAndAllSubCategory, updateProduct } from "@/lib/actions/product.action";
 import { productSchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ImagePlus, Loader, Plus } from "lucide-react";
@@ -13,75 +13,45 @@ import { toast } from "sonner";
 import { ProductFormType } from "../../add/components/product-form";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Variant } from "@/types";
 import VariantForm from "../../variant-form";
 import GalleryModal from "@/components/gallery/gallery-modal";
 import Image from "next/image";
 
-export interface EditProductFormProps {
-  product: {
-    id: string;
-    name: string;
-    subCategory: {
-      value: string;
-      label: string;
-    } | null;
-    image: string[];
-    price: number;
-    discount: number;
-    description: string;
-    stock: number;
-    hasVariant: boolean;
-    variants: Variant[];
-    weight: number;
-    width?: number;
-    length?: number;
-    height?: number;
-  };
-  subCategoryList: {
-    value: string;
-    label: string;
-  }[];
-}
-
-const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => {
+const EditProductForm = ({ data }: {data: Awaited<ReturnType<typeof getProductByIdAndAllSubCategory>>}) => {
   const router = useRouter();
   const [isLoading, startTransition] = useTransition();
-  const [hasVariant, setHasVariant] = useState(product.hasVariant);
+  const [hasVariant, setHasVariant] = useState(data.hasVariant);
 
   const {
     register,
     formState: { errors },
     control,
     handleSubmit,
-    watch,
     reset,
   } = useForm({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      name: product.name,
-      subCategory: product.subCategory,
-      price: product.price,
-      discount: product.discount,
-      description: product.description,
-      stock: product.stock,
-      image: product.image,
+      name: data.name,
+      subCategory: data.subCategory,
+      price: data.regularPrice,
+      discount: data.discount,
+      description: data.description,
+      stock: data.stock,
+      image: data.images,
       hasVariant: hasVariant,
-      weight: product.weight,
-      height: product.height,
-      length: product.length,
-      width: product.width,
-      variants: product.variants || []
+      weight: data.weight,
+      height: data.height,
+      length: data.length,
+      width: data.width,
+      variants: data.variants || []
     },
   });
-
-  console.log(watch("weight"))
 
   useEffect(() => {
     if(hasVariant){
       reset({
         hasVariant,
-        variants: product.variants.length !== 0 ? product.variants : [{
+        variants: data.variants?.length !== 0 ? data.variants : [{
           discount: undefined,
           image: '',
           name: '',
@@ -104,12 +74,12 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
     name: "variants",
   });
 
-  const onSubmit = async (data: ProductFormType) => {
+  const onSubmit = async (result: ProductFormType) => {
     startTransition(async () => {
       try {
         const response = await updateProduct({
-          ...data,
-          id: product.id,
+          ...result,
+          id: data.id,
         });
 
         if (response.success) {
@@ -150,7 +120,7 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
         placeholder="Please choose the sub category"
         type="select"
         errors={errors}
-        options={subCategoryList}
+        options={data.allSubCategory}
         control={control}
         disabled={isLoading}
         required

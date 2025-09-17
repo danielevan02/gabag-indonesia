@@ -1,7 +1,6 @@
 import { getAllProducts, getProductBySlug } from "@/lib/actions/product.action";
 import ProductDetailSection from "./components/product-detail-section";
 import { Metadata } from "next";
-import { Product } from "@/types";
 import ProductCard from "@/components/shared/product/product-card";
 
 type tParams = Promise<{ slug: string }>;
@@ -31,9 +30,7 @@ const ProductDetailsPage = async ({ params }: {params: tParams}) => {
 
   return (
     <div className="flex flex-col px-5 w-full max-w-screen mt-10">
-      <ProductDetailSection 
-        product={product as Product} 
-      />
+      <ProductDetailSection product={product} />
 
       {products && (
         <div className="mt-10">
@@ -41,19 +38,9 @@ const ProductDetailsPage = async ({ params }: {params: tParams}) => {
           <div className="flex gap-1 mt-5 md:gap-5 overflow-scroll no-scrollbar snap-x snap-mandatory py-px">
             {products.map((product) => (
               <ProductCard
-                key={product.slug}
                 {...product}
-                image={product.images[0]}
-                subCategory={product.subCategory!}
-                className={`
-                min-w-56 
-                max-w-56 
-                md:min-w-80 
-                md:max-w-80 
-                lg:min-w-96
-                lg:max-w-96
-                snap-start
-              `}
+                key={product.slug}
+                className="product-card-container"
               />
             ))}
           </div>

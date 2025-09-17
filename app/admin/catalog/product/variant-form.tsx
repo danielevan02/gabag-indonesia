@@ -13,36 +13,11 @@ import {
   UseFieldArrayRemove,
   UseFormRegister,
 } from "react-hook-form";
+import { z } from "zod";
+import { productSchema } from "@/lib/schema";
 
 // This type is for helping so i dont get ts error, because the useform type is generic
-type VariantFormProps = {
-  subCategory: {
-    value: string;
-    label: string;
-  } | null;
-  hasVariant: boolean;
-  name?: string | undefined;
-  price?: number | undefined;
-  discount?: number | undefined;
-  description?: string | undefined;
-  stock?: number | undefined;
-  image?: string[] | undefined;
-  weight: number
-  length: number
-  width: number
-  height: number
-  variants?:
-    | {
-        name: string;
-        regularPrice: number;
-        stock: number;
-        image: string;
-        discount?: number | undefined;
-        sku?: string | undefined;
-      }[]
-    | undefined;
-  slug?: string | undefined;
-};
+type VariantFormProps = z.infer<typeof productSchema>
 
 export default function VariantForm({
   fieldLength,

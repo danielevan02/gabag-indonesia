@@ -32,30 +32,6 @@ export async function getFlashSaleProducts() {
 
   const serializeData = serializeType(data)
 
-  // return [
-  //   ...products.map((product) => ({
-  //     ...product,
-  //     variants: product?.variants.map((variant) => ({
-  //       ...variant,
-  //       discount: variant.discount as number | undefined,
-  //       sku: variant.sku as string | undefined,
-  //       regularPrice: Number(variant.regularPrice),
-  //       price:
-  //         Number(variant.regularPrice) -
-  //         Number(variant.regularPrice) * (((variant.discount || product.discount) ?? 0) / 100),
-  //     })),
-  //     weight: Number(product.weight),
-  //     length: Number(product.length),
-  //     width: Number(product.width),
-  //     height: Number(product.height),
-  //     sku: product.sku as string | undefined,
-  //     eventId: product.eventId as string | undefined,
-  //     regularPrice: Number(product.regularPrice),
-  //     event: product.event as PrismaEvent | undefined,
-  //     price: Number(product.regularPrice) - (Number(product.regularPrice) * product.discount) / 100,
-  //   })),
-  // ];
-
   return serializeData.map((product) => ({
     ...product,
     image: product.images[0],

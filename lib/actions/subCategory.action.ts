@@ -3,6 +3,7 @@
 import { SubCategoryFormType } from "@/app/admin/catalog/sub-category/page"
 import prisma from "../db/prisma"
 import { revalidatePath } from "next/cache"
+import { serializeType } from "../utils"
 
 export async function getSubCategories(categoryId: string){
   return await prisma.subCategory.findMany({
@@ -35,7 +36,7 @@ export async function getSubCategoryById(id: string) {
 }
 
 export async function getAllSubCategories() {
-  return await prisma.subCategory.findMany({
+  const data = await prisma.subCategory.findMany({
     include: {
       _count: {
         select: {
@@ -45,6 +46,8 @@ export async function getAllSubCategories() {
       category: true
     }
   })
+
+  return serializeType(data)
 }
 
 export async function deleteManySubCategories(subCategoryIds: string[]) {

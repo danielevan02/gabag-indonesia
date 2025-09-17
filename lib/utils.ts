@@ -13,11 +13,13 @@ type SerializeValue<T> = T extends null
     ? number
     : T extends bigint
       ? number
-      : T extends (infer U)[]
-        ? SerializeValue<U>[]
-        : T extends Record<string, unknown>
-          ? { [K in keyof T]: SerializeValue<T[K]> }
-          : T;
+    : T extends Date
+      ? string
+    : T extends (infer U)[]
+      ? SerializeValue<U>[]
+      : T extends Record<string, unknown>
+        ? { [K in keyof T]: SerializeValue<T[K]> }
+        : T;
 
 export function serializeType<T>(data: T): SerializeValue<T> {
   if (data === null || data === undefined) {
@@ -28,16 +30,35 @@ export function serializeType<T>(data: T): SerializeValue<T> {
     return data.map((item) => serializeType(item)) as SerializeValue<T>;
   }
 
+  // Handle Prisma.Decimal specifically
+  if (data instanceof Prisma.Decimal) {
+    return Number(data) as SerializeValue<T>;
+  }
+
+  // Handle Date objects
+  if (data instanceof Date) {
+    return data.toISOString() as SerializeValue<T>;
+  }
+
+  // Handle bigint
+  if (typeof data === "bigint") {
+    return Number(data) as SerializeValue<T>;
+  }
+
   if (typeof data === "object") {
     const result = {} as Record<string, unknown>;
 
     for (const [key, value] of Object.entries(data)) {
-      if (value === null) {
+      if (value === null || value === undefined) {
         result[key] = undefined;
-      } else if (value?.constructor?.name === "Decimal") {
+      } else if (value instanceof Prisma.Decimal) {
         result[key] = Number(value);
+      } else if (value instanceof Date) {
+        result[key] = value.toISOString();
       } else if (typeof value === "bigint") {
         result[key] = Number(value);
+      } else if (Array.isArray(value)) {
+        result[key] = value.map((item) => serializeType(item));
       } else if (typeof value === "object") {
         result[key] = serializeType(value);
       } else {

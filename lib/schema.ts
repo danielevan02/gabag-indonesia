@@ -111,8 +111,8 @@ export const productSchema = z.object({
   slug: z.string().optional(),
   subCategory: z
     .object({
-      value: z.string(),
-      label: z.string(),
+      id: z.string(),
+      name: z.string(),
     })
     .nullable(),
   price: z.coerce.number().min(0, "Price must be greater than or equal to 0").optional(),

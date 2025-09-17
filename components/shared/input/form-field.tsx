@@ -21,7 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
 // Types
-type SelectOption = { value: string; label: string };
+type SelectOption = { id: string; name: string };
 
 interface BaseFormFieldProps<TFieldValues extends FieldValues> {
   label: string;
@@ -31,15 +31,17 @@ interface BaseFormFieldProps<TFieldValues extends FieldValues> {
   errors?: FieldErrors<TFieldValues>;
 }
 
-export interface InputFormFieldProps<TFieldValues extends FieldValues> extends BaseFormFieldProps<TFieldValues> {
+export interface InputFormFieldProps<TFieldValues extends FieldValues>
+  extends BaseFormFieldProps<TFieldValues> {
   type?: HTMLInputTypeAttribute;
   placeholder?: string;
   register?: UseFormRegister<TFieldValues>;
   disabled?: boolean;
 }
 
-interface SelectFormFieldProps<TFieldValues extends FieldValues> extends BaseFormFieldProps<TFieldValues> {
-  type: 'select';
+interface SelectFormFieldProps<TFieldValues extends FieldValues>
+  extends BaseFormFieldProps<TFieldValues> {
+  type: "select";
   control: Control<TFieldValues>;
   placeholder?: string;
   options: SelectOption[];
@@ -47,22 +49,25 @@ interface SelectFormFieldProps<TFieldValues extends FieldValues> extends BaseFor
   disabled?: boolean;
 }
 
-interface TextareaFormFieldProps<TFieldValues extends FieldValues> extends BaseFormFieldProps<TFieldValues> {
-  type: 'textarea';
+interface TextareaFormFieldProps<TFieldValues extends FieldValues>
+  extends BaseFormFieldProps<TFieldValues> {
+  type: "textarea";
   placeholder?: string;
   register?: UseFormRegister<TFieldValues>;
   disabled?: boolean;
 }
 
-interface PasswordFormFieldProps<TFieldValues extends FieldValues> extends BaseFormFieldProps<TFieldValues> {
-  type: 'password';
+interface PasswordFormFieldProps<TFieldValues extends FieldValues>
+  extends BaseFormFieldProps<TFieldValues> {
+  type: "password";
   placeholder?: string;
   register?: UseFormRegister<TFieldValues>;
   disabled?: boolean;
 }
 
-interface PhoneFormFieldProps<TFieldValues extends FieldValues> extends BaseFormFieldProps<TFieldValues> {
-  type: 'phone';
+interface PhoneFormFieldProps<TFieldValues extends FieldValues>
+  extends BaseFormFieldProps<TFieldValues> {
+  type: "phone";
   register?: UseFormRegister<TFieldValues>;
   disabled?: boolean;
 }
@@ -71,7 +76,7 @@ type FormFieldProps<TFieldValues extends FieldValues> =
   | InputFormFieldProps<TFieldValues>
   | SelectFormFieldProps<TFieldValues>
   | PasswordFormFieldProps<TFieldValues>
-  | PhoneFormFieldProps<TFieldValues>
+  | PhoneFormFieldProps<TFieldValues>;
 
 // Sub-components
 export const ErrorMessage = ({ message }: { message: string }) => (
@@ -98,11 +103,10 @@ export function FormField<TFieldValues extends FieldValues>({
   description,
   ...props
 }: FormFieldProps<TFieldValues>) {
-
   const [passShown, setPassShown] = useState(false);
   const renderField = () => {
     switch (type) {
-      case 'phone': {
+      case "phone": {
         const phoneProps = props as PhoneFormFieldProps<TFieldValues>;
         return (
           <InputPhone
@@ -114,7 +118,7 @@ export function FormField<TFieldValues extends FieldValues>({
         );
       }
 
-      case 'password': {
+      case "password": {
         const passwordProps = props as PasswordFormFieldProps<TFieldValues>;
         return (
           <div className="relative flex items-center">
@@ -141,39 +145,44 @@ export function FormField<TFieldValues extends FieldValues>({
         );
       }
 
-      case 'select': {
+      case "select": {
         const selectProps = props as SelectFormFieldProps<TFieldValues>;
         const animatedComponent = makeAnimated();
         return (
           <Controller
             control={selectProps.control}
             name={name}
-            render={({ field: { onBlur, onChange, value } }) => (
-              <Select
-                styles={{
-                  control: (base) => ({
-                    ...base,
-                    borderColor: "black",
-                    borderRadius: 7,
-                    paddingTop: 5,
-                    paddingBottom: 5,
-                  }),
-                }}
-                components={animatedComponent}
-                isMulti={selectProps.isMulti}
-                placeholder={selectProps.placeholder}
-                value={value}
-                onBlur={onBlur}
-                onChange={onChange}
-                options={selectProps.options}
-                isDisabled={selectProps.disabled}
-              />
-            )}
+            render={({ field: { onBlur, onChange, value } }) => {
+              console.log("INI HASILNYA", value);
+              return (
+                <Select
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      borderColor: "black",
+                      borderRadius: 7,
+                      paddingTop: 5,
+                      paddingBottom: 5,
+                    }),
+                  }}
+                  components={animatedComponent}
+                  isMulti={selectProps.isMulti}
+                  placeholder={selectProps.placeholder}
+                  value={value}
+                  onBlur={onBlur}
+                  onChange={onChange}
+                  options={selectProps.options}
+                  isDisabled={selectProps.disabled}
+                  // @ts-expect-error this is just ts error
+                  getOptionLabel={(option) => option.name} getOptionValue={(option) => option.id}
+                />
+              );
+            }}
           />
         );
       }
 
-      case 'textarea': {
+      case "textarea": {
         const textareaProps = props as TextareaFormFieldProps<TFieldValues>;
         return (
           <Textarea
@@ -183,7 +192,7 @@ export function FormField<TFieldValues extends FieldValues>({
             {...(textareaProps.register ? textareaProps.register(name) : {})}
             disabled={textareaProps.disabled}
           />
-        )
+        );
       }
 
       default: {
@@ -192,7 +201,7 @@ export function FormField<TFieldValues extends FieldValues>({
           <Input
             id={name}
             type={type}
-            step={type === 'number' ? "0.01":undefined}
+            step={type === "number" ? "0.01" : undefined}
             placeholder={inputProps.placeholder}
             className="border-black py-6 text-xs"
             {...(inputProps.register ? inputProps.register(name) : {})}

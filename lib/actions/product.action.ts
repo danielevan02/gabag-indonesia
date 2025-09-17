@@ -5,6 +5,7 @@ import { Product } from "@/types";
 import { ProductFormType } from "@/app/admin/catalog/product/add/components/product-form";
 import { revalidatePath } from "next/cache";
 import { serializeType } from "../utils";
+import { getAllSubCategories } from "./subCategory.action";
 
 export async function getAllProducts(
   subCategory?: string,
@@ -101,11 +102,9 @@ export async function searchProduct(keyword: string): Promise<Product[]> {
   ];
 }
 
-export async function getProductBySlug(slug: string): Promise<Product> {
-  const product = await prisma.product.findFirst({
-    where: {
-      slug,
-    },
+export async function getProductBySlug(slug: string) {
+  const data = await prisma.product.findFirst({
+    where: { slug },
     include: {
       subCategory: true,
       variants: true,
@@ -121,38 +120,24 @@ export async function getProductBySlug(slug: string): Promise<Product> {
     },
   });
 
+  if (!data) {
+    throw new Error("Product not found");
+  }
+
+  const convertedData = serializeType(data);
+
   return {
-    ...product!,
-    variants: product?.variants.map((variant) => ({
+    ...convertedData,
+    variants: convertedData.variants.map((variant) => ({
       ...variant,
-      discount: variant.discount as number | undefined,
-      sku: variant.sku as string | undefined,
-      regularPrice: Number(variant.regularPrice),
-      price:
-        Number(variant.regularPrice) -
-        Number(variant.regularPrice) * (((variant.discount || product.discount) ?? 0) / 100),
+      price: variant.regularPrice - variant.regularPrice*((variant.discount??0)/100)
     })),
-    orderItems: product?.orderItems.map((item) => ({
-      ...item,
-      weight: Number(item.weight),
-      width: Number(item.width),
-      length: Number(item.length),
-      height: Number(item.height),
-    })),
-    weight: Number(product?.weight),
-    length: Number(product?.length),
-    width: Number(product?.width),
-    height: Number(product?.height),
-    sku: product?.sku as string | undefined,
-    eventId: product?.eventId as string | undefined,
-    regularPrice: Number(product?.regularPrice),
-    price:
-      Number(product?.regularPrice) -
-      (Number(product?.regularPrice) * (product?.discount || 0)) / 100,
-  };
+    price: convertedData.regularPrice - convertedData.regularPrice*(convertedData.discount/100)
+  }
 }
 
 export async function getNewArrivalProduct(): Promise<Product[]> {
+
   const products = await prisma.product.findMany({
     orderBy: {
       createdAt: "desc",
@@ -175,39 +160,45 @@ export async function getNewArrivalProduct(): Promise<Product[]> {
   ];
 }
 
-export async function getProductById(id: string): Promise<Product> {
-  const product = await prisma.product.findFirst({
-    where: {
-      id,
-    },
-    include: {
-      subCategory: true,
-      variants: true,
-    },
-  });
+export async function getProductByIdAndAllSubCategory(id: string) {
+  const [product, subCategories] = await Promise.all([
+    await prisma.product.findFirst({
+      where: {
+        id,
+      },
+      include: {
+        subCategory: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        variants: true,
+      },
+    }),
+    await getAllSubCategories()
+  ])
 
+
+  const convertedData = serializeType(product);
+
+  let productPrice;
+  if(convertedData?.regularPrice) {
+    productPrice = convertedData.regularPrice - convertedData.regularPrice*(convertedData.discount/100)
+  }
+  
   return {
-    ...product!,
-    variants: product?.variants.map((variant) => ({
-      ...variant,
-      discount: variant.discount as number | undefined,
-      sku: variant.sku as string | undefined,
-      regularPrice: Number(variant.regularPrice),
-      price:
-        Number(variant.regularPrice) -
-        Number(variant.regularPrice) * ((variant.discount || 0) / 100),
+    ...convertedData,
+    price: productPrice,
+    allSubCategory: subCategories.map(({id, name}) => ({
+      id,
+      name
     })),
-    eventId: product?.eventId as string | undefined,
-    sku: product?.sku as string | undefined,
-    weight: Number(product?.weight),
-    length: Number(product?.length),
-    width: Number(product?.width),
-    height: Number(product?.height),
-    regularPrice: Number(product?.regularPrice),
-    price:
-      Number(product?.regularPrice) -
-      (Number(product?.regularPrice) * (product!.discount || 0)) / 100,
-  };
+    variants: convertedData?.variants.map((variant) => ({
+      ...variant,
+      price: variant.regularPrice - variant.regularPrice*((variant.discount??0)/100)
+    })),
+  }
 }
 
 export async function createProduct(data: ProductFormType) {
@@ -220,7 +211,7 @@ export async function createProduct(data: ProductFormType) {
         ...rest,
         name: name!,
         slug: slug!,
-        subCategoryId: subCategory?.value ?? "",
+        subCategoryId: subCategory?.id ?? "",
         regularPrice: hasVariant ? 0 : price,
         images: image,
         description: description!,
@@ -283,7 +274,7 @@ export async function updateProduct(data: ProductFormType & { id?: string }) {
       },
       data: {
         name: name!,
-        subCategoryId: subCategory?.value ?? "",
+        subCategoryId: subCategory?.id ?? "",
         regularPrice: hasVariant ? 0 : price,
         discount,
         images: image,
