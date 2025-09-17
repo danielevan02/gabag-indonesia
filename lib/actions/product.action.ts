@@ -224,16 +224,15 @@ export async function getProductById(id: string): Promise<Product> {
 
 export async function createProduct(data: ProductFormType) {
   try {
-    const { subCategory, name, price, discount, image, description, slug, hasVariant, variants } =
-      data;
+    const { subCategory, name, price, image, description, slug, hasVariant, variants, ...rest } = data;
 
     await prisma.product.create({
       data: {
+        ...rest,
         name: name!,
         slug: slug!,
         subCategoryId: subCategory?.value ?? "",
         regularPrice: hasVariant ? 0 : price,
-        discount,
         images: image,
         description: description!,
         hasVariant,

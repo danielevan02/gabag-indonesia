@@ -107,6 +107,7 @@ export const variantSchema = z.object({
 
 export const productSchema = z.object({
   name: z.string().min(1, "Name is required").optional(),
+  sku: z.string().optional(),
   slug: z.string().optional(),
   subCategory: z
     .object({

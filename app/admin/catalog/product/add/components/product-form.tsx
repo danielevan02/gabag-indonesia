@@ -71,6 +71,7 @@ const ProductForm = ({
     }, [hasVariant])
 
   const onSubmit = async (data: ProductFormType) => {
+    console.log(data)
     startTransition(async () => {
       try {
         const response = await createProduct({
@@ -231,6 +232,16 @@ const ProductForm = ({
           />
 
           <FormField
+            label="SKU"
+            name="sku"
+            type="text"
+            placeholder="Please enter product price"
+            register={register}
+            errors={errors}
+            disabled={isLoading}
+          />
+
+          <FormField
             label="Stock"
             name="stock"
             type="number"
@@ -254,8 +265,17 @@ const ProductForm = ({
       />
       <div className="flex gap-2 items-center">
         <FormField
+          label="Length (cm)"
+          name="length"
+          type="number"
+          placeholder="Please enter product length"
+          register={register}
+          errors={errors}
+          disabled={isLoading}
+        /> x
+        <FormField
           label="Width (cm)"
-          name="weight"
+          name="width"
           type="number"
           placeholder="Please enter product weight"
           register={register}
@@ -267,15 +287,6 @@ const ProductForm = ({
           name="height"
           type="number"
           placeholder="Please enter product height"
-          register={register}
-          errors={errors}
-          disabled={isLoading}
-        /> x 
-        <FormField
-          label="Length (cm)"
-          name="length"
-          type="number"
-          placeholder="Please enter product length"
           register={register}
           errors={errors}
           disabled={isLoading}

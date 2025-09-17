@@ -28,6 +28,9 @@ type VariantFormProps = {
   stock?: number | undefined;
   image?: string[] | undefined;
   weight: number
+  length: number
+  width: number
+  height: number
   variants?:
     | {
         name: string;

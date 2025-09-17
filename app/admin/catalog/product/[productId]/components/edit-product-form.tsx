@@ -143,6 +143,7 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
         disabled={isLoading}
         required
       />
+      
       <FormField
         label="Select Sub Category"
         name="subCategory"
@@ -169,7 +170,6 @@ const EditProductForm = ({ product, subCategoryList }: EditProductFormProps) => 
                   {field.value?.map((image, index) => (
                     <div key={index} className="size-32 overflow-hidden rounded-md border">
                       <Image
-                        
                         src={image}
                         alt={`image-product`}
                         width={100}
