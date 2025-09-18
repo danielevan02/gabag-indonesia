@@ -5,15 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { createOrder } from "@/lib/actions/order.action";
 import { useCartStore } from "@/lib/stores/cart-store";
-import { Cart } from "@/types";
 import { Loader, ShoppingBag, ShoppingCart } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useTransition } from "react";
 import { toast } from "sonner";
 import CartItem from "./cart-item";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getMyCart } from "@/lib/actions/cart.action";
 
-const CartModal = ({ cart, userId }: { cart?: Cart; userId?: string }) => {
+interface CartModalProps {
+  cart: Awaited<ReturnType<typeof getMyCart>>
+  userId?: string
+}
+
+const CartModal = ({ cart, userId }: CartModalProps) => {
   const router = useRouter();
   const path = usePathname();
   const [isLoading, startTransition] = useTransition();

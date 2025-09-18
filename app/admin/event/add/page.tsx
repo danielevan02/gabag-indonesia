@@ -12,6 +12,7 @@ export default async function AddEventPage() {
     <div className="form-page">
       <p className="text-lg">Add New Event</p>
       <EventForm products={productsList}/>
+      
     </div>
   )
 }
