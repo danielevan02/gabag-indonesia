@@ -4,8 +4,7 @@ import prisma from "@/lib/prisma";
 import { authConfig } from "./auth.config";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compareSync } from "bcrypt-ts-edge";
-import { getUserById } from "./lib/actions/user.action";
-import { cookies } from "next/headers";
+import { trpc } from "@/trpc/server";
 
 class InvalidLoginError extends CredentialsSignin {
   code: string;
@@ -68,10 +67,44 @@ export const config: NextAuthConfig = {
         return true;
       }
 
-      const existingUser = await getUserById(user.id ?? "");
+      const existingUser = await trpc.auth.getUserById({id: user.id??""});
 
       if (!existingUser?.emailVerified) {
         return false;
+      }
+
+      // Handle cart migration on sign in
+      try {
+        const { cookies } = await import("next/headers");
+        const cookiesObject = await cookies();
+        const sessionCartId = cookiesObject.get("sessionCartId")?.value;
+
+        if (sessionCartId) {
+          const sessionCart = await prisma.cart.findFirst({
+            where: {
+              sessionCartId,
+            },
+          });
+
+          if (sessionCart && sessionCart.userId == null) {
+            await prisma.cart.deleteMany({
+              where: {
+                userId: user.id,
+              },
+            });
+
+            await prisma.cart.update({
+              where: {
+                id: sessionCart.id,
+              },
+              data: {
+                userId: user.id,
+              },
+            }).catch((e) => console.log("CART UPDATE ERROR AUTH:", e));
+          }
+        }
+      } catch (error) {
+        console.log("Cart migration error:", error);
       }
 
       return true;
@@ -91,35 +124,6 @@ export const config: NextAuthConfig = {
               name: token.name,
             },
           });
-        }
-        if (trigger === "signIn" || trigger === "signUp") {
-          const cookiesObject = await cookies();
-          const sessionCartId = cookiesObject.get("sessionCartId")?.value;
-
-          if (sessionCartId) {
-            const sessionCart = await prisma.cart.findFirst({
-              where: {
-                sessionCartId,
-              },
-            });
-
-            if (sessionCart && sessionCart.id == null) {
-              await prisma.cart.deleteMany({
-                where: {
-                  userId: user.id,
-                },
-              });
-            
-              await prisma.cart.update({
-                where: {
-                  id: sessionCart.id,
-                },
-                data: {
-                  userId: user.id,
-                },
-              }).catch((e) => console.log("CART UPDATE ERROR AUTH:", e));
-            }
-          }
         }
       }
 
