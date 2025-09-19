@@ -4,6 +4,7 @@ import "./globals.css";
 
 import { APP_DESCRIPTION, APP_NAME, BASE_URL } from "@/lib/constants";
 import { TRPCProvider } from "@/trpc/client";
+import { Toaster } from "@/components/ui/sonner";
 
 const outift = Outfit({
   subsets: ['latin'],
@@ -35,10 +36,12 @@ export default function RootLayout({
 }>) {
   return (
     <TRPCProvider>
-      
       <html lang="en">
         <body className={`${outift.className}`}>
-          {children}
+          <main>
+            {children}
+            <Toaster position="top-center"/>
+          </main>
         </body>
       </html>
     </TRPCProvider>

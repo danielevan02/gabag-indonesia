@@ -1,7 +1,8 @@
 "use client";
 
+
+import React from "react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { CircleAlert, Eye, EyeOff } from "lucide-react";
 import { HTMLInputTypeAttribute, useState } from "react";
 import {
@@ -18,6 +19,13 @@ import { InputPhone } from "../input-phone";
 import makeAnimated from "react-select/animated";
 import dynamic from "next/dynamic";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  FormControl,
+  FormDescription,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
 // Types
@@ -84,13 +92,6 @@ export const ErrorMessage = ({ message }: { message: string }) => (
     <CircleAlert className="w-3 h-3" />
     {message}
   </p>
-);
-
-const FormLabel = ({ label, required }: { label: string; required?: boolean }) => (
-  <Label className="text-sm flex gap-1">
-    {label}
-    {required && <p className="text-red-500">*</p>}
-  </Label>
 );
 
 // Main component
@@ -198,7 +199,6 @@ export function FormField<TFieldValues extends FieldValues>({
           <Input
             id={name}
             type={type}
-            step={type === "number" ? "0.01" : undefined}
             placeholder={inputProps.placeholder}
             className="border-black py-6 text-xs"
             {...(inputProps.register ? inputProps.register(name) : {})}
@@ -210,13 +210,25 @@ export function FormField<TFieldValues extends FieldValues>({
   };
 
   return (
-    <div className="flex flex-col gap-2 mb-5">
-      <div>
-        <FormLabel label={label} required={required} />
-        {description && <p className="text-xs text-neutral-500">NOTE: {description}</p>}
-      </div>
-      {renderField()}
-      {get(errors, name) && <ErrorMessage message={get(errors, `${name}.message`)} />}
-    </div>
+    <FormItem>
+      <FormLabel className="text-sm flex gap-1">
+        {label}
+        {required && <span className="text-red-500">*</span>}
+      </FormLabel>
+      {description && (
+        <FormDescription className="text-xs text-neutral-500">
+          NOTE: {description}
+        </FormDescription>
+      )}
+      <FormControl>
+        {renderField()}
+      </FormControl>
+      {get(errors, name) && (
+        <FormMessage className="flex items-center gap-1">
+          <CircleAlert className="w-3 h-3" />
+          {get(errors, `${name}.message`)}
+        </FormMessage>
+      )}
+    </FormItem>
   );
 }

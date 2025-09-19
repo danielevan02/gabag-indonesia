@@ -91,11 +91,12 @@ export const authRouter = createTRPCRouter({
       try {
         await signIn("credentials", { ...input, redirect: false });
         return handleAuthSuccess("Login Success");
-      } catch (error) {
-        console.log(error)
+      } catch (error: any) {
+        console.log(error);
+
         return {
           success: false,
-          message:  "Login failed",
+          message: error.code as string,
         };
       }
     }),

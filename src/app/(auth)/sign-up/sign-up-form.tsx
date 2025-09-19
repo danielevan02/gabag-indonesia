@@ -3,40 +3,39 @@
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signUpSchema } from "@/lib/schema";
-import { defaultSignUp } from "@/lib/defaultValues";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { z } from "zod";
 import Link from "next/link";
-import { registerUser } from "@/lib/actions/user.action";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
-import { FormField } from "@/components/shared/input/form-field";
+import { trpc } from "@/trpc/client";
+import { Form } from "@/components/ui/form";
+import { FormInput } from "@/components/shared/input/refactor-form-field";
 
 export type SignUpType = z.infer<typeof signUpSchema>;
 
 const SignUpForm = () => {
   const [email, setEmail] = useState('') 
   const [isLoading, startTransition] = useTransition()
-  const {
-    handleSubmit,
-    formState: { errors },
-    register,
-    control,
-  } = useForm({
+  const signUpMutation = trpc.auth.register.useMutation()
+  const form = useForm({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
-      ...defaultSignUp,
-      phone: defaultSignUp.phone.slice(3)
-    },
+      confirmPassword: '',
+      email: '',
+      fullName: '',
+      password: '',
+      phone: ''
+    }
   });
 
   const onSubmit: SubmitHandler<SignUpType> = async (data) => {
     startTransition(async()=>{
-      const res = await registerUser(data)
+      const res = await signUpMutation.mutateAsync(data)
       
-      if(!res.success){
-        toast.error(res.message as string)
+      if(!res?.success){
+        toast.error(res?.message as string)
       } else {
         setEmail(data.email)
       }
@@ -44,68 +43,70 @@ const SignUpForm = () => {
   };
 
   return !email ? (
-    <form className="flex flex-col px-1" onSubmit={handleSubmit(onSubmit)}>
-      <FormField
-        label="Full Name"
-        name="fullName"
-        errors={errors}
-        placeholder="Enter your name..."
-        type="text"
-        register={register}
-      />
+    <Form {...form}>
+      <form className="flex flex-col px-1" onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="flex flex-col gap-y-4">
+          <FormInput
+            form={form}
+            label="Full Name"
+            fieldType="text"
+            name="fullName"
+            placeholder="e.g: John Doe"
+          />
 
-      <FormField
-        label="Email"
-        name="email"
-        errors={errors}
-        placeholder="Enter your email..."
-        type="email"
-        register={register}
-      />
+          <FormInput
+            form={form}
+            label="Email"
+            fieldType="text"
+            name="email"
+            placeholder="e.g: johndoe@email.com"
+          />
 
-      <FormField
-        label="Phone"
-        name="phone"
-        errors={errors}
-        placeholder="Enter your phone number..."
-        register={register}
-        control={control}
-      />
+          <FormInput
+            form={form}
+            label="Phone"
+            fieldType="phone"
+            name="phone"
+            placeholder="e.g: 0812 3456 7890"
+          />
 
-      <FormField
-        label="Password"
-        name="password"
-        errors={errors}
-        placeholder="Enter your password..."
-        register={register}
-      />
+          <FormInput
+            form={form}
+            label="Password"
+            fieldType="password"
+            name="password"
+            placeholder="e.g: johndoe123"
+            showPass
+          />
 
-      <FormField
-        label="Confirm Password"
-        name="confirmPassword"
-        errors={errors}
-        placeholder="Enter your confirm password..."
-        type="password"
-        register={register}
-      />
-      <p className="mb-5 md:mb-0">
-        Already have an account?{" "}
-        <Link href="/sign-in" className="underline hover:text-blue-900">
-          Login
-        </Link>{" "}
-      </p>
-      <Button
-        className="w-fit ml-auto tracking-widest rounded-full py-7 px-10 min-w-40 text-lg"
-        type="submit"
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <Loader className="w-5 h-5 animate-spin"/>
-        ):(
-          "Register"
-        )}
-      </Button>
-    </form>
+          <FormInput
+            form={form}
+            label="Confirm Password"
+            fieldType="password"
+            name="confirmPassword"
+            placeholder="Re-type your password"
+          />
+        </div>
+        
+        <p className="mb-5 md:mb-0 mt-5">
+          Already have an account?{" "}
+          <Link href="/sign-in" className="underline hover:text-blue-900">
+            Login
+          </Link>{" "}
+        </p>
+        <Button
+          className="w-fit ml-auto tracking-widest rounded-full py-7 px-10 min-w-40 text-lg"
+          type="submit"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <Loader className="w-5 h-5 animate-spin"/>
+          ):(
+            "Register"
+          )}
+        </Button>
+      </form>
+    </Form>
   ) : (
     <div className="text-center">
       <p>We&apos;ve sent a verification to your email at</p>

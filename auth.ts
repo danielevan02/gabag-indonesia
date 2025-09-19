@@ -4,7 +4,6 @@ import prisma from "@/lib/prisma";
 import { authConfig } from "./auth.config";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compareSync } from "bcrypt-ts-edge";
-import { trpc } from "@/trpc/server";
 
 class InvalidLoginError extends CredentialsSignin {
   code: string;
@@ -17,6 +16,7 @@ class InvalidLoginError extends CredentialsSignin {
 }
 
 export const config: NextAuthConfig = {
+  trustHost: true,
   pages: {
     signIn: "/sign-in",
     error: "/sign-in",
@@ -67,7 +67,9 @@ export const config: NextAuthConfig = {
         return true;
       }
 
-      const existingUser = await trpc.auth.getUserById({id: user.id??""});
+      const existingUser = await prisma.user.findFirst({
+        where: { id: user.id??"" }
+      });
 
       if (!existingUser?.emailVerified) {
         return false;
