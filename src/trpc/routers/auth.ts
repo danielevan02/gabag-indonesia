@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { sendVerificationEmail } from "@/email/send-verification";
 import { TRPCError } from "@trpc/server";
 import { redirect } from "next/navigation";
-import { auth, signIn, signOut } from "../../../auth";
+import { auth, signIn, signOut } from "@/auth"
 import { signInSchema, signUpSchema } from "@/lib/schema";
 import { Address } from "@/types";
 

@@ -7,8 +7,11 @@ export type SubCategory = Omit<PrismaSubCategory, "image" | "discount"> & {
   discount?: number;
 }
 
-export type ProductEvent = Omit<PrismaEvent, "discount"> & {
+export type ProductEvent = Omit<PrismaEvent, "discount" | "description" | "startDate" | "endDate"> & {
   discount?: number
+  description?: string
+  startDate?: Date
+  endDate?: Date
 }
 
 export type Product = {
@@ -31,7 +34,7 @@ export type Product = {
   regularPrice: number;
   price: number;
   orderItems?: OrderItem[];
-  event?: Event;
+  event?: ProductEvent;
   subCategory?: SubCategory;
   reviews?: Review[];
   variants?: Variant[];

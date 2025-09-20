@@ -3,7 +3,7 @@ import { baseProcedure, createTRPCRouter } from "../init";
 import prisma from "@/lib/prisma";
 import { serializeType } from "@/lib/utils";
 import { TRPCError } from "@trpc/server";
-import { auth } from "../../../auth";
+import { auth } from "@/auth"
 import { CartItem } from "@/types";
 
 // Helper function to calculate cart prices
@@ -21,7 +21,11 @@ const calcPrice = (items: CartItem[]) => {
 };
 
 // Helper function to get cart
-const getCartHelper = async (sessionCartId: string, userId?: string) => {
+export const getCartHelper = async (userId?: string) => {
+  const { cookies } = await import("next/headers");
+  const cookiesObject = await cookies();
+  const sessionCartId = cookiesObject.get("sessionCartId")?.value;
+
   const cart = await prisma.cart.findFirst({
     where: userId
       ? { userId }
@@ -56,20 +60,12 @@ const cartItemSchema = z.object({
 export const cartRouter = createTRPCRouter({
   // Get current user's cart
   getMyCart: baseProcedure
-    .input(z.object({ sessionCartId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async () => {
       try {
-        if (!input.sessionCartId) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Cart session not found!",
-          });
-        }
-
         const session = await auth();
         const userId = session?.user?.id;
 
-        return await getCartHelper(input.sessionCartId, userId);
+        return await getCartHelper(userId);
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -81,29 +77,33 @@ export const cartRouter = createTRPCRouter({
   // Add item to cart
   addToCart: baseProcedure
     .input(z.object({
-      sessionCartId: z.string(),
       item: cartItemSchema,
     }))
     .mutation(async ({ input }) => {
       try {
-        const { sessionCartId, item } = input;
-
-        if (!sessionCartId) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Cart session not found!",
-          });
-        }
+        const { item } = input;
 
         const session = await auth();
         const userId = session?.user?.id;
 
-        const cart = await getCartHelper(sessionCartId, userId);
+        // Get sessionCartId from cookies inside getCartHelper
+        const cart = await getCartHelper(userId);
 
         let message: string;
 
         // Create new cart if none exists
         if (!cart) {
+          const { cookies } = await import("next/headers");
+          const cookiesObject = await cookies();
+          const sessionCartId = cookiesObject.get("sessionCartId")?.value;
+
+          if (!sessionCartId) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Cart session not found!",
+            });
+          }
+
           message = `${item.name} is added to cart`;
           await prisma.cart.create({
             data: {
@@ -182,14 +182,13 @@ export const cartRouter = createTRPCRouter({
   // Update cart item quantity
   updateCartItem: baseProcedure
     .input(z.object({
-      sessionCartId: z.string(),
       productId: z.string(),
       quantity: z.number(),
       variantId: z.string().optional(),
     }))
     .mutation(async ({ input }) => {
       try {
-        const { sessionCartId, productId, quantity, variantId } = input;
+        const { productId, quantity, variantId } = input;
 
         if (quantity < 0) {
           throw new TRPCError({
@@ -198,17 +197,10 @@ export const cartRouter = createTRPCRouter({
           });
         }
 
-        if (!sessionCartId) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Cart session not found!",
-          });
-        }
-
         const session = await auth();
         const userId = session?.user?.id;
 
-        const cart = await getCartHelper(sessionCartId, userId);
+        const cart = await getCartHelper(userId);
         if (!cart) {
           throw new TRPCError({
             code: "NOT_FOUND",
@@ -292,18 +284,17 @@ export const cartRouter = createTRPCRouter({
   // Delete cart item
   deleteCartItem: baseProcedure
     .input(z.object({
-      sessionCartId: z.string(),
       productId: z.string(),
       variantId: z.string().optional(),
     }))
     .mutation(async ({ input }) => {
       try {
-        const { sessionCartId, productId, variantId } = input;
+        const { productId, variantId } = input;
 
         const session = await auth();
         const userId = session?.user?.id;
 
-        const cart = await getCartHelper(sessionCartId, userId);
+        const cart = await getCartHelper(userId);
 
         if (!cart) {
           throw new TRPCError({

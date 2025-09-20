@@ -127,3 +127,47 @@
     @apply bg-background text-foreground;
   }
 }
+
+.form-page {
+  @apply p-5 h-full max-h-full flex flex-col overflow-scroll
+}
+
+.image-section-container {
+  @apply relative md:sticky flex flex-col-reverse md:flex-row size-full lg:max-w-md xl:max-w-xl md:max-h-[500px] lg:max-h-[440px] xl:max-h-[600px] xl:min-h-[600px] gap-2 md:left-0 md:top-56 lg:top-36 xl:top-48 overflow-hidden
+}
+
+.nav-container {
+  @apply sticky flex flex-col items-center justify-between w-full top-0 left-0 bg-background z-50
+}
+
+.image-list-container {
+  @apply flex flex-row md:flex-col md:min-w-fit gap-3 max-h-full overflow-scroll snap-x md:snap-y snap-mandatory
+}
+
+.image-list-item {
+  @apply relative snap-start min-h-20 max-h-20 min-w-20 max-w-20 rounded-md overflow-hidden
+}
+
+.main-image {
+  @apply size-full max-h-[400px] min-h-[400px] md:max-h-full md:min-h-full object-cover rounded-md
+}
+
+.gallery-image-container {
+  @apply grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 max-h-64 overflow-scroll gap-2 justify-start
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.horizontal-line {
+  @apply mb-5 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-900 to-transparent opacity-25 dark:via-white
+}
+
+.product-card-image-container {
+  @apply overflow-hidden min-h-64 max-h-64 md:min-h-96 md:max-h-96 xl:min-h-[450px] xl:max-h-[450px] w-full
+}
+
+.product-card-container {
+  @apply min-w-56 max-w-56 md:min-w-80 md:max-w-80 lg:min-w-96 lg:max-w-96 snap-start
+}

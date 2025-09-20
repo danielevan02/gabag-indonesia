@@ -8,29 +8,22 @@ import { TRPCError } from "@trpc/server";
 // Constants
 const DEFAULT_NEW_ARRIVALS_LIMIT = 2;
 
-// Types
-type Product = {
-  regularPrice: number;
-  discount?: number;
-};
-
-type Variant = {
-  regularPrice: number;
-  discount?: number;
-};
-
-type ProductWithVariants = Product & {
-  variants: Variant[];
-  images: string[];
-};
-
 // Helper functions
 const calculateDiscountedPrice = (regularPrice: number, discount?: number): number => {
   if (!discount) return regularPrice;
-  return regularPrice - (regularPrice * (discount / 100));
+  return regularPrice - regularPrice * (discount / 100);
 };
 
-const transformProductWithPrice = (product: ProductWithVariants) => {
+const transformProductWithPrice = <
+  T extends {
+    regularPrice: number;
+    discount?: number;
+    images: string[];
+    variants: Array<{ regularPrice: number; discount?: number }>;
+  },
+>(
+  product: T
+) => {
   return {
     ...product,
     price: calculateDiscountedPrice(product.regularPrice, product.discount),
@@ -42,7 +35,16 @@ const transformProductWithPrice = (product: ProductWithVariants) => {
   };
 };
 
-const transformProductList = (products: ProductWithVariants[]) => {
+const transformProductList = <
+  T extends {
+    regularPrice: number;
+    discount?: number;
+    images: string[];
+    variants: Array<{ regularPrice: number; discount?: number }>;
+  },
+>(
+  products: T[]
+) => {
   return products.map(transformProductWithPrice);
 };
 
@@ -134,63 +136,74 @@ export const productRouter = createTRPCRouter({
       });
 
       const convertedData = serializeType(data);
-      return transformProductList(convertedData);
-    }),
-
-  // Search products
-  search: baseProcedure
-    .input(z.object({ keyword: z.string() }))
-    .query(async ({ input }) => {
-      const data = await prisma.product.findMany({
-        where: {
-          name: {
-            contains: input.keyword,
-            mode: "insensitive",
-          },
-        },
-        include: {
-          variants: true,
-        },
-      });
-
-      const convertedData = serializeType(data);
       return convertedData.map((product) => ({
         ...product,
         price: calculateDiscountedPrice(product.regularPrice, product.discount),
+        image: product.images[0],
+        variants: product.variants.map((variant) => ({
+          ...variant,
+          price: calculateDiscountedPrice(variant.regularPrice, variant.discount),
+        })),
       }));
     }),
 
+  // Search products
+  search: baseProcedure.input(z.object({ keyword: z.string() })).query(async ({ input }) => {
+    const data = await prisma.product.findMany({
+      where: {
+        name: {
+          contains: input.keyword,
+          mode: "insensitive",
+        },
+      },
+      include: {
+        variants: true,
+      },
+    });
+
+    const convertedData = serializeType(data);
+    return convertedData.map((product) => ({
+      ...product,
+      price: calculateDiscountedPrice(product.regularPrice, product.discount),
+    }));
+  }),
+
   // Get product by slug
-  getBySlug: baseProcedure
-    .input(z.object({ slug: z.string() }))
-    .query(async ({ input }) => {
-      const data = await prisma.product.findFirst({
-        where: { slug: input.slug },
-        include: {
-          subCategory: true,
-          variants: true,
-          orderItems: {
-            where: {
-              order: {
-                paymentStatus: {
-                  in: ["settlement", "capture"],
-                },
+  getBySlug: baseProcedure.input(z.object({ slug: z.string() })).query(async ({ input }) => {
+    const data = await prisma.product.findFirst({
+      where: { slug: input.slug },
+      include: {
+        subCategory: true,
+        variants: true,
+        orderItems: {
+          where: {
+            order: {
+              paymentStatus: {
+                in: ["settlement", "capture"],
               },
             },
           },
         },
+      },
+    });
+
+    if (!data) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Product not found",
       });
+    }
 
-      if (!data) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Product not found",
-        });
-      }
-
-      const convertedData = serializeType(data);
-      return transformProductWithPrice(convertedData);
-    }),
+    const convertedData = serializeType(data);
+    return {
+      ...convertedData,
+      variants: convertedData.variants.map((variant) => ({
+        ...variant,
+        price: calculateDiscountedPrice(variant.regularPrice, variant.discount),
+      })),
+      price: calculateDiscountedPrice(convertedData.regularPrice, convertedData.discount),
+    };
+  }),
 
   // Get new arrival products
   getNewArrivals: baseProcedure.query(async () => {
@@ -207,6 +220,48 @@ export const productRouter = createTRPCRouter({
     });
 
     return serializeType(data);
+  }),
+
+  // Get flash sale products
+  getFlashSale: baseProcedure.query(async () => {
+    const data = await prisma.product.findMany({
+      where: {
+        eventId: "be32be21-13c2-4ed7-aaa2-861477ebb11f",
+      },
+      select: {
+        regularPrice: true,
+        discount: true,
+        name: true,
+        images: true,
+        subCategory: {
+          select: {
+            name: true
+          }
+        },
+        event: {
+          select: {
+            name: true
+          }
+        },
+        variants: {
+          select: {
+            regularPrice: true,
+            discount: true
+          }
+        },
+      },
+    });
+
+    const serializeData = serializeType(data);
+
+    return serializeData.map((product) => ({
+      ...product,
+      image: product.images[0],
+      price: calculateDiscountedPrice(product.regularPrice, product.discount),
+      variants: product.variants.map((variant) => ({
+        price: calculateDiscountedPrice(variant.regularPrice, variant.discount),
+      })),
+    }));
   }),
 
   // Get product by ID with all subcategories
@@ -244,10 +299,14 @@ export const productRouter = createTRPCRouter({
       }
 
       const convertedData = serializeType(product);
-      const transformedProduct = transformProductWithPrice(convertedData);
 
       return {
-        ...transformedProduct,
+        ...convertedData,
+        price: calculateDiscountedPrice(convertedData.regularPrice, convertedData.discount),
+        variants: convertedData?.variants.map((variant) => ({
+          ...variant,
+          price: calculateDiscountedPrice(variant.regularPrice, variant.discount)
+        })),
         allSubCategory: subCategories.map(({ id, name }) => ({
           id,
           name,
@@ -256,38 +315,36 @@ export const productRouter = createTRPCRouter({
     }),
 
   // Create product
-  create: baseProcedure
-    .input(productSchema)
-    .mutation(async ({ input }) => {
-      try {
-        const { subCategory, price, hasVariant, variants, ...rest } = input;
+  create: baseProcedure.input(productSchema).mutation(async ({ input }) => {
+    try {
+      const { subCategory, price, hasVariant, variants, ...rest } = input;
 
-        await prisma.product.create({
-          data: {
-            ...rest,
-            subCategoryId: subCategory?.id ?? "",
-            regularPrice: hasVariant ? BigInt(0) : price ?? BigInt(0),
-            hasVariant,
-            variants: hasVariant
-              ? {
-                  create: variants?.map((variant) => ({
-                    name: variant.name,
-                    sku: variant.sku,
-                    regularPrice: variant.regularPrice,
-                    stock: variant.stock,
-                    discount: variant.discount,
-                    image: variant.image,
-                  })),
-                }
-              : undefined,
-          },
-        });
+      await prisma.product.create({
+        data: {
+          ...rest,
+          subCategoryId: subCategory?.id ?? "",
+          regularPrice: hasVariant ? BigInt(0) : (price ?? BigInt(0)),
+          hasVariant,
+          variants: hasVariant
+            ? {
+                create: variants?.map((variant) => ({
+                  name: variant.name,
+                  sku: variant.sku,
+                  regularPrice: variant.regularPrice,
+                  stock: variant.stock,
+                  discount: variant.discount,
+                  image: variant.image,
+                })),
+              }
+            : undefined,
+        },
+      });
 
-        return handleMutationSuccess("Product Created");
-      } catch (error) {
-        return handleMutationError(error, "Create Product");
-      }
-    }),
+      return handleMutationSuccess("Product Created");
+    } catch (error) {
+      return handleMutationError(error, "Create Product");
+    }
+  }),
 
   // Update product
   update: baseProcedure
@@ -301,7 +358,7 @@ export const productRouter = createTRPCRouter({
           data: {
             ...rest,
             subCategoryId: subCategory?.id ?? "",
-            regularPrice: hasVariant ? BigInt(0) : price ?? BigInt(0),
+            regularPrice: hasVariant ? BigInt(0) : (price ?? BigInt(0)),
             hasVariant,
           },
         });
@@ -331,19 +388,17 @@ export const productRouter = createTRPCRouter({
     }),
 
   // Delete product
-  delete: baseProcedure
-    .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }) => {
-      try {
-        await prisma.product.delete({
-          where: { id: input.id },
-        });
+  delete: baseProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
+    try {
+      await prisma.product.delete({
+        where: { id: input.id },
+      });
 
-        return handleMutationSuccess("Product Deleted");
-      } catch (error) {
-        return handleMutationError(error, "Delete Product");
-      }
-    }),
+      return handleMutationSuccess("Product Deleted");
+    } catch (error) {
+      return handleMutationError(error, "Delete Product");
+    }
+  }),
 
   // Delete many products
   deleteMany: baseProcedure
