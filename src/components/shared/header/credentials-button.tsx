@@ -3,12 +3,13 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { signOutUser } from "@/lib/actions/user.action"
+import { trpc } from "@/trpc/client"
 import { LogOut, Settings2 } from "lucide-react"
 import { User } from "next-auth"
 import Link from "next/link"
 
 const CredentialsButton = ({user}: {user: User}) => {
+  const signOutUser = trpc.auth.signOut.useMutation()
   if(user){
     return (
       <>
@@ -28,7 +29,7 @@ const CredentialsButton = ({user}: {user: User}) => {
                 <Settings2/>
               </DropdownMenuItem>
               <DropdownMenuItem> 
-                <form action={signOutUser} className="flex justify-between w-full" >
+                <form action={async () => await signOutUser.mutateAsync()} className="flex justify-between w-full" >
                   <button className="flex-1 text-start">Logout</button>
                   <LogOut/>
                 </form>
@@ -36,7 +37,7 @@ const CredentialsButton = ({user}: {user: User}) => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <form action={signOutUser} className="flex lg:hidden">
+        <form action={async () => await signOutUser.mutateAsync()} className="flex lg:hidden">
           <Button variant='destructive' className="w-full uppercase tracking-widest">Log out</Button>
         </form>
       </>

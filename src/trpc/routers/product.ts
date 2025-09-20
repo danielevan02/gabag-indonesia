@@ -14,40 +14,6 @@ const calculateDiscountedPrice = (regularPrice: number, discount?: number): numb
   return regularPrice - regularPrice * (discount / 100);
 };
 
-const transformProductWithPrice = <
-  T extends {
-    regularPrice: number;
-    discount?: number;
-    images: string[];
-    variants: Array<{ regularPrice: number; discount?: number }>;
-  },
->(
-  product: T
-) => {
-  return {
-    ...product,
-    price: calculateDiscountedPrice(product.regularPrice, product.discount),
-    image: product.images[0],
-    variants: product.variants.map((variant) => ({
-      ...variant,
-      price: calculateDiscountedPrice(variant.regularPrice, variant.discount),
-    })),
-  };
-};
-
-const transformProductList = <
-  T extends {
-    regularPrice: number;
-    discount?: number;
-    images: string[];
-    variants: Array<{ regularPrice: number; discount?: number }>;
-  },
->(
-  products: T[]
-) => {
-  return products.map(transformProductWithPrice);
-};
-
 const buildProductFilters = (filters: {
   subCategory?: string;
   search?: string;
@@ -233,6 +199,8 @@ export const productRouter = createTRPCRouter({
         discount: true,
         name: true,
         images: true,
+        slug: true,
+        hasVariant: true,
         subCategory: {
           select: {
             name: true
@@ -259,6 +227,7 @@ export const productRouter = createTRPCRouter({
       image: product.images[0],
       price: calculateDiscountedPrice(product.regularPrice, product.discount),
       variants: product.variants.map((variant) => ({
+        regularPrice: variant.regularPrice,
         price: calculateDiscountedPrice(variant.regularPrice, variant.discount),
       })),
     }));

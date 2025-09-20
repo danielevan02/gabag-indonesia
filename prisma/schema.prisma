@@ -84,50 +84,12 @@ model Category {
   vouchers      Voucher[]     // Relasi untuk voucher yang spesifik untuk category
 }
 
-// Central Media Library untuk semua images
-model MediaFile {
-  id            String   @id @default(cuid())
-  
-  // Cloudinary specific fields
-  publicId      String   @unique // Cloudinary public_id (most important!)
-  secureUrl     String   @db.VarChar(500) // Full HTTPS URL
-  originalUrl   String?  @db.VarChar(500) // Original upload URL (backup)
-  originalName  String?  @db.VarChar(255) // Original filename
-  
-  // Image metadata (dari Cloudinary response)
-  width         Int?
-  height        Int?
-  format        String?  @db.VarChar(10) // jpg, png, webp, etc
-  fileSize      Int?     // bytes
-  resourceType  String   @default("image") @db.VarChar(20) // image, video, raw
-  
-  // Organization & SEO
-  altText       String?  @db.VarChar(255)
-  description   String?  @db.Text
-  folder        String?  @db.VarChar(100) // e.g., "products", "categories", "events"
-  tags          String[] // Cloudinary tags for searching/organization
-  
-  // Gallery management
-  isPublic      Boolean  @default(true)
-  uploadedBy    String?  @db.Uuid // User ID who uploaded
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // Relations
-  productImages ProductMediaRelation[]
-  
-  @@index([folder])
-  @@index([tags])
-  @@index([publicId])
-  @@map("MediaFile")
-}
-
 model Product {
   id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name          String
   slug          String      @unique(map: "product_slug_idx")
   description   String
+  images        String[]
   stock         Int         @default(0)
   discount      Int?
   hasVariant    Boolean     @default(false)
@@ -146,33 +108,6 @@ model Product {
   reviews       Review[]
   variants      Variant[]
   vouchers      Voucher[]   // Relasi untuk voucher yang spesifik untuk produk tertentu
-  
-  // Many-to-Many relation dengan MediaFile
-  images        ProductMediaRelation[]
-}
-
-// Junction table untuk Product <-> MediaFile relationship
-model ProductMediaRelation {
-  id          String  @id @default(cuid())
-  productId   String  @db.Uuid
-  mediaFileId String
-  
-  // Product-specific image settings
-  orderIndex  Int     @default(0)
-  isPrimary   Boolean @default(false)
-  altText     String? @db.VarChar(255) // Override dari MediaFile.altText jika perlu
-  
-  createdAt   DateTime @default(now())
-
-  // Relations
-  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  mediaFile   MediaFile @relation(fields: [mediaFileId], references: [id], onDelete: Cascade)
-
-  // Constraints
-  @@unique([productId, mediaFileId]) // Prevent duplicate assignment
-  @@index([productId, orderIndex])
-  @@index([productId, isPrimary])
-  @@map("ProductMediaRelation")
 }
 
 model Variant {
@@ -181,7 +116,7 @@ model Variant {
   discount     Int?
   stock        Int         @default(0)
   createdAt    DateTime    @default(now()) @db.Timestamp(6)
-  image        String      // Bisa tetap string atau bisa juga relasi ke MediaFile
+  image        String
   sku          String?     @unique(map: "variant_sku")
   productId    String      @db.Uuid
   regularPrice BigInt      @default(0)
@@ -335,4 +270,11 @@ enum VoucherApplicationType {
   SUBCATEGORY       // Berlaku untuk produk dalam subcategory tertentu
   EVENT             // Berlaku untuk produk dalam event tertentu
   SPECIFIC_PRODUCTS // Berlaku untuk produk tertentu saja
+}
+
+model GalleryImage {
+  id        String   @id @default(cuid())
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

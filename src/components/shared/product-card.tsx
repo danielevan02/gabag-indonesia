@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import { ProductEvent, SubCategory, Variant } from "@/types";
 import Link from "next/link";
 import BlurImage from "./blur-image";
 
@@ -12,16 +11,26 @@ interface ProductCardProps {
   slug: string;
   hasVariant: boolean;
   className?: string;
-  subCategory: SubCategory;
-  event?: ProductEvent;
-  variants?: Variant[];
+  subCategory: {
+    name: string;
+  };
+  event?: {
+    name: string;
+  };
+  variants?: {
+    price: number;
+    regularPrice: number
+  }[];
 }
 
 interface PriceTagProps {
   price: number;
   regularPrice: number;
   hasVariant: boolean;
-  variants?: Variant[];
+  variants?: {
+    price: number;
+    regularPrice: number;
+  }[];
   discount?: number;
 }
 
@@ -83,11 +92,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
 };
 
 // Helper functions for price calculations
-const getLowestPrice = (variants: Variant[]): number => {
+const getLowestPrice = ({variants}: { variants: { price: number }[]}): number => {
   return Math.min(...variants.map((variant) => variant.price));
 };
 
-const hasVariantPriceDifferences = (variants: Variant[]): boolean => {
+const hasVariantPriceDifferences = ({variants}: { variants: { price: number }[]}): boolean => {
   return new Set(variants.map((variant) => variant.price)).size > 1;
 };
 
@@ -109,7 +118,7 @@ const DiscountBadge: React.FC<{ discount?: number }> = ({ discount }) => {
 };
 
 // Component for displaying event badge
-const EventBadge: React.FC<{ event?: ProductEvent }> = ({ event }) => {
+const EventBadge = ({ event }: { event?: { name: string } }) => {
   if (!event?.name) return null;
 
   return (
@@ -120,12 +129,12 @@ const EventBadge: React.FC<{ event?: ProductEvent }> = ({ event }) => {
 };
 
 // Component for displaying variant prices
-const VariantPricing: React.FC<{ variants: Variant[] }> = ({ variants }) => {
-  const hasPriceDifferences = hasVariantPriceDifferences(variants);
+const VariantPricing = ({ variants }: { variants: { price: number; regularPrice: number;}[] }) => {
+  const hasPriceDifferences = hasVariantPriceDifferences({variants});
   const firstVariant = variants[0];
 
   if (hasPriceDifferences) {
-    const lowestPrice = getLowestPrice(variants);
+    const lowestPrice = getLowestPrice({variants});
     return (
       <div className="flex gap-1">
         <span>from</span>
