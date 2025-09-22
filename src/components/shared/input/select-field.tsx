@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState } from "react";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,8 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 export interface SelectOption {
-  value: string;
-  label: string;
+  id: string;
+  name: string;
   disabled?: boolean;
 }
 
@@ -53,11 +55,11 @@ export const MultiSelect = ({
   const [search, setSearch] = useState("");
 
   const filteredOptions = options.filter((option) =>
-    option.label.toLowerCase().includes(search.toLowerCase())
+    option.name.toLowerCase().includes(search.toLowerCase())
   );
 
   const selectedOptions = options.filter((option) => 
-    value.includes(option.value)
+    value.includes(option.id)
   );
 
   const handleSelect = (optionValue: string) => {
@@ -103,23 +105,23 @@ export const MultiSelect = ({
             <div className="flex gap-1 flex-wrap">
               {selectedOptions.map((option) => (
                 <Badge
-                  key={option.value}
+                  key={option.id}
                   variant="secondary"
                   className="mr-1"
                 >
-                  {option.label}
+                  {option.name}
                   <button
                     className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
-                        handleRemove(option.value, e);
+                        handleRemove(option.id, e);
                       }
                     }}
                     onMouseDown={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                     }}
-                    onClick={(e) => handleRemove(option.value, e)}
+                    onClick={(e) => handleRemove(option.id, e)}
                   >
                     <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
                   </button>
@@ -164,15 +166,15 @@ export const MultiSelect = ({
             <CommandEmpty>{noOptionsMessage}</CommandEmpty>
             <CommandGroup>
               {filteredOptions.map((option) => {
-                const isSelected = value.includes(option.value);
+                const isSelected = value.includes(option.name);
                 const isDisabled = option.disabled || 
                   (maxItems && value.length >= maxItems && !isSelected);
 
                 return (
                   <CommandItem
-                    key={option.value}
-                    value={option.value}
-                    onSelect={() => !isDisabled && handleSelect(option.value)}
+                    key={option.name}
+                    value={option.id}
+                    onSelect={() => !isDisabled && handleSelect(option.id)}
                     disabled={!!isDisabled}
                     className={cn(
                       "cursor-pointer",
@@ -185,7 +187,7 @@ export const MultiSelect = ({
                         isSelected ? "opacity-100" : "opacity-0"
                       )}
                     />
-                    {option.label}
+                    {option.name}
                   </CommandItem>
                 );
               })}
@@ -225,10 +227,10 @@ export const SingleSelect = ({
   const [search, setSearch] = useState("");
 
   const filteredOptions = options.filter((option) =>
-    option.label.toLowerCase().includes(search.toLowerCase())
+    option.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const selectedOption = options.find((option) => option.value === value);
+  const selectedOption = options.find((option) => option.id === value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -241,7 +243,7 @@ export const SingleSelect = ({
           disabled={disabled}
         >
           {selectedOption ? (
-            <span>{selectedOption.label}</span>
+            <span>{selectedOption.name}</span>
           ) : (
             <span className="text-muted-foreground">{placeholder}</span>
           )}
@@ -285,10 +287,10 @@ export const SingleSelect = ({
             <CommandGroup>
               {filteredOptions.map((option) => (
                 <CommandItem
-                  key={option.value}
-                  value={option.value}
+                  key={option.id}
+                  value={option.id}
                   onSelect={() => {
-                    onChange(option.value);
+                    onChange(option.id);
                     setOpen(false);
                   }}
                   disabled={!!option.disabled}
@@ -300,10 +302,10 @@ export const SingleSelect = ({
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === option.value ? "opacity-100" : "opacity-0"
+                      value === option.id ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  {option.label}
+                  {option.name}
                 </CommandItem>
               ))}
             </CommandGroup>
