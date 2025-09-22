@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +26,7 @@ export interface SelectOption {
   disabled?: boolean;
 }
 
+// Custom Multi Select Component
 export const MultiSelect = ({
   options = [],
   value = [],
@@ -40,7 +41,7 @@ export const MultiSelect = ({
   className,
 }: {
   options: SelectOption[];
-  value: string[];
+  value: string | string[] | SelectOption[] | undefined | null;
   onChange: (value: string[]) => void;
   placeholder?: string;
   isSearchable?: boolean;
@@ -54,36 +55,65 @@ export const MultiSelect = ({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
+  // Normalize value to always be an array of string IDs
+  const normalizedValue = React.useMemo(() => {
+    if (!value) return [];
+    
+    // If value is an array
+    if (Array.isArray(value)) {
+      return value.map(item => {
+        // If item is an object with id property
+        if (typeof item === 'object' && item && 'id' in item) {
+          return String(item.id);
+        }
+        // If item is string or number
+        return String(item);
+      });
+    }
+    
+    // If value is a single object with id property
+    if (typeof value === 'object' && 'id' in value) {
+      return [String(value.id)];
+    }
+    
+    // If value is a single string
+    if (typeof value === 'string') {
+      return value ? [value] : [];
+    }
+    
+    return [];
+  }, [value]);
+
   const filteredOptions = options.filter((option) =>
     option.name.toLowerCase().includes(search.toLowerCase())
   );
 
   const selectedOptions = options.filter((option) => 
-    value.includes(option.id)
+    normalizedValue.includes(option.id)
   );
 
-  const handleSelect = (optionValue: string) => {
-    const isSelected = value.includes(optionValue);
+  const handleSelect = (optionId: string) => {
+    const isSelected = normalizedValue.includes(optionId);
     let newValue: string[];
 
     if (isSelected) {
-      newValue = value.filter((v) => v !== optionValue);
+      newValue = normalizedValue.filter((v) => v !== optionId);
     } else {
-      if (maxItems && value.length >= maxItems) {
+      if (maxItems && normalizedValue.length >= maxItems) {
         return;
       }
-      newValue = [...value, optionValue];
+      newValue = [...normalizedValue, optionId];
     }
     onChange(newValue);
   };
 
-  const handleRemove = (optionValue: string, e?: React.MouseEvent | React.KeyboardEvent) => {
-    e?.stopPropagation();
-    onChange(value.filter((v) => v !== optionValue));
+  const handleRemove = (optionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange(normalizedValue.filter((v) => v !== optionId));
   };
 
-  const handleClear = (e?: React.MouseEvent | React.KeyboardEvent) => {
-    e?.stopPropagation();
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
     onChange([]);
   };
 
@@ -95,7 +125,7 @@ export const MultiSelect = ({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "w-full justify-between min-h-[40px] h-auto",
+            "w-full justify-between border-black min-h-[40px]",
             selectedOptions.length > 0 ? "py-2" : "",
             className
           )}
@@ -110,11 +140,15 @@ export const MultiSelect = ({
                   className="mr-1"
                 >
                   {option.name}
-                  <button
-                    className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 inline-flex cursor-pointer"
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleRemove(option.id, e);
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleRemove(option.id, e as any);
                       }
                     }}
                     onMouseDown={(e) => {
@@ -123,8 +157,8 @@ export const MultiSelect = ({
                     }}
                     onClick={(e) => handleRemove(option.id, e)}
                   >
-                    <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                  </button>
+                    <X className="h-3 w-3 text-muted-foreground hover:text-foreground pointer-events-none" />
+                  </div>
                 </Badge>
               ))}
             </div>
@@ -133,11 +167,15 @@ export const MultiSelect = ({
           )}
           <div className="flex items-center gap-1">
             {isClearable && selectedOptions.length > 0 && (
-              <button
-                className="ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              <div
+                role="button"
+                tabIndex={0}
+                className="ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleClear(e);
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleClear(e as any);
                   }
                 }}
                 onMouseDown={(e) => {
@@ -146,8 +184,8 @@ export const MultiSelect = ({
                 }}
                 onClick={handleClear}
               >
-                <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-              </button>
+                <X className="h-4 w-4 text-muted-foreground hover:text-foreground pointer-events-none" />
+              </div>
             )}
             <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
           </div>
@@ -166,13 +204,13 @@ export const MultiSelect = ({
             <CommandEmpty>{noOptionsMessage}</CommandEmpty>
             <CommandGroup>
               {filteredOptions.map((option) => {
-                const isSelected = value.includes(option.name);
+                const isSelected = normalizedValue.includes(option.id);
                 const isDisabled = option.disabled || 
-                  (maxItems && value.length >= maxItems && !isSelected);
+                  (maxItems && normalizedValue.length >= maxItems && !isSelected);
 
                 return (
                   <CommandItem
-                    key={option.name}
+                    key={option.id}
                     value={option.id}
                     onSelect={() => !isDisabled && handleSelect(option.id)}
                     disabled={!!isDisabled}
@@ -213,8 +251,8 @@ export const SingleSelect = ({
   className,
 }: {
   options: SelectOption[];
-  value: string;
-  onChange: (value: string) => void;
+  value: string | number | SelectOption | undefined | null;
+  onChange: (value: SelectOption | string) => void;
   placeholder?: string;
   isSearchable?: boolean;
   isClearable?: boolean;
@@ -226,11 +264,38 @@ export const SingleSelect = ({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
+  // Normalize value to string ID
+  const normalizedValue = React.useMemo(() => {
+    if (value === null || value === undefined || value === '') return '';
+    
+    // If value is an object with id property
+    if (typeof value === 'object' && 'id' in value) {
+      return String(value.id);
+    }
+    
+    // If value is string or number
+    return String(value);
+  }, [value]);
+
   const filteredOptions = options.filter((option) =>
     option.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const selectedOption = options.find((option) => option.id === value);
+  const selectedOption = options.find((option) => option.id === normalizedValue);
+
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange("");
+  };
+
+  const handleSelect = (optionId: string) => {
+    console.log('[SingleSelect] Selecting:', optionId); // Debug log
+    const selectedOption = options.find(opt => opt.id === optionId);
+    if (selectedOption) {
+      onChange(selectedOption); // Kirim object dengan id dan name
+    }
+    setOpen(false);
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -239,21 +304,24 @@ export const SingleSelect = ({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between", className)}
+          className={cn("w-full justify-between border-black py-5", className)}
           disabled={disabled}
         >
           {selectedOption ? (
-            <span>{selectedOption.name}</span>
+            <span className="font-normal">{selectedOption.name}</span>
           ) : (
             <span className="text-muted-foreground">{placeholder}</span>
           )}
           <div className="flex items-center gap-1">
-            {isClearable && value && (
-              <button
-                className="ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            {isClearable && normalizedValue && (
+              <div
+                role="button"
+                tabIndex={0}
+                className="ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                  if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
+                    e.stopPropagation();
                     onChange("");
                   }
                 }}
@@ -261,13 +329,10 @@ export const SingleSelect = ({
                   e.preventDefault();
                   e.stopPropagation();
                 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onChange("");
-                }}
+                onClick={handleClear}
               >
-                <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-              </button>
+                <X className="h-4 w-4 text-muted-foreground hover:text-foreground pointer-events-none" />
+              </div>
             )}
             <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
           </div>
@@ -289,11 +354,8 @@ export const SingleSelect = ({
                 <CommandItem
                   key={option.id}
                   value={option.id}
-                  onSelect={() => {
-                    onChange(option.id);
-                    setOpen(false);
-                  }}
-                  disabled={!!option.disabled}
+                  onSelect={() => handleSelect(option.id)}
+                  disabled={option.disabled}
                   className={cn(
                     "cursor-pointer",
                     option.disabled && "opacity-50 cursor-not-allowed"
@@ -302,7 +364,7 @@ export const SingleSelect = ({
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === option.id ? "opacity-100" : "opacity-0"
+                      normalizedValue === option.id ? "opacity-100" : "opacity-0"
                     )}
                   />
                   {option.name}

@@ -44,21 +44,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
         ],
       },
-      {
-        title: "Image Gallery",
-        url: "/admin/gallery",
-        icon: BookImage,
-      },
+      // {
+      //   title: "Image Gallery",
+      //   url: "/admin/gallery",
+      //   icon: BookImage,
+      // },
       {
         title: "Events",
         url: "/admin/event",
         icon: Calendar
       },
-      {
-        title: "Voucher",
-        url: "/admin/voucher",
-        icon: TicketPercent
-      },
+      // {
+      //   title: "Voucher",
+      //   url: "/admin/voucher",
+      //   icon: TicketPercent
+      // },
       {
         title: "Order",
         url: "/admin/order",

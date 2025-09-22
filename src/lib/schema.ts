@@ -77,7 +77,7 @@ export const productsSchema = z.object({
 
 export const subCategorySchema = z.object({
   name: z.string().min(1, "Please enter the name of the sub category"),
-  image: z.string({ message: "Please insert an image for this sub category" }).optional(),
+  mediaFileId: z.string({ message: "Please insert an image for this sub category" }).optional(),
   discount: z.coerce.number().optional(),
   category: z.object(
     {
@@ -99,16 +99,15 @@ export const subCategorySchema = z.object({
 export const variantSchema = z.object({
   name: z.string().min(1, "Variant name is required"),
   sku: z.string().optional(),
-  regularPrice: z.coerce.number().min(0, "Price must be greater than or equal to 0"),
-  stock: z.coerce.number().min(0, "Stock must be greater than or equal to 0"),
-  discount: z.coerce.number().min(0).max(100).optional(),
+  regularPrice: z.number().min(0, "Price must be greater than or equal to 0"),
+  stock: z.number().min(0, "Stock must be greater than or equal to 0"),
+  discount: z.number().min(0).max(100).optional(),
   image: z.string().min(1, "Variant image is required"),
 });
 
 export const productSchema = z.object({
   name: z.string().min(1, "Name is required"),
   sku: z.string().optional(),
-  slug: z.string(),
   subCategory: z
     .object({
       id: z.string(),
@@ -149,4 +148,19 @@ export const voucherSchema = z.object({
   qty: z.coerce.number().min(0, "Quantity must be greater than or equal to 0"),
   min: z.coerce.number().optional(),
   autoApply: z.boolean().default(false),
+})
+
+export const mediaFileSchema = z.object({
+  thumbnail_url: z.string().url('Must be a valid URL'),
+  public_id: z.string().min(1, 'Public ID is required'),
+  secure_url: z.string().url('Must be a valid HTTPS URL').refine(
+    (url) => url.startsWith('https://'),
+    'Must be a secure HTTPS URL'
+  ),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+  format: z.string().max(10).optional(),
+  bytes: z.number().int().positive().optional(),
+  resource_type: z.string().max(20).default('image'),
+  original_filename: z.string().max(255).optional(),
 })

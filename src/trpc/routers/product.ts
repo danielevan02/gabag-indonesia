@@ -72,6 +72,19 @@ const handleMutationSuccess = (message: string) => {
 };
 
 export const productRouter = createTRPCRouter({
+  getSelect: baseProcedure.query(async () => {
+    const data = await prisma.product.findMany({
+      where: {
+        subCategoryId: undefined,
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return serializeType(data);
+  }),
   // Get all products with filters
   getAll: baseProcedure
     .input(
@@ -95,6 +108,16 @@ export const productRouter = createTRPCRouter({
           subCategory: true,
           event: true,
           variants: true,
+          images: {
+            take: 1,
+            select: {
+              mediaFile: {
+                select: {
+                  secure_url: true
+                }
+              }
+            }
+          }
         },
         orderBy: {
           createdAt: "desc",
@@ -105,7 +128,6 @@ export const productRouter = createTRPCRouter({
       return convertedData.map((product) => ({
         ...product,
         price: calculateDiscountedPrice(product.regularPrice, product.discount),
-        image: product.images[0],
         variants: product.variants.map((variant) => ({
           ...variant,
           price: calculateDiscountedPrice(variant.regularPrice, variant.discount),
@@ -203,19 +225,19 @@ export const productRouter = createTRPCRouter({
         hasVariant: true,
         subCategory: {
           select: {
-            name: true
-          }
+            name: true,
+          },
         },
         event: {
           select: {
-            name: true
-          }
+            name: true,
+          },
         },
         variants: {
           select: {
             regularPrice: true,
-            discount: true
-          }
+            discount: true,
+          },
         },
       },
     });
@@ -250,6 +272,13 @@ export const productRouter = createTRPCRouter({
               },
             },
             variants: true,
+            images: {
+              select: {
+                mediaFileId: true,
+                orderIndex: true,
+                isPrimary: true,
+              },
+            },
           },
         }),
         prisma.subCategory.findMany({
@@ -274,8 +303,11 @@ export const productRouter = createTRPCRouter({
         price: calculateDiscountedPrice(convertedData.regularPrice, convertedData.discount),
         variants: convertedData?.variants.map((variant) => ({
           ...variant,
-          price: calculateDiscountedPrice(variant.regularPrice, variant.discount)
+          price: calculateDiscountedPrice(variant.regularPrice, variant.discount),
         })),
+        images: convertedData.images
+          .sort((a, b) => a.orderIndex - b.orderIndex)
+          .map(img => img.mediaFileId),
         allSubCategory: subCategories.map(({ id, name }) => ({
           id,
           name,
@@ -284,43 +316,72 @@ export const productRouter = createTRPCRouter({
     }),
 
   // Create product
-  create: baseProcedure.input(productSchema).mutation(async ({ input }) => {
-    try {
-      const { subCategory, price, hasVariant, variants, ...rest } = input;
+  create: baseProcedure
+    .input(productSchema.extend({ slug: z.string().min(1, "Slug is required") }))
+    .mutation(async ({ input }) => {
+      try {
+        const { subCategory, price, hasVariant, variants, images, ...rest } = input;
 
-      await prisma.product.create({
-        data: {
-          ...rest,
-          subCategoryId: subCategory?.id ?? "",
-          regularPrice: hasVariant ? BigInt(0) : (price ?? BigInt(0)),
-          hasVariant,
-          variants: hasVariant
-            ? {
-                create: variants?.map((variant) => ({
-                  name: variant.name,
-                  sku: variant.sku,
-                  regularPrice: variant.regularPrice,
-                  stock: variant.stock,
-                  discount: variant.discount,
-                  image: variant.image,
-                })),
-              }
-            : undefined,
-        },
-      });
+        await prisma.product.create({
+          data: {
+            ...rest,
+            subCategoryId: subCategory?.id ?? "",
+            regularPrice: hasVariant ? BigInt(0) : (price ?? BigInt(0)),
+            hasVariant,
+            variants: hasVariant
+              ? {
+                  create: variants?.map((variant) => ({
+                    name: variant.name,
+                    sku: variant.sku,
+                    regularPrice: variant.regularPrice,
+                    stock: variant.stock,
+                    discount: variant.discount,
+                    mediaFileId: variant.image,
+                  })),
+                }
+              : undefined,
+            images: images && images.length > 0
+              ? {
+                  create: images.map((imageId, index) => ({
+                    mediaFileId: imageId,
+                    orderIndex: index,
+                    isPrimary: index === 0, // First image is primary
+                  })),
+                }
+              : undefined,
+          },
+        });
 
-      return handleMutationSuccess("Product Created");
-    } catch (error) {
-      return handleMutationError(error, "Create Product");
-    }
-  }),
+        return handleMutationSuccess("Product Created");
+      } catch (error) {
+        return handleMutationError(error, "Create Product");
+      }
+    }),
 
   // Update product
   update: baseProcedure
     .input(productSchema.extend({ id: z.string() }))
     .mutation(async ({ input }) => {
       try {
-        const { id, subCategory, hasVariant, price, variants, ...rest } = input;
+        const { id, subCategory, hasVariant, price, variants, images, ...rest } = input;
+
+        // Update product images - delete all existing relations and create new ones with updated order
+        if (images !== undefined) {
+          await prisma.productMediaRelation.deleteMany({
+            where: { productId: id },
+          });
+
+          if (images.length > 0) {
+            await prisma.productMediaRelation.createMany({
+              data: images.map((imageId, index) => ({
+                productId: id,
+                mediaFileId: imageId,
+                orderIndex: index,
+                isPrimary: index === 0, // First image in array is primary
+              })),
+            });
+          }
+        }
 
         const updatedProduct = await prisma.product.update({
           where: { id },
@@ -340,7 +401,7 @@ export const productRouter = createTRPCRouter({
           await prisma.variant.createMany({
             data: variants.map((v) => ({
               productId: updatedProduct.id,
-              image: v.image,
+              mediaFileId: v.image,
               name: v.name,
               sku: v.sku,
               regularPrice: v.regularPrice,

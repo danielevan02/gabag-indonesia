@@ -3,21 +3,7 @@ import { baseProcedure, createTRPCRouter } from "../init";
 import prisma from "@/lib/prisma";
 import { serializeType } from "@/lib/utils";
 import { TRPCError } from "@trpc/server";
-
-// Sub Category schemas
-const subCategorySchema = z.object({
-  name: z.string(),
-  discount: z.number().optional(),
-  image: z.string().optional(),
-  category: z.object({
-    id: z.string(),
-    name: z.string(),
-  }),
-  products: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-  })).optional(),
-});
+import { subCategorySchema } from "@/lib/schema";
 
 const handleMutationError = (error: unknown, operation: string) => {
   console.error(`${operation} error:`, error);
@@ -35,6 +21,14 @@ const handleMutationSuccess = (message: string) => {
 };
 
 export const subCategoryRouter = createTRPCRouter({
+  getSelect: baseProcedure.query(async () => {
+    return prisma.subCategory.findMany({
+      select: {
+        id: true,
+        name: true
+      }
+    })
+  }),
   // Get sub categories by category ID
   getByCategory: baseProcedure
     .input(z.object({ categoryId: z.string() }))
@@ -92,6 +86,11 @@ export const subCategoryRouter = createTRPCRouter({
           },
         },
         category: true,
+        mediaFile: {
+          select: {
+            secure_url: true
+          }
+        }
       },
     });
 
@@ -101,9 +100,13 @@ export const subCategoryRouter = createTRPCRouter({
   display: baseProcedure.query(async () => {
     const data = await prisma.subCategory.findMany({
       select: {
-        image: true,
         id: true,
-        name: true
+        name: true,
+        mediaFile: {
+          select: {
+            secure_url: true
+          }
+        }
       }
     })
 
@@ -114,7 +117,7 @@ export const subCategoryRouter = createTRPCRouter({
     .input(subCategorySchema)
     .mutation(async ({ input }) => {
       try {
-        const { category, name, discount, image, products } = input;
+        const { category, name, discount, mediaFileId, products } = input;
 
         await prisma.$transaction(async (tx) => {
           await tx.subCategory.create({
@@ -122,7 +125,7 @@ export const subCategoryRouter = createTRPCRouter({
               name,
               categoryId: category.id,
               discount,
-              image,
+              mediaFileId,
               products: {
                 connect: products?.map((product) => ({
                   id: product.id,
@@ -167,7 +170,7 @@ export const subCategoryRouter = createTRPCRouter({
     .input(subCategorySchema.extend({ id: z.string() }))
     .mutation(async ({ input }) => {
       try {
-        const { category, name, discount, image, products, id } = input;
+        const { category, name, discount, mediaFileId, products, id } = input;
 
         await prisma.$transaction(async (tx) => {
           await tx.subCategory.update({
@@ -178,7 +181,7 @@ export const subCategoryRouter = createTRPCRouter({
               name,
               categoryId: category.id,
               discount,
-              image,
+              mediaFileId,
               products: {
                 set: [], // Clear existing connections
                 connect: products?.map((product) => ({

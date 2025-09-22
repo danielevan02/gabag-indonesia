@@ -11,7 +11,7 @@ import { Loader } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/trpc/client";
 import { Form } from "@/components/ui/form";
-import { FormInput } from "@/components/shared/input/refactor-form-field";
+import { FormInput } from "@/components/shared/input/form-input";
 
 export type SignUpType = z.infer<typeof signUpSchema>;
 

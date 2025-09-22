@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Loader } from "lucide-react";
 import { trpc } from "@/trpc/client";
 import { Form } from "@/components/ui/form";
-import { FormInput } from "@/components/shared/input/refactor-form-field";
+import { FormInput } from "@/components/shared/input/form-input";
 
 type LoginType = z.infer<typeof signInSchema>;
 
