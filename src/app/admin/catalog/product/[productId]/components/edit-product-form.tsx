@@ -16,7 +16,7 @@ import { trpc } from "@/trpc/client";
 import { RouterOutputs } from "@/trpc/routers/_app";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ProductImagesField } from "../../add/components/product-images-field";
+import { ProductImagesField } from "../../components/product-images-field";
 
 type Product = RouterOutputs["product"]["getByIdWithSubCategories"];
 
@@ -70,6 +70,9 @@ const EditProductForm = ({ data }: { data: Product }) => {
     if (hasVariant) {
       form.reset({
         ...currentValues,
+        price: undefined,
+        stock: 0,
+        sku: "",
         hasVariant,
         variants:
           data.variants?.length !== 0
@@ -196,6 +199,15 @@ const EditProductForm = ({ data }: { data: Product }) => {
           </div>
         ) : (
           <>
+            <FormInput
+              fieldType="text"
+              form={form}
+              label="SKU"
+              name="sku"
+              type="text"
+              disabled={updateProduct.isPending}
+              placeholder="Please enter product SKU"
+            />
             <FormInput
               fieldType="text"
               form={form}

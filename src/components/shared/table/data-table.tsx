@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import ModalContent from "./modal-content";
 import TablePagination from "./pagination";
 import { Truck } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 interface DeleteManyMutation {
   mutate: (params: { ids: string[] }) => void;
@@ -42,7 +43,7 @@ interface DataTableProps<TData, TValue> {
   searchColumn?: string;
 }
 
-export function DataTable<TData, TValue>({
+export function   DataTable<TData, TValue>({
   columns,
   data,
   searchPlaceholder,
@@ -53,6 +54,7 @@ export function DataTable<TData, TValue>({
   const [openModal, setOpenModal] = useState(false);
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
+  const path = usePathname()
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -161,10 +163,12 @@ export function DataTable<TData, TValue>({
             selectedRows !== 0 && "opacity-100 pointer-events-auto"
           )}
         >
-          <Button>
-            <Truck />
-            Create Shipment for {`${selectedRows} order(s)`}
-          </Button>
+          {path === "/admin/order" && (
+            <Button>
+              <Truck />
+              Create Shipment for {`${selectedRows} order(s)`}
+            </Button>
+          )}
           <Button variant="destructive" onClick={() => setOpenModal(true)}>
             <IconTrash />
             Delete {`${selectedRows} row(s)`}
@@ -173,8 +177,9 @@ export function DataTable<TData, TValue>({
       </div>
 
       <div className="rounded-md border relative overflow-y-auto flex-1">
+        {/* IF YOU SEARCHING FOR TABLE HEADER STICKY, MAKE SURE YOU ADD "h-full" TO THE shadcn TABLE COMPONENT */}
         <Table>
-          <TableHeader className="sticky top-0 bg-white shadow shadow-neutral-200">
+          <TableHeader className="sticky top-0 bg-white shadow shadow-neutral-200 z-10">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {

@@ -35,15 +35,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <TRPCProvider>
-      <html lang="en">
-        <body className={`${outift.className}`}>
+    <html lang="en">
+      <body className={`${outift.className}`}>
+        <TRPCProvider>
           <main>
             {children}
             <Toaster position="top-center"/>
           </main>
-        </body>
-      </html>
-    </TRPCProvider>
+        </TRPCProvider>
+      </body>
+    </html>
   );
 }

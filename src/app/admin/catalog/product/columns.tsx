@@ -3,7 +3,6 @@
 import ActionTable from "@/components/shared/table/action-table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ColumnDef } from "@tanstack/react-table";
-import { format } from "date-fns";
 import Image from "next/image";
 import { RouterOutputs } from "@/trpc/routers/_app";
 import { useDeleteMutation } from "@/hooks/use-delete-mutation";
@@ -51,7 +50,7 @@ export const columns: ColumnDef<Product>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    cell: ({ row }) => <div className="line-clamp-1 capitalize">{row.getValue("name")}</div>,
+    cell: ({ row }) => <div className="text-wrap capitalize max-w-40">{row.getValue("name")}</div>,
   },
   {
     accessorKey: "image",
@@ -69,16 +68,26 @@ export const columns: ColumnDef<Product>[] = [
     ),
   },
   {
-    accessorKey: 'stock',
-    header: "Stock"
+    header: "Stock",
+    cell: ({row}) => {
+      const productStock = row.original.stock
+      const variantStock = row.original.variants.reduce((prev, curr) => curr.stock+prev ,0)
+      
+      if(variantStock !== 0) {
+        return <p>{variantStock} item(s)</p>
+      } else if(productStock !== 0) {
+        return <p>{productStock} item(s)</p>
+      } else {
+        return <p className="text-destructive italic text-sm">Empty Stock!</p>
+      }
+    }
   },
   {
-    accessorKey: "price",
-    header: "Price",
+    header: "Regular Price",
     cell: ({ row }) => {
-      const price = Number(row.original);
+      const price = Number(row.original.regularPrice);
       return price !== 0 ? (
-        <p className="">Rp{row.original.regularPrice.toLocaleString("id-ID")}</p>
+        <p>Rp{price.toLocaleString("id-ID")}</p>
       ) : (
         <p className="text-foreground/50">No Price</p>
       );
@@ -87,7 +96,19 @@ export const columns: ColumnDef<Product>[] = [
   {
     accessorKey: "discount",
     header: "Discount",
-    cell: ({ row }) => <p className="">{row.original.discount}%</p>,
+    cell: ({ row }) => <p>{row.original.discount}%</p>,
+  },
+  {
+    header: "Price",
+
+    cell: ({row}) => {
+      const price = Number(row.original.price);
+      return price !== 0 ? (
+        <p>Rp{price.toLocaleString("id-ID")}</p>
+      ) : (
+        <p className="text-foreground/50">No Price</p>
+      );
+    }
   },
   {
     header: "Sub Category",
@@ -99,11 +120,6 @@ export const columns: ColumnDef<Product>[] = [
       const variantLength = row.original.variants.length;
       return variantLength !== 0 ? <p>{variantLength}</p> : <p className="text-foreground/50">No Variants</p>;
     },
-  },
-  {
-    accessorKey: "createdAt",
-    header: "Created At",
-    cell: ({ row }) => <p>{format(row.original.createdAt, "dd/MM/yyyy")}</p>,
   },
   {
     id: "actions",

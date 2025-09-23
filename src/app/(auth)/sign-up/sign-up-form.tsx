@@ -112,7 +112,7 @@ const SignUpForm = () => {
       <p>We&apos;ve sent a verification to your email at</p>
       <p className="font-bold">{email}</p>
       <p className="mt-5">Please verify your email and continue to login page</p>
-      <Button asChild className="mt-3">
+      <Button asChild className="rounded-full mt-3">
         <Link href='/sign-in' className="uppercase tracking-widest rounded-full text-sm">Back to login page</Link>
       </Button>
     </div>

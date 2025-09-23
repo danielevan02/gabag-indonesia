@@ -16,7 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Form } from "@/components/ui/form";
 import { FormInput } from "@/components/shared/input/form-input";
 import { trpc } from "@/trpc/client";
-import { ProductImagesField } from "./product-images-field";
+import { ProductImagesField } from "../../components/product-images-field";
 
 export type ProductFormType = z.infer<typeof productSchema>;
 
@@ -62,15 +62,17 @@ const ProductForm = ({ subCategories }: { subCategories: { id: string; name: str
     if (hasVariant) {
       form.reset({
         ...allValues,
+        price: undefined,
+        stock: 0,
+        sku: '',
         hasVariant,
         variants: [
           {
-            discount: undefined,
             image: "",
             name: "",
-            regularPrice: undefined,
+            regularPrice: 0,
             sku: "",
-            stock: undefined,
+            stock: 0,
           },
         ],
       });

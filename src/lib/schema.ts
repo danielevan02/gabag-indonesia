@@ -1,13 +1,5 @@
 import z from "zod";
 
-const numberSchema = (message: string, min?: number) => 
-  z.union([z.string(), z.number()])
-    .transform((val) => {
-      const parsed = typeof val === 'string' ? parseFloat(val) : val;
-      return isNaN(parsed) ? 0 : parsed;
-    })
-    .pipe(z.number().min(min ?? 0, message));
-
 export const signInSchema = z.object({
   email: z.string().email("Please input a valid email").min(1, "Email is required!"),
   password: z.string().min(5, "Password must be at least 6 characters"),
@@ -105,12 +97,12 @@ export const subCategorySchema = z.object({
 });
 
 export const variantSchema = z.object({
-  name: z.string().min(1, "Variant name is required"),
-  sku: z.string().optional(),
-  regularPrice: z.coerce.number().min(0, "Price must be greater than or equal to 0"),
+  name: z.string().min(1, "Please input variant name"),
+  sku: z.string().min(1, "Please insert SKU for variant"),
+  regularPrice: z.coerce.number().min(1, "Please input the price for variants"),
   stock: z.coerce.number().min(0, "Stock must be greater than or equal to 0"),
   discount: z.coerce.number().min(0).max(100).optional(),
-  image: z.string().min(1, "Variant image is required"),
+  image: z.string().min(1, "Please input image for variant"),
 });
 
 export const productSchema = z.object({
