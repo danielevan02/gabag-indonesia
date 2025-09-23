@@ -61,7 +61,7 @@ export default function GalleryModal({
   }, [initialSelectedImages]);
 
   useEffect(() => {
-    if (data?.success && data.images) {
+    if (data?.images) {
       setAllPhotos(data.images);
     }
     setLoading(loadingImage);

@@ -94,8 +94,10 @@ const EditProductForm = ({ data }: { data: Product }) => {
   });
 
   useEffect(() => {
+    const currentValues = form.getValues();
     if (hasVariant) {
       form.reset({
+        ...currentValues,
         hasVariant,
         variants:
           data.variants?.length !== 0
@@ -113,6 +115,7 @@ const EditProductForm = ({ data }: { data: Product }) => {
       });
     } else {
       form.reset({
+        ...currentValues,
         hasVariant,
         variants: [],
       });

@@ -18,14 +18,12 @@ export const galleryRouter = createTRPCRouter({
         });
 
         return {
-          success: true,
           images
         };
       } catch (error) {
         console.error('Error fetching gallery images:', error);
         return {
-          success: false,
-          message: "Failed to fetch images"
+          images: []
         };
       }
     }),

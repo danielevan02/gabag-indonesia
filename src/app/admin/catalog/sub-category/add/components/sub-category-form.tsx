@@ -29,11 +29,7 @@ const SubCategoryForm = ({
   const form = useForm({
     resolver: zodResolver(subCategorySchema),
     defaultValues: {
-      category: {
-        id: '',
-        name: ''
-      },
-      products: []
+      name: '',
     }
   });
 

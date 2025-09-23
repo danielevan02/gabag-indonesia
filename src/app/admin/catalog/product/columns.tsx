@@ -59,7 +59,7 @@ export const columns: ColumnDef<Product>[] = [
     cell: ({ row }) => (
       <div className="w-56 h-32 rounded-lg overflow-clip border">
         <Image
-          src={row.original.images[0].mediaFile.secure_url || "/images/placeholder.png"}
+          src={row.original.images || "/images/placeholder.png"}
           alt={row.original.name}
           width={100}
           height={100}

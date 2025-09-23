@@ -1,58 +1,29 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import VariantForm from "../../variant-form";
 import slugify from "react-slugify";
+import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { toast } from "sonner";
 import { productSchema } from "@/lib/schema";
-import { ImagePlus, Loader, Plus } from "lucide-react";
+import { Loader, Plus } from "lucide-react";
 import { z } from "zod";
 import { Label } from "@/components/ui/label";
-import VariantForm from "../../variant-form";
 import { Switch } from "@/components/ui/switch";
-import Image from "next/image";
 import { Form } from "@/components/ui/form";
 import { FormInput } from "@/components/shared/input/form-input";
 import { trpc } from "@/trpc/client";
-import GalleryModal from "@/components/shared/gallery/gallery-modal";
+import { ProductImagesField } from "./product-images-field";
 
 export type ProductFormType = z.infer<typeof productSchema>;
-
-// Component to display product image by ID
-const ProductImageDisplay = ({ imageId, alt }: { imageId: string; alt: string }) => {
-  const { data: mediaFile } = trpc.gallery.getById.useQuery(
-    { id: imageId },
-    { enabled: !!imageId }
-  );
-
-  if (!mediaFile?.secure_url) {
-    return (
-      <div className="size-32 flex items-center justify-center rounded-md border bg-gray-100">
-        <span className="text-xs text-gray-500">Loading...</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="size-32 overflow-hidden rounded-md border">
-      <Image
-        src={mediaFile.secure_url}
-        alt={alt}
-        width={100}
-        height={100}
-        className="size-full object-cover"
-      />
-    </div>
-  );
-};
 
 const ProductForm = ({ subCategories }: { subCategories: { id: string; name: string }[] }) => {
   const router = useRouter();
   const [hasVariant, setHasVariant] = useState(false);
-  
+
   const { mutateAsync, isPending } = trpc.product.create.useMutation({
     onSuccess: (response) => {
       if (response.success) {
@@ -70,15 +41,14 @@ const ProductForm = ({ subCategories }: { subCategories: { id: string; name: str
     resolver: zodResolver(productSchema),
     defaultValues: {
       hasVariant: hasVariant,
-      variants: [],
+      weight: 0,
+      width: 0,
+      height: 0,
+      length: 0,
+      subCategory: "",
       images: [],
       name: "",
       description: "",
-      price: 0,
-      weight: 0,
-      height: 0,
-      length: 0,
-      width: 0,
     },
   });
 
@@ -87,12 +57,9 @@ const ProductForm = ({ subCategories }: { subCategories: { id: string; name: str
     name: "variants",
   });
 
-
   useEffect(() => {
-    const currentValues = form.getValues();
     if (hasVariant) {
       form.reset({
-        ...currentValues,
         hasVariant,
         variants: [
           {
@@ -107,7 +74,6 @@ const ProductForm = ({ subCategories }: { subCategories: { id: string; name: str
       });
     } else {
       form.reset({
-        ...currentValues,
         hasVariant,
         variants: [],
       });
@@ -116,23 +82,25 @@ const ProductForm = ({ subCategories }: { subCategories: { id: string; name: str
   }, [hasVariant]);
 
   const onSubmit = async (data: ProductFormType) => {
-    console.log('Form data:', data);
-    console.log('Images:', data.images);
     try {
       await mutateAsync({
         ...data,
         slug: slugify(data.name),
       });
     } catch (error) {
-      console.log("INI ERRORNYA",error);
+      console.log(error);
       toast.error("Failed to create product");
     }
+  };
+
+  const onError = (error: any) => {
+    console.log(error);
   };
 
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(onSubmit, onError)}
         className="flex flex-col my-5 flex-1 overflow-y-scroll px-1 gap-3"
       >
         <FormInput
@@ -141,7 +109,7 @@ const ProductForm = ({ subCategories }: { subCategories: { id: string; name: str
           label="Name"
           name="name"
           type="text"
-          placeholder="Enter product name"
+          placeholder="e.g: Pombag"
           disabled={isPending}
         />
 
@@ -155,53 +123,9 @@ const ProductForm = ({ subCategories }: { subCategories: { id: string; name: str
           disabled={isPending}
         />
 
-        <Controller
-          control={form.control}
-          name="images"
-          render={({ field }) => (
-            <div className="flex gap-2 flex-col mb-5">
-              <Label>Product Photo(s)</Label>
-              <p className="text-xs text-neutral-600">NOTE: You can add more than 1 image</p>
-              <div className="flex flex-col gap-2">
-                {field.value && field.value?.length !== 0 ? (
-                  // SHOW THIS IF THERE IS IMAGES
-                  <div className="w-full flex gap-2 justify-start flex-wrap">
-                    {field.value?.map((imageId, index) => (
-                      <ProductImageDisplay key={index} imageId={imageId} alt={`product-image-${index}`} />
-                    ))}
-                  </div>
-                ) : (
-                  // SHOW THIS IF THERE IS NO IMAGES
-                  <div className="flex flex-col items-center justify-center size-44 rounded-md border bg-accent gap-4">
-                    <ImagePlus />
-                    <span className="text-sm text-neutral-700">Add product images</span>
-                  </div>
-                )}
-
-                <GalleryModal
-                  multiple={true}
-                  initialSelectedImages={
-                    field.value && allMediaFiles?.images
-                      ? field.value
-                          .map(id => allMediaFiles.images.find(file => file.id === id)?.secure_url)
-                          .filter(Boolean) as string[]
-                      : []
-                  }
-                  setInitialSelectedImages={(value) => {
-                    if (Array.isArray(value) && allMediaFiles?.images) {
-                      const imageIds = value.map(url => {
-                        const mediaFile = allMediaFiles.images.find(file => file.secure_url === url);
-                        return mediaFile?.id;
-                      }).filter(Boolean) as string[];
-                      field.onChange(imageIds);
-                    } else {
-                      field.onChange([]);
-                    }
-                  }}
-                />
-              </div>
-            </div>
-          )}
+        <ProductImagesField
+          form={form}
+          allMediaFiles={allMediaFiles}
         />
 
         <FormInput
@@ -211,7 +135,7 @@ const ProductForm = ({ subCategories }: { subCategories: { id: string; name: str
           description="If this product has variants, the discount will automatically apply to all of them."
           name="discount"
           type="number"
-          placeholder="Enter discount percentage"
+          placeholder="e.g: 23"
           disabled={isPending}
         />
 
@@ -266,7 +190,7 @@ const ProductForm = ({ subCategories }: { subCategories: { id: string; name: str
               label="Price"
               name="price"
               type="number"
-              placeholder="Please enter product price"
+              placeholder="e.g: 234000"
               disabled={isPending}
             />
 
@@ -276,7 +200,7 @@ const ProductForm = ({ subCategories }: { subCategories: { id: string; name: str
               label="SKU"
               name="sku"
               type="text"
-              placeholder="Please enter product price"
+              placeholder="e.g: 9920041184923"
               disabled={isPending}
             />
 
@@ -286,7 +210,7 @@ const ProductForm = ({ subCategories }: { subCategories: { id: string; name: str
               label="Stock"
               name="stock"
               type="number"
-              placeholder="Please input the stock"
+              placeholder="e.g: 40"
               disabled={isPending}
             />
           </>
@@ -298,7 +222,7 @@ const ProductForm = ({ subCategories }: { subCategories: { id: string; name: str
           label="Weight (grams)"
           name="weight"
           type="number"
-          placeholder="Please enter product weight"
+          placeholder="e.g: 300"
           disabled={isPending}
         />
 
@@ -309,7 +233,7 @@ const ProductForm = ({ subCategories }: { subCategories: { id: string; name: str
             label="Length (cm)"
             name="length"
             type="number"
-            placeholder="Please enter product length"
+            placeholder="e.g: 12"
             disabled={isPending}
           />{" "}
           x
@@ -319,7 +243,7 @@ const ProductForm = ({ subCategories }: { subCategories: { id: string; name: str
             label="Width (cm)"
             name="width"
             type="number"
-            placeholder="Please enter product weight"
+            placeholder="e.g: 10"
             disabled={isPending}
           />{" "}
           x
@@ -329,16 +253,17 @@ const ProductForm = ({ subCategories }: { subCategories: { id: string; name: str
             label="Height (cm)"
             name="height"
             type="number"
-            placeholder="Please enter product height"
+            placeholder="e.g: 22"
             disabled={isPending}
           />
         </div>
+
         <FormInput
           form={form}
           fieldType="textarea"
           label="Description"
           name="description"
-          placeholder="Please enter product description"
+          placeholder="e.g: tas yang memiliki 2 fungsi sebagai cooler bag atau/dan..."
           disabled={isPending}
         />
 

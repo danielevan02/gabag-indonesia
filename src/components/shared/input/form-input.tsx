@@ -164,7 +164,7 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>(
                     value={field.value || ""}
                     onChange={(value) => {
                       field.onChange(value);
-                      onValueChange?.(typeof value === 'string' ? value : value?.id || '');
+                      onValueChange?.(value);
                     }}
                     placeholder={placeholder}
                     isSearchable={isSearchable}

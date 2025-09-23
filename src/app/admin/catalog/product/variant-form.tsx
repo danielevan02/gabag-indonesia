@@ -40,7 +40,7 @@ export default function VariantForm({
   );
 
   return (
-    <div className="relative rounded-md shadow p-8 bg-white">
+    <div className="relative rounded-md shadow p-8 bg-white flex flex-col gap-3">
       <Controller
         control={form.control}
         name={`variants.${index}.image`}

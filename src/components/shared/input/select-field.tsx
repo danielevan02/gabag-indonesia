@@ -252,7 +252,7 @@ export const SingleSelect = ({
 }: {
   options: SelectOption[];
   value: string | number | SelectOption | undefined | null;
-  onChange: (value: SelectOption | string) => void;
+  onChange: (value: string) => void;
   placeholder?: string;
   isSearchable?: boolean;
   isClearable?: boolean;
@@ -289,11 +289,7 @@ export const SingleSelect = ({
   };
 
   const handleSelect = (optionId: string) => {
-    console.log('[SingleSelect] Selecting:', optionId); // Debug log
-    const selectedOption = options.find(opt => opt.id === optionId);
-    if (selectedOption) {
-      onChange(selectedOption); // Kirim object dengan id dan name
-    }
+    onChange(optionId); // Kirim hanya string ID
     setOpen(false);
   };
 

@@ -125,8 +125,10 @@ export const productRouter = createTRPCRouter({
       });
 
       const convertedData = serializeType(data);
+
       return convertedData.map((product) => ({
         ...product,
+        images: product.images[0].mediaFile.secure_url,
         price: calculateDiscountedPrice(product.regularPrice, product.discount),
         variants: product.variants.map((variant) => ({
           ...variant,
@@ -271,7 +273,11 @@ export const productRouter = createTRPCRouter({
                 name: true,
               },
             },
-            variants: true,
+            variants: {
+              include: {
+                mediaFile: true,
+              },
+            },
             images: {
               select: {
                 mediaFileId: true,
@@ -303,6 +309,7 @@ export const productRouter = createTRPCRouter({
         price: calculateDiscountedPrice(convertedData.regularPrice, convertedData.discount),
         variants: convertedData?.variants.map((variant) => ({
           ...variant,
+          image: variant.mediaFileId,
           price: calculateDiscountedPrice(variant.regularPrice, variant.discount),
         })),
         images: convertedData.images
@@ -325,7 +332,7 @@ export const productRouter = createTRPCRouter({
         await prisma.product.create({
           data: {
             ...rest,
-            subCategoryId: subCategory?.id ?? "",
+            subCategoryId: subCategory,
             regularPrice: hasVariant ? BigInt(0) : (price ?? BigInt(0)),
             hasVariant,
             variants: hasVariant
@@ -387,7 +394,7 @@ export const productRouter = createTRPCRouter({
           where: { id },
           data: {
             ...rest,
-            subCategoryId: subCategory?.id ?? "",
+            subCategoryId: subCategory ?? "",
             regularPrice: hasVariant ? BigInt(0) : (price ?? BigInt(0)),
             hasVariant,
           },

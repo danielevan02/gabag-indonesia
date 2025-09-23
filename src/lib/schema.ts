@@ -1,5 +1,13 @@
 import z from "zod";
 
+const numberSchema = (message: string, min?: number) => 
+  z.union([z.string(), z.number()])
+    .transform((val) => {
+      const parsed = typeof val === 'string' ? parseFloat(val) : val;
+      return isNaN(parsed) ? 0 : parsed;
+    })
+    .pipe(z.number().min(min ?? 0, message));
+
 export const signInSchema = z.object({
   email: z.string().email("Please input a valid email").min(1, "Email is required!"),
   password: z.string().min(5, "Password must be at least 6 characters"),
@@ -99,32 +107,27 @@ export const subCategorySchema = z.object({
 export const variantSchema = z.object({
   name: z.string().min(1, "Variant name is required"),
   sku: z.string().optional(),
-  regularPrice: z.number().min(0, "Price must be greater than or equal to 0"),
-  stock: z.number().min(0, "Stock must be greater than or equal to 0"),
-  discount: z.number().min(0).max(100).optional(),
+  regularPrice: z.coerce.number().min(0, "Price must be greater than or equal to 0"),
+  stock: z.coerce.number().min(0, "Stock must be greater than or equal to 0"),
+  discount: z.coerce.number().min(0).max(100).optional(),
   image: z.string().min(1, "Variant image is required"),
 });
 
 export const productSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Please input product name"),
   sku: z.string().optional(),
-  subCategory: z
-    .object({
-      id: z.string(),
-      name: z.string(),
-    })
-    .nullable(),
+  subCategory: z.string().min(1, "Please select subcategory"),
   price: z.coerce.number().min(0, "Price must be greater than or equal to 0"),
   discount: z.coerce.number().min(0).max(100).optional(),
-  images: z.array(z.string()).min(1, "Image is required").optional(),
-  description: z.string().min(1, "Description is required"),
+  images: z.array(z.string()).min(1, "Please input at least 1 image"),
+  description: z.string().min(1, "Please input the description"),
   hasVariant: z.boolean().default(false),
   variants: z.array(variantSchema).optional(),
   stock: z.coerce.number().min(0, "Stock must be greater than or equal to 0").optional(),
-  weight: z.coerce.number().min(0, "Please input the weight"),
-  height: z.coerce.number().min(0, "Please input the height"),
-  length: z.coerce.number().min(0, "Please input the length"),
-  width: z.coerce.number().min(0, "Please input the width"),
+  weight: z.coerce.number().min(1, "Please input the weight"),
+  height: z.coerce.number().min(1, "Please input the height"),
+  length: z.coerce.number().min(1, "Please input the length"),
+  width: z.coerce.number().min(1, "Please input the width"),
 });
 
 export const eventSchema = z.object({
