@@ -15,7 +15,6 @@ import { FormInput } from "@/components/shared/input/form-input";
 import { trpc } from "@/trpc/client";
 import { Label } from "@/components/ui/label";
 
-// This type is for helping so i dont get ts error, because the useform type is generic
 type ProductSchema = z.infer<typeof productSchema>;
 type VariantFormProps = ProductSchema;
 

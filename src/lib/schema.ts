@@ -117,7 +117,7 @@ export const productSchema = z.object({
   name: z.string().min(1, "Please input product name"),
   sku: z.string().optional(),
   subCategory: z.string().min(1, "Please select subcategory"),
-  price: z.coerce.number().min(0, "Price must be greater than or equal to 0"),
+  price: z.coerce.number().min(0, "Price must be greater than or equal to 0").optional(),
   discount: z.coerce.number().min(0).max(100).optional(),
   images: z.array(z.string()).min(1, "Please input at least 1 image"),
   description: z.string().min(1, "Please input the description"),

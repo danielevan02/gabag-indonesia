@@ -2,53 +2,25 @@
 
 import { Button } from "@/components/ui/button";
 import { productSchema } from "@/lib/schema";
-import { ImagePlus, Loader, Plus } from "lucide-react";
+import { Loader, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import VariantForm from "../../variant-form";
+import VariantForm from "../../components/variant-form";
 import { FormInput } from "@/components/shared/input/form-input";
 import { Form } from "@/components/ui/form";
 import { trpc } from "@/trpc/client";
 import { RouterOutputs } from "@/trpc/routers/_app";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Image from "next/image";
-import GalleryModal from "@/components/shared/gallery/gallery-modal";
+import { ProductImagesField } from "../../add/components/product-images-field";
+
 type Product = RouterOutputs["product"]["getByIdWithSubCategories"];
 
 type ProductFormType = z.infer<typeof productSchema>;
-
-// Component to display product image by ID
-const ProductImageDisplay = ({ imageId, alt }: { imageId: string; alt: string }) => {
-  const { data: mediaFile } = trpc.gallery.getById.useQuery(
-    { id: imageId },
-    { enabled: !!imageId }
-  );
-
-  if (!mediaFile?.secure_url) {
-    return (
-      <div className="size-32 flex items-center justify-center rounded-md border bg-gray-100">
-        <span className="text-xs text-gray-500">Loading...</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="size-32 overflow-hidden rounded-md border">
-      <Image
-        src={mediaFile.secure_url}
-        alt={alt}
-        width={100}
-        height={100}
-        className="size-full object-cover"
-      />
-    </div>
-  );
-};
 
 const EditProductForm = ({ data }: { data: Product }) => {
   const router = useRouter();
@@ -62,7 +34,7 @@ const EditProductForm = ({ data }: { data: Product }) => {
     defaultValues: {
       sku: data.sku || "",
       name: data.name,
-      subCategory: data.subCategory,
+      subCategory: data.subCategory.id,
       price: data.regularPrice,
       discount: data.discount || undefined,
       description: data.description,
@@ -170,54 +142,7 @@ const EditProductForm = ({ data }: { data: Product }) => {
           disabled={updateProduct.isPending}
         />
   
-        <Controller
-          control={form.control}
-          name="images"
-          render={({ field }) => (
-            <div className="flex gap-2 flex-col mb-5">
-              <Label>Product Photo(s)</Label>
-              <p className="text-xs text-neutral-600">NOTE: You can add more than 1 image</p>
-              <div className="flex flex-col gap-2">
-                {field.value && field.value?.length !== 0 ? (
-                  // SHOW THIS IF THERE IS IMAGES
-                  <div className="w-full flex gap-2 justify-start flex-wrap">
-                    {field.value?.map((imageId, index) => (
-                      <ProductImageDisplay key={index} imageId={imageId} alt={`product-image-${index}`} />
-                    ))}
-                  </div>
-                ) : (
-                  // SHOW THIS IF THERE IS NO IMAGES
-                  <div className="flex flex-col items-center justify-center size-44 rounded-md border bg-accent gap-4">
-                    <ImagePlus />
-                    <span className="text-sm text-neutral-700">Add product images</span>
-                  </div>
-                )}
-
-                <GalleryModal
-                  multiple={true}
-                  initialSelectedImages={
-                    field.value && allMediaFiles?.images
-                      ? field.value
-                          .map(id => allMediaFiles.images.find(file => file.id === id)?.secure_url)
-                          .filter(Boolean) as string[]
-                      : []
-                  }
-                  setInitialSelectedImages={(value) => {
-                    if (Array.isArray(value) && allMediaFiles?.images) {
-                      const imageIds = value.map(url => {
-                        const mediaFile = allMediaFiles.images.find(file => file.secure_url === url);
-                        return mediaFile?.id;
-                      }).filter(Boolean) as string[];
-                      field.onChange(imageIds);
-                    } else {
-                      field.onChange([]);
-                    }
-                  }}
-                />
-              </div>
-            </div>
-          )}
-        />
+        <ProductImagesField form={form} allMediaFiles={allMediaFiles} />
 
         <FormInput
           fieldType="text"

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { trpc } from "@/trpc/server";
-import ProductDataTableWrapper from "./product-data-table-wrapper";
+import ProductDataTableWrapper from "./components/product-data-table-wrapper";
 
 export default async function AdminProductPage() {
   const products = await trpc.product.getAll({});

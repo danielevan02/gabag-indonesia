@@ -1,6 +1,6 @@
 "use client";
 
-import VariantForm from "../../variant-form";
+import VariantForm from "../../components/variant-form";
 import slugify from "react-slugify";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -58,8 +58,10 @@ const ProductForm = ({ subCategories }: { subCategories: { id: string; name: str
   });
 
   useEffect(() => {
+    const allValues = form.getValues()
     if (hasVariant) {
       form.reset({
+        ...allValues,
         hasVariant,
         variants: [
           {
@@ -74,6 +76,7 @@ const ProductForm = ({ subCategories }: { subCategories: { id: string; name: str
       });
     } else {
       form.reset({
+        ...allValues,
         hasVariant,
         variants: [],
       });

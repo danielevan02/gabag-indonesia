@@ -1,7 +1,7 @@
 "use client";
 
 import { DataTable } from "@/components/shared/table/data-table";
-import { columns } from "./columns";
+import { columns } from "../columns";
 import { useDeleteManyMutation } from "@/hooks/use-delete-mutation";
 import { RouterOutputs } from "@/trpc/routers/_app";
 
