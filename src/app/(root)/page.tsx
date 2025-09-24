@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
-import HomeCarousel from "./components/home-carousel";
 import { CategorySection, CategorySectionFallback } from "./components/category-section";
 import { FlashSaleSection, FlashSaleSectionFallback } from "./components/flash-sale-section";
 import {BreastPumpSection, BreastPumpSectionFallback } from "./components/breastpump-section";
@@ -23,7 +22,7 @@ export default function LandingPage() {
         <Suspense fallback={<CarouselSectionFallback/>}>
           <CarouselSection/>
         </Suspense>
-        
+
         <Suspense fallback={<CategorySectionFallback />}>
           <CategorySection />
         </Suspense>
