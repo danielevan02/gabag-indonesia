@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -12,11 +12,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -31,6 +27,7 @@ export const MultiSelect = ({
   options = [],
   value = [],
   onChange,
+  isError = false,
   placeholder = "Select items...",
   isSearchable = true,
   isClearable = true,
@@ -40,6 +37,7 @@ export const MultiSelect = ({
   disabled = false,
   className,
 }: {
+  isError: boolean;
   options: SelectOption[];
   value: string | string[] | SelectOption[] | undefined | null;
   onChange: (value: string[]) => void;
@@ -58,29 +56,29 @@ export const MultiSelect = ({
   // Normalize value to always be an array of string IDs
   const normalizedValue = React.useMemo(() => {
     if (!value) return [];
-    
+
     // If value is an array
     if (Array.isArray(value)) {
-      return value.map(item => {
+      return value.map((item) => {
         // If item is an object with id property
-        if (typeof item === 'object' && item && 'id' in item) {
+        if (typeof item === "object" && item && "id" in item) {
           return String(item.id);
         }
         // If item is string or number
         return String(item);
       });
     }
-    
+
     // If value is a single object with id property
-    if (typeof value === 'object' && 'id' in value) {
-      return [String(value.id)];
+    if (typeof value === "object" && value !== null && "id" in value) {
+      return [String((value as { id: string | number }).id)];
     }
-    
+
     // If value is a single string
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       return value ? [value] : [];
     }
-    
+
     return [];
   }, [value]);
 
@@ -88,9 +86,7 @@ export const MultiSelect = ({
     option.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const selectedOptions = options.filter((option) => 
-    normalizedValue.includes(option.id)
-  );
+  const selectedOptions = options.filter((option) => normalizedValue.includes(option.id));
 
   const handleSelect = (optionId: string) => {
     const isSelected = normalizedValue.includes(optionId);
@@ -125,7 +121,8 @@ export const MultiSelect = ({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "w-full justify-between border-black min-h-[40px]",
+            "w-full justify-between min-h-[40px]",
+            isError ? "border-red-600" : "border-black",
             selectedOptions.length > 0 ? "py-2" : "",
             className
           )}
@@ -134,11 +131,7 @@ export const MultiSelect = ({
           {selectedOptions.length > 0 ? (
             <div className="flex gap-1 flex-wrap">
               {selectedOptions.map((option) => (
-                <Badge
-                  key={option.id}
-                  variant="secondary"
-                  className="mr-1"
-                >
+                <Badge key={option.id} className="mr-1">
                   {option.name}
                   <div
                     role="button"
@@ -157,7 +150,7 @@ export const MultiSelect = ({
                     }}
                     onClick={(e) => handleRemove(option.id, e)}
                   >
-                    <X className="h-3 w-3 text-muted-foreground hover:text-foreground pointer-events-none" />
+                    <X className="size-3 hover:text-foreground pointer-events-none" />
                   </div>
                 </Badge>
               ))}
@@ -191,11 +184,11 @@ export const MultiSelect = ({
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
         <Command shouldFilter={false}>
           {isSearchable && (
-            <CommandInput 
-              placeholder={searchPlaceholder} 
+            <CommandInput
+              placeholder={searchPlaceholder}
               value={search}
               onValueChange={setSearch}
             />
@@ -205,7 +198,8 @@ export const MultiSelect = ({
             <CommandGroup>
               {filteredOptions.map((option) => {
                 const isSelected = normalizedValue.includes(option.id);
-                const isDisabled = option.disabled || 
+                const isDisabled =
+                  option.disabled ||
                   (maxItems && normalizedValue.length >= maxItems && !isSelected);
 
                 return (
@@ -214,16 +208,10 @@ export const MultiSelect = ({
                     value={option.id}
                     onSelect={() => !isDisabled && handleSelect(option.id)}
                     disabled={!!isDisabled}
-                    className={cn(
-                      "cursor-pointer",
-                      isDisabled && "opacity-50 cursor-not-allowed"
-                    )}
+                    className={cn("cursor-pointer", isDisabled && "opacity-50 cursor-not-allowed")}
                   >
                     <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        isSelected ? "opacity-100" : "opacity-0"
-                      )}
+                      className={cn("mr-2 h-4 w-4", isSelected ? "opacity-100" : "opacity-0")}
                     />
                     {option.name}
                   </CommandItem>
@@ -242,6 +230,7 @@ export const SingleSelect = ({
   options = [],
   value,
   onChange,
+  isError = false,
   placeholder = "Select an option...",
   isSearchable = true,
   isClearable = true,
@@ -250,6 +239,7 @@ export const SingleSelect = ({
   disabled = false,
   className,
 }: {
+  isError: boolean;
   options: SelectOption[];
   value: string | number | SelectOption | undefined | null;
   onChange: (value: string) => void;
@@ -266,13 +256,13 @@ export const SingleSelect = ({
 
   // Normalize value to string ID
   const normalizedValue = React.useMemo(() => {
-    if (value === null || value === undefined || value === '') return '';
-    
+    if (value === null || value === undefined || value === "") return "";
+
     // If value is an object with id property
-    if (typeof value === 'object' && 'id' in value) {
-      return String(value.id);
+    if (typeof value === "object" && value !== null && "id" in value) {
+      return String((value as { id: string | number }).id);
     }
-    
+
     // If value is string or number
     return String(value);
   }, [value]);
@@ -300,7 +290,11 @@ export const SingleSelect = ({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between border-black py-5", className)}
+          className={cn(
+            "w-full justify-between py-5",
+            isError ? "border-red-600" : "border-black",
+            className
+          )}
           disabled={disabled}
         >
           {selectedOption ? (
@@ -334,11 +328,11 @@ export const SingleSelect = ({
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
         <Command shouldFilter={false}>
           {isSearchable && (
-            <CommandInput 
-              placeholder={searchPlaceholder} 
+            <CommandInput
+              placeholder={searchPlaceholder}
               value={search}
               onValueChange={setSearch}
             />

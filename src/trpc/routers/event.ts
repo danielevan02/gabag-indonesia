@@ -114,7 +114,7 @@ export const eventRouter = createTRPCRouter({
             name,
             discount,
             products: {
-              connect: products?.map((prod) => ({ id: prod.value })) || [],
+              connect: products?.map((productId) => ({ id: productId })) || [],
             },
           },
         });
@@ -139,7 +139,7 @@ export const eventRouter = createTRPCRouter({
             discount,
             products: {
               set: [], // Clear existing connections
-              connect: products?.map((prod) => ({ id: prod.value })) || [],
+              connect: products?.map((productId) => ({ id: productId })) || [],
             },
           },
         });

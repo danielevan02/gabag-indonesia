@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { eventSchema } from "@/lib/schema";
 import { trpc } from "@/trpc/client";
+import { RouterOutputs } from "@/trpc/routers/_app";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -14,46 +15,61 @@ import { z } from "zod";
 
 export type EventFormType = z.infer<typeof eventSchema>;
 
-export default function EventForm({
+type EventData = RouterOutputs['event']['getById']
+
+export default function EditEventForm({
+  event,
   products,
 }: {
+  event: EventData;
   products: {
     id: string;
     name: string;
   }[];
 }) {
   const router = useRouter();
-  const {isPending, mutateAsync} = trpc.event.create.useMutation({
-    onSuccess: (resp) => {
-      if (resp.success) {
-          toast.success(resp.message);
-          router.push("/admin/event");
-        } else {
-          toast.error(resp.message);
-        }
-    }
-  })
+  const utils = trpc.useUtils();
+  const { isPending, mutateAsync } = trpc.event.update.useMutation({
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success(data.message);
+        utils.event.getAll.invalidate();
+        router.push("/admin/event");
+      } else {
+        toast.error(data.message);
+      }
+    },
+    onError: (error) => {
+      toast.error("Failed to update event");
+      console.error(error);
+    },
+  });
 
-  const form = useForm({
+  const form = useForm<EventFormType>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
-      name: "",
+      name: event.name,
+      discount: event.discount || undefined,
+      products: event.products.map((product) => product.id)
     },
   });
 
   const onSubmit = async (data: EventFormType) => {
-      try {
-        await mutateAsync(data)
-      } catch (error) {
-        toast.error("Internal Server Error");
-        console.log(error);
-      }
+    try {
+      await mutateAsync({ ...data, id: event.id });
+    } catch (error) {
+      console.error(error);
+    }
   };
+
+  const onError = (error: any) => {
+    console.log(error)
+  }
 
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(onSubmit, onError)}
         className="flex flex-col my-5 flex-1 overflow-y-scroll px-1 gap-3"
       >
         <FormInput
@@ -62,7 +78,7 @@ export default function EventForm({
           label="Name"
           name="name"
           type="text"
-          placeholder="Enter product name"
+          placeholder="Enter event name"
           disabled={isPending}
         />
 
@@ -71,7 +87,7 @@ export default function EventForm({
           form={form}
           label="Products"
           name="products"
-          placeholder="Select product"
+          placeholder="Select products"
           isMulti
           options={products}
           disabled={isPending}
@@ -83,7 +99,7 @@ export default function EventForm({
           label="Discount"
           name="discount"
           type="number"
-          placeholder="Enter discount"
+          placeholder="Enter discount percentage (0-100)"
           disabled={isPending}
         />
 
@@ -97,7 +113,7 @@ export default function EventForm({
             Cancel
           </Button>
           <Button type="submit" disabled={isPending}>
-            {isPending ? <Loader className="w-4 h-4 animate-spin" /> : "Create Event"}
+            {isPending ? <Loader className="w-4 h-4 animate-spin" /> : "Update Event"}
           </Button>
         </div>
       </form>

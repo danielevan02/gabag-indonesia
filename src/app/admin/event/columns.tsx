@@ -1,4 +1,3 @@
-
 "use client";
 
 import ActionTable from "@/components/shared/table/action-table";
@@ -8,7 +7,7 @@ import { format } from "date-fns";
 import { RouterOutputs } from "@/trpc/routers/_app";
 import { useDeleteMutation } from "@/hooks/use-delete-mutation";
 
-type EventPrisma = RouterOutputs['event']['getAll'][number]
+type EventPrisma = RouterOutputs["event"]["getAll"][number];
 
 const EventActionCell = ({ eventId }: { eventId: string }) => {
   const deleteSubCategoryMutation = useDeleteMutation({ type: "event" });
@@ -20,27 +19,30 @@ const EventActionCell = ({ eventId }: { eventId: string }) => {
       id={eventId}
       title="Delete Event"
       desc="Are you sure you want to delete this event? This action cannot be undone"
+      catalog={false}
     />
   );
 };
 
 export const columns: ColumnDef<EventPrisma>[] = [
   {
-    id: 'select',
-    header: ({table}) => (
+    id: "select",
+    header: ({ table }) => (
       <Checkbox
-        checked={table.getIsAllPageRowsSelected() || table.getIsSomeRowsSelected() && 'indeterminate'}
-        onCheckedChange={(val)=>table.toggleAllPageRowsSelected(!!val)}
+        checked={
+          table.getIsAllPageRowsSelected() || (table.getIsSomeRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="select all"
       />
     ),
-    cell: ({row}) => (
+    cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
-        onCheckedChange={(val)=>row.toggleSelected(!!val)}
+        onCheckedChange={(val) => row.toggleSelected(!!val)}
         aria-label="select row"
       />
-    )
+    ),
   },
   {
     header: "#",
@@ -49,26 +51,40 @@ export const columns: ColumnDef<EventPrisma>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    cell: ({ row }) => (
-      <div className="line-clamp-1 capitalize">{row.getValue("name")}</div>
-    ),
+    cell: ({ row }) => <div className="line-clamp-1 capitalize">{row.getValue("name")}</div>,
   },
   {
     accessorKey: "discount",
     header: "Discount",
-    cell: ({ row }) => <p>{row.original.discount}%</p>
+    cell: ({ row }) => {
+      if (row.original.discount) {
+        return <p>{row.original.discount}%</p>;
+      } else {
+        return <p className="italic text-muted-foreground">No Discount</p>;
+      }
+    },
   },
   {
     header: "Products",
-    cell: ({ row }) => <p>{row.original._count.products}</p>
+    cell: ({ row }) => {
+      if(row.original._count.products !== 0) {
+        return (
+          <p>{row.original._count.products} product(s)</p>
+        )
+      } else {
+        return (
+          <p className="italic text-muted-foreground">No Products</p>
+        )
+      }
+    }
   },
   {
     accessorKey: "createdAt",
     header: "Created At",
-    cell: ({ row }) => <p>{format(row.original.createdAt, "EEEE, d MMMM yyyy")}</p>
+    cell: ({ row }) => <p>{format(row.original.createdAt, "EEEE, d MMMM yyyy")}</p>,
   },
   {
     id: "actions",
-    cell: ({ row }) => <EventActionCell eventId={row.original.id}/>
+    cell: ({ row }) => <EventActionCell eventId={row.original.id} />,
   },
 ];

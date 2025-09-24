@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { UseFormReturn, FieldValues, FieldPath } from "react-hook-form";
+import { UseFormReturn, FieldValues, FieldPath, get } from "react-hook-form";
 import { MultiSelect, SingleSelect, SelectOption } from "./select-field";
 import { Eye, EyeOff } from "lucide-react";
 import { PhoneInput } from "./phone-field";
@@ -133,6 +133,7 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>(
         onValueChange,
       } = selectProps;
 
+      const isError = !!get(form.formState.errors, name)
       return (
         <FormField
           control={form.control}
@@ -144,6 +145,7 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>(
               <FormControl>
                 {isMulti ? (
                   <MultiSelect
+                    isError={isError}
                     options={options}
                     value={field.value || []}
                     onChange={(value) => {
@@ -160,6 +162,7 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>(
                   />
                 ) : (
                   <SingleSelect
+                    isError={isError}
                     options={options}
                     value={field.value || ""}
                     onChange={(value) => {

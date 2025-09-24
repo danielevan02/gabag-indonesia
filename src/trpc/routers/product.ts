@@ -328,10 +328,12 @@ export const productRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       try {
         const { subCategory, price, hasVariant, variants, images, ...rest } = input;
+        console.log(input)
 
         await prisma.product.create({
           data: {
             ...rest,
+            sku: input.sku?.trim() || null,
             subCategoryId: subCategory,
             regularPrice: hasVariant ? BigInt(0) : (price ?? BigInt(0)),
             hasVariant,

@@ -124,15 +124,8 @@ export const productSchema = z.object({
 
 export const eventSchema = z.object({
   name: z.string().min(1, "Please enter the name of event"),
-  discount: z.coerce.number().min(0).max(100).nullable(),
-  products: z
-    .array(
-      z.object({
-        value: z.string(),
-        label: z.string(),
-      })
-    )
-    .nullable(),
+  discount: z.coerce.number().min(0).max(100).optional(),
+  products: z.array(z.string()).optional(),
 });
 
 export const voucherSchema = z.object({
@@ -143,19 +136,19 @@ export const voucherSchema = z.object({
   qty: z.coerce.number().min(0, "Quantity must be greater than or equal to 0"),
   min: z.coerce.number().optional(),
   autoApply: z.boolean().default(false),
-})
+});
 
 export const mediaFileSchema = z.object({
-  thumbnail_url: z.string().url('Must be a valid URL'),
-  public_id: z.string().min(1, 'Public ID is required'),
-  secure_url: z.string().url('Must be a valid HTTPS URL').refine(
-    (url) => url.startsWith('https://'),
-    'Must be a secure HTTPS URL'
-  ),
+  thumbnail_url: z.string().url("Must be a valid URL"),
+  public_id: z.string().min(1, "Public ID is required"),
+  secure_url: z
+    .string()
+    .url("Must be a valid HTTPS URL")
+    .refine((url) => url.startsWith("https://"), "Must be a secure HTTPS URL"),
   width: z.number().int().positive().optional(),
   height: z.number().int().positive().optional(),
   format: z.string().max(10).optional(),
   bytes: z.number().int().positive().optional(),
-  resource_type: z.string().max(20).default('image'),
+  resource_type: z.string().max(20).default("image"),
   original_filename: z.string().max(255).optional(),
-})
+});
