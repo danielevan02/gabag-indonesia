@@ -22,7 +22,7 @@ export default function ProductDataTableWrapper({ products }: ProductDataTableWr
       data={products}
       deleteManyMutation={deleteManyProductMutation}
       searchPlaceholder="Search Products"
-      deleteTitle="Delete Products"
+      deleteTitle="Delete Product"
     />
   );
 }

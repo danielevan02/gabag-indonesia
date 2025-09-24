@@ -4,6 +4,7 @@ import * as React from "react"
 import {
   BookImage,
   Calendar,
+  Images,
   ScrollText,
   SquareTerminal,
   TicketPercent,
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/sidebar"
 import { SessionProvider } from "next-auth/react"
 import { NavHeader } from "./nav-header"
+import { title } from "process"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const data = {
@@ -63,6 +65,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Order",
         url: "/admin/order",
         icon: ScrollText
+      },
+      {
+        title: "Carousel",
+        url: "/admin/carousel",
+        icon: Images
       }
     ],
   }

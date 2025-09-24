@@ -104,24 +104,39 @@ export const productRouter = createTRPCRouter({
     .query(async ({ input }) => {
       const data = await prisma.product.findMany({
         where: buildProductFilters(input),
-        include: {
-          subCategory: true,
-          event: true,
-          variants: true,
+        select: {
+          id: true,
+          regularPrice: true,
+          discount: true,
+          name: true,
+          slug: true,
+          hasVariant: true,
+          stock: true,
           images: {
             take: 1,
             select: {
               mediaFile: {
                 select: {
-                  secure_url: true
-                }
-              }
-            }
-          }
+                  secure_url: true,
+                },
+              },
+            },
+          },
+          subCategory: {
+            select: {
+              name: true,
+            },
+          },
+          event: {
+            select: {
+              name: true,
+            },
+          },
+          variants: true
         },
         orderBy: {
-          createdAt: "desc",
-        },
+          createdAt: 'desc'
+        }
       });
 
       const convertedData = serializeType(data);
@@ -129,10 +144,10 @@ export const productRouter = createTRPCRouter({
       return convertedData.map((product) => ({
         ...product,
         images: product.images[0].mediaFile.secure_url,
-        price: calculateDiscountedPrice(product.regularPrice, product.discount),
+        price: product.regularPrice - product.regularPrice * ((product.discount??0) / 100),
         variants: product.variants.map((variant) => ({
           ...variant,
-          price: calculateDiscountedPrice(variant.regularPrice, variant.discount),
+          price: variant.regularPrice - variant.regularPrice * ((variant.discount ?? 0) / 100),
         })),
       }));
     }),
@@ -200,7 +215,16 @@ export const productRouter = createTRPCRouter({
     const data = await prisma.product.findMany({
       select: {
         slug: true,
-        images: true,
+        images: {
+          take: 1,
+          select: {
+            mediaFile: {
+              select: {
+                secure_url: true
+              }
+            }
+          }
+        },
         name: true,
       },
       orderBy: {
@@ -209,22 +233,37 @@ export const productRouter = createTRPCRouter({
       take: DEFAULT_NEW_ARRIVALS_LIMIT,
     });
 
-    return serializeType(data);
+    const convertedData = serializeType(data)
+
+    return convertedData.map((product) => ({
+      slug: product.slug,
+      name: product.name,
+      image: product.images[0].mediaFile.secure_url
+    }));
   }),
 
   // Get flash sale products
   getFlashSale: baseProcedure.query(async () => {
     const data = await prisma.product.findMany({
       where: {
-        eventId: "be32be21-13c2-4ed7-aaa2-861477ebb11f",
+        eventId: "544caa89-a63d-49b3-87c1-39d805daa0f3",
       },
       select: {
         regularPrice: true,
         discount: true,
         name: true,
-        images: true,
         slug: true,
         hasVariant: true,
+        images: {
+          take: 1,
+          select: {
+            mediaFile: {
+              select: {
+                secure_url: true,
+              },
+            },
+          },
+        },
         subCategory: {
           select: {
             name: true,
@@ -237,26 +276,25 @@ export const productRouter = createTRPCRouter({
         },
         variants: {
           select: {
-            regularPrice: true,
             discount: true,
-          },
-        },
+            regularPrice: true
+          }
+        }
       },
     });
 
     const serializeData = serializeType(data);
-
+    
     return serializeData.map((product) => ({
       ...product,
-      image: product.images[0],
+      images: product.images[0].mediaFile.secure_url,
       price: calculateDiscountedPrice(product.regularPrice, product.discount),
       variants: product.variants.map((variant) => ({
-        regularPrice: variant.regularPrice,
+        ...variant,
         price: calculateDiscountedPrice(variant.regularPrice, variant.discount),
       })),
     }));
   }),
-
   // Get product by ID with all subcategories
   getByIdWithSubCategories: baseProcedure
     .input(z.object({ id: z.string() }))
@@ -314,7 +352,7 @@ export const productRouter = createTRPCRouter({
         })),
         images: convertedData.images
           .sort((a, b) => a.orderIndex - b.orderIndex)
-          .map(img => img.mediaFileId),
+          .map((img) => img.mediaFileId),
         allSubCategory: subCategories.map(({ id, name }) => ({
           id,
           name,
@@ -328,7 +366,7 @@ export const productRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       try {
         const { subCategory, price, hasVariant, variants, images, ...rest } = input;
-        console.log(input)
+        console.log(input);
 
         await prisma.product.create({
           data: {
@@ -344,20 +382,21 @@ export const productRouter = createTRPCRouter({
                     sku: variant.sku,
                     regularPrice: variant.regularPrice,
                     stock: variant.stock,
-                    discount: variant.discount,
+                    discount: variant.discount ?? input.discount,
                     mediaFileId: variant.image,
                   })),
                 }
               : undefined,
-            images: images && images.length > 0
-              ? {
-                  create: images.map((imageId, index) => ({
-                    mediaFileId: imageId,
-                    orderIndex: index,
-                    isPrimary: index === 0, // First image is primary
-                  })),
-                }
-              : undefined,
+            images:
+              images && images.length > 0
+                ? {
+                    create: images.map((imageId, index) => ({
+                      mediaFileId: imageId,
+                      orderIndex: index,
+                      isPrimary: index === 0, // First image is primary
+                    })),
+                  }
+                : undefined,
           },
         });
 
@@ -372,7 +411,7 @@ export const productRouter = createTRPCRouter({
     .input(productSchema.extend({ id: z.string() }))
     .mutation(async ({ input }) => {
       try {
-        const { id, subCategory, hasVariant, price, variants, images, ...rest } = input;
+        const { id, subCategory, hasVariant, price, variants, images, sku, ...rest } = input;
 
         // Update product images - delete all existing relations and create new ones with updated order
         if (images !== undefined) {
@@ -396,6 +435,7 @@ export const productRouter = createTRPCRouter({
           where: { id },
           data: {
             ...rest,
+            sku: sku?.trim() || null,
             subCategoryId: subCategory ?? "",
             regularPrice: hasVariant ? BigInt(0) : (price ?? BigInt(0)),
             hasVariant,
@@ -415,7 +455,7 @@ export const productRouter = createTRPCRouter({
               sku: v.sku,
               regularPrice: v.regularPrice,
               stock: v.stock,
-              discount: v.discount,
+              discount: v.discount ?? input.discount,
             })),
           });
         }

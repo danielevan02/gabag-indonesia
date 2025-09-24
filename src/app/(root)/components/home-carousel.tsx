@@ -1,34 +1,34 @@
 "use client";
 
 import Autoplay from "embla-carousel-autoplay";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { useEffect, useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import Image from "next/image";
 import { useIsMobile } from "@/hooks/use-mobile";
-import BlurImage from "@/components/shared/blur-image";
+import { RouterOutputs } from "@/trpc/routers/_app";
 
-const HomeCarousel = ({slideDuration}: {slideDuration?: number}) => {
-  const isMobile = useIsMobile()
-  const [mounted, setMounted] = useState(false);
+type HomeCarouselProps = {
+  carousels: RouterOutputs["carousel"]["getAll"];
+  slideDuration?: number;
+};
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  
-  const carouselImg = [
-    {desktop: 'dummy1.png', mobile: 'mobiledummy1.png'},
-    {desktop: 'dummy2.png', mobile: 'mobiledummy2.png'},
-    {desktop: 'dummy3.png', mobile: 'mobiledummy3.jpg'},
-    {desktop: 'dummy4.png', mobile: 'mobiledummy3.jpg'},
-  ]
-  if (!mounted) {
-    return (
-      <div className="flex flex-col gap-1 mt-5">
-        <Skeleton className="rounded-lg w-[85%] h-[555px] lg:h-[700px] mx-auto"/>
-      </div>
-    )// Placeholder saat loading
-  }
+const HomeCarousel = ({ slideDuration, carousels }: HomeCarouselProps) => {
+  const isMobile = useIsMobile();
+
+  const carouselImg = carousels
+    .map((carousel) => ({
+      desktop: carousel.desktopImage.secure_url,
+      mobile: carousel.mobileImage.secure_url,
+      url: carousel.linkUrl,
+      isActive: carousel.isActive,
+    }))
+    .filter((val) => val.isActive);
+
   return (
     <div className="w-[85%] m-auto mt-5">
       <Carousel
@@ -41,14 +41,16 @@ const HomeCarousel = ({slideDuration}: {slideDuration?: number}) => {
         <CarouselContent className="rounded-4xl">
           {carouselImg.map((item) => (
             <CarouselItem key={item.desktop}>
-              <Image
-                src={`/dummy/${isMobile ? item.mobile : item.desktop}`}
-                className="w-full max-h-[700px] object-cover rounded-md"
-                alt={isMobile ? item.mobile : item.desktop}
-                width={100}
-                height={100}
-                priority
-              />
+              <a href={item.url}>
+                <Image
+                  src={isMobile ? item.mobile : item.desktop}
+                  className="w-full max-h-[700px] object-cover rounded-md"
+                  alt={isMobile ? item.mobile : item.desktop}
+                  width={600}
+                  height={600}
+                  priority
+                />
+              </a>
             </CarouselItem>
           ))}
         </CarouselContent>

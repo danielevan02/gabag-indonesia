@@ -129,7 +129,7 @@
 }
 
 .form-page {
-  @apply p-5 h-full max-h-full flex flex-col overflow-scroll
+  @apply p-5 h-full max-h-full flex flex-col overflow-hidden
 }
 
 .image-section-container {

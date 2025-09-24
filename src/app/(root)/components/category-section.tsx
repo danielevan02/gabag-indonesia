@@ -4,7 +4,7 @@ import { trpc } from "@/trpc/server";
 import Link from "next/link";
 import CategoryImage from "./category-image";
 
-const CategorySection = async () => {
+export const CategorySection = async () => {
   const subCategories = await trpc.subCategory.display()
   return (
     <section className="mt-20">
@@ -22,7 +22,7 @@ const CategorySection = async () => {
             >
               <div className="w-full min-h-72 max-h-72 overflow-hidden">
                 <CategoryImage
-                  src={category.image}
+                  src={category.mediaFile?.secure_url}
                   alt={category.name}
                   width={200}
                   height={200}
@@ -40,7 +40,7 @@ const CategorySection = async () => {
           <Link href="/" key={category.id} className="flex flex-col gap-2">
             <div className="min-w-56 min-h-56 max-h-56 overflow-hidden">
               <CategoryImage
-                src={category.image}
+                src={category.mediaFile?.secure_url}
                 alt={category.name}
                 width={200}
                 height={200}
@@ -80,5 +80,3 @@ export const CategorySectionFallback = () => {
     </section>
   )
 }
-
-export default CategorySection;

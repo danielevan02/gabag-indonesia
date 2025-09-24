@@ -1,7 +1,7 @@
 import { trpc } from "@/trpc/client";
 import { toast } from "sonner";
 
-type DeleteType = "product" | "category" | "subCategory" | "event" | "voucher" | "order";
+type DeleteType = "product" | "category" | "subCategory" | "event" | "voucher" | "order" | "carousel";
 
 interface UseDeleteMutationProps {
   type: DeleteType;
@@ -113,6 +113,22 @@ export const useDeleteMutation = ({ type, onSuccess }: UseDeleteMutationProps) =
         toast.error("Failed to delete order");
       },
     }),
+
+    carousel: trpc.carousel.delete.useMutation({
+      onSuccess: (data) => {
+        if(data.success) {
+          toast.success(data.message)
+          utils.carousel.getAll.invalidate()
+          onSuccess?.()
+        } else {
+          toast.error(data.message);
+        }
+      },
+      onError: (error) => {
+        console.error(error);
+        toast.error("Failed to delete carousel");
+      },
+    })
   };
 
   return mutations[type];
@@ -214,6 +230,21 @@ export const useDeleteManyMutation = ({ type, onSuccess }: UseDeleteManyMutation
         toast.error("Failed to delete orders");
       },
     }),
+    carousel: trpc.carousel.deleteMany.useMutation({
+      onSuccess: (data) => {
+        if (data.success) {
+          toast.success(data.message);
+          utils.event.getAll.invalidate();
+          onSuccess?.();
+        } else {
+          toast.error(data.message);
+        }
+      },
+      onError: (error) => {
+        console.error(error);
+        toast.error("Failed to delete carousels");
+      },
+    })
   };
 
   return mutations[type];

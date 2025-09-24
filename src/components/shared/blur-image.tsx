@@ -28,8 +28,8 @@ export default async function BlurImage({
         src={src}
         alt={alt}
         className={className}
-        width={100}
-        height={100}
+        width={width}
+        height={height}
         placeholder="blur"
         {...(dynamic && { blurDataURL: base64 })}
       />

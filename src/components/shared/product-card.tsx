@@ -7,7 +7,7 @@ interface ProductCardProps {
   price: number;
   regularPrice: number;
   discount?: number;
-  image: string;
+  images: string;
   slug: string;
   hasVariant: boolean;
   className?: string;
@@ -36,7 +36,7 @@ interface PriceTagProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({
   discount,
-  image,
+  images,
   name,
   regularPrice,
   hasVariant,
@@ -61,7 +61,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       {/* Image Container */}
       <div className="product-card-image-container">
         <BlurImage
-          src={image}
+          src={images}
           className="w-full object-cover h-full group-hover:scale-110 transition-all"
           alt={`${name} product image`}
           height={200}
@@ -129,9 +129,10 @@ const EventBadge = ({ event }: { event?: { name: string } }) => {
 };
 
 // Component for displaying variant prices
-const VariantPricing = ({ variants }: { variants: { price: number; regularPrice: number;}[] }) => {
+const VariantPricing = ({ variants }: { variants: { price: number; regularPrice: number;}[]  }) => {
   const hasPriceDifferences = hasVariantPriceDifferences({variants});
   const firstVariant = variants[0];
+  
 
   if (hasPriceDifferences) {
     const lowestPrice = getLowestPrice({variants});
@@ -147,6 +148,7 @@ const VariantPricing = ({ variants }: { variants: { price: number; regularPrice:
   const hasDiscount = firstVariant.regularPrice !== firstVariant.price;
 
   if (hasDiscount) {
+
     return (
       <div className="flex flex-col md:flex-row gap-1">
         <h4 className="line-through text-neutral-400 text-sm">

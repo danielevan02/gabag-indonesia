@@ -152,3 +152,14 @@ export const mediaFileSchema = z.object({
   resource_type: z.string().max(20).default("image"),
   original_filename: z.string().max(255).optional(),
 });
+
+export const carouselSchema = z.object({
+  name: z.string().min(1, "Please enter the name of carousel"),
+  linkUrl: z.string().url("Please enter a valid URL").min(1, "Please enter the link URL"),
+  altText: z.string().optional(),
+  desktopImageId: z.string().min(1, "Please select desktop image"),
+  mobileImageId: z.string().min(1, "Please select mobile image"),
+  isActive: z.boolean().default(true),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
+});

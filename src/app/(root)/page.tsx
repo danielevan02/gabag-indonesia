@@ -1,11 +1,12 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
 import HomeCarousel from "./components/home-carousel";
-import CategorySection, { CategorySectionFallback } from "./components/category-section";
-import FlashSaleSection, { FlashSaleSectionFallback } from "./components/flash-sale-section";
-import BreastPumpSection, { BreastPumpSectionFallback } from "./components/breastpump-section";
-import NewArrivalSection, { NewArrivalSectionFallback } from "./components/new-arrival-section";
-import BeautySection, { BeautySectionFallback } from "./components/beauty-section";
+import { CategorySection, CategorySectionFallback } from "./components/category-section";
+import { FlashSaleSection, FlashSaleSectionFallback } from "./components/flash-sale-section";
+import {BreastPumpSection, BreastPumpSectionFallback } from "./components/breastpump-section";
+import {NewArrivalSection, NewArrivalSectionFallback } from "./components/new-arrival-section";
+import {BeautySection, BeautySectionFallback } from "./components/beauty-section";
+import { CarouselSection, CarouselSectionFallback } from "./components/carousel-section";
 
 export const metadata: Metadata = {
   description:
@@ -19,8 +20,10 @@ export default function LandingPage() {
   return (
     <div>
       <div className="flex flex-col w-full max-w-screen px-2 md:px-5 lg:px-10">
-        <HomeCarousel slideDuration={5000} />
-
+        <Suspense fallback={<CarouselSectionFallback/>}>
+          <CarouselSection/>
+        </Suspense>
+        
         <Suspense fallback={<CategorySectionFallback />}>
           <CategorySection />
         </Suspense>

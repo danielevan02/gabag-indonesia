@@ -3,7 +3,7 @@ import Link from "next/link";
 import BlurImage from "@/components/shared/blur-image";
 import { trpc } from "@/trpc/server";
 
-const NewArrivalSection = async () => {
+export const NewArrivalSection = async () => {
   const newArrival = await trpc.product.getNewArrivals()
   return (
     <section className="mt-20 lg:px-[14rem]">
@@ -19,7 +19,7 @@ const NewArrivalSection = async () => {
             className="w-full flex flex-col items-center"
           >
             <BlurImage
-              src={product.images[0]}
+              src={product.image}
               alt={product.name}
               width={300}
               height={300}
@@ -35,7 +35,7 @@ const NewArrivalSection = async () => {
                 `}
               dynamic
             />
-            <h2 className="text-center mt-3 lg:text-xl font-semibold w-72 lg:w-96">
+            <h2 className="text-center mt-3 lg:text-xl w-72 lg:w-96">
               {product.name}
             </h2>
           </Link>
@@ -60,5 +60,3 @@ export const NewArrivalSectionFallback = () => {
     </section>
   )
 }
-
-export default NewArrivalSection;

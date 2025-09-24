@@ -13,8 +13,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { UseFormReturn, FieldValues, FieldPath, get } from "react-hook-form";
 import { MultiSelect, SingleSelect, SelectOption } from "./select-field";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, CalendarIcon } from "lucide-react";
 import { PhoneInput } from "./phone-field";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 interface BaseFormInputProps<TFieldValues extends FieldValues = FieldValues> {
   form: UseFormReturn<TFieldValues>;
@@ -65,12 +70,18 @@ interface SelectInputProps<TFieldValues extends FieldValues = FieldValues>
   onValueChange?: (value: string | string[]) => void;
 }
 
+interface DateInputProps<TFieldValues extends FieldValues = FieldValues>
+  extends BaseFormInputProps<TFieldValues> {
+  fieldType: "date";
+}
+
 type FormInputProps<TFieldValues extends FieldValues = FieldValues> =
   | TextInputProps<TFieldValues>
   | PhoneInputProps<TFieldValues>
   | TextareaInputProps<TFieldValues>
   | SelectInputProps<TFieldValues>
-  | PasswordInputProps<TFieldValues>;
+  | PasswordInputProps<TFieldValues>
+  | DateInputProps<TFieldValues>;
 
 export function FormInput<TFieldValues extends FieldValues = FieldValues>(
   props: FormInputProps<TFieldValues>
@@ -266,6 +277,52 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>(
                   value={field.value || ""}
                 />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      );
+    }
+
+    case "date": {
+      return (
+        <FormField
+          control={form.control}
+          name={name}
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>{label}</FormLabel>
+              {description && <FormDescription>{description}</FormDescription>}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "border border-black py-5 pl-3 text-left font-normal w-full",
+                        !field.value && "text-muted-foreground"
+                      )}
+                      disabled={disabled}
+                    >
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>{placeholder || "Pick a date"}</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    captionLayout="dropdown"
+                    disabled={disabled}
+                  />
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}

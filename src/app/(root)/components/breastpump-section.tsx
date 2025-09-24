@@ -1,9 +1,10 @@
 import ProductCard from "@/components/shared/product-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/trpc/server";
+import CloudinaryVideoPlayer from "@/components/shared/cloudinary-video-player"
 
-const BreastPumpSection = async () => {
-  const products = await trpc.product.getAll({});
+export const BreastPumpSection = async () => {
+  const products = await trpc.product.getAll({subCategory: "Breast Pump"});
   return (
     <section>
       <div className="flex flex-col w-full md:w-[460px] mx-auto mb-5 mt-10 gap-2">
@@ -16,28 +17,19 @@ const BreastPumpSection = async () => {
       <hr className="mb-3 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-900 to-transparent opacity-25 dark:via-white" />
 
       <div className="relative">
+        <CloudinaryVideoPlayer
+          src="https://res.cloudinary.com/dkjvksieq/video/upload/v1758695895/home-video_sodvri.mp4"
+          className="w-screen h-screen object-cover"
+        />
         <div className="absolute inset-0 -bottom-1 bg-gradient-to-b from-transparent via-transparent to-background" />
-        <video autoPlay loop muted playsInline className="w-screen h-screen object-cover">
-          <source src="/home-video.mp4" type="video/mp4" />
-        </video>
       </div>
 
-      <div className="flex gap-1 mt-10 md:gap-5 overflow-scroll no-scrollbar py-px snap-x snap-mandatory">
+      <div className="flex gap-1 mt-5 md:gap-5 overflow-scroll no-scrollbar py-px snap-x snap-mandatory">
         {products.map((product) => (
           <ProductCard
             key={product.slug}
             {...product}
-            image={product.images[0]}
-            subCategory={product.subCategory!}
-            className={`
-                min-w-56 
-                max-w-56 
-                md:min-w-80 
-                md:max-w-80 
-                lg:min-w-96
-                lg:max-w-96
-                snap-start
-              `}
+            className="product-card-container"
           />
         ))}
       </div>
@@ -59,9 +51,10 @@ export const BreastPumpSectionFallback = () => {
 
       <div className="relative">
         <div className="absolute inset-0 -bottom-1 bg-gradient-to-b from-transparent via-transparent to-background" />
-        <video autoPlay loop muted playsInline className="w-screen h-screen object-cover">
-          <source src="/home-video.mp4" type="video/mp4" />
-        </video>
+        <CloudinaryVideoPlayer
+          src="https://res.cloudinary.com/dkjvksieq/video/upload/v1758695895/home-video_sodvri.mp4"
+          className="w-screen h-screen object-cover"
+        />
       </div>
 
       <div className="flex gap-1 mt-10 md:gap-5 overflow-scroll no-scrollbar py-px snap-x snap-mandatory">
@@ -72,6 +65,3 @@ export const BreastPumpSectionFallback = () => {
     </section>
   )
 }
-
-
-export default BreastPumpSection;

@@ -2,8 +2,7 @@ import ProductCard from "@/components/shared/product-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/trpc/server";
 
-const BeautySection = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 3000));
+export const BeautySection = async () => {
   const beauty = await trpc.product.getAll({subCategory: "Beauty"})
   
   return (
@@ -48,5 +47,3 @@ export const BeautySectionFallback = () => {
     </section>
   )
 }
-
-export default BeautySection;

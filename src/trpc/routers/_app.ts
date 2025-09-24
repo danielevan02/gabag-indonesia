@@ -10,6 +10,7 @@ import { courierRouter } from './courier';
 import { inferRouterOutputs } from '@trpc/server';
 import { voucherRouter } from './voucher';
 import { galleryRouter } from './gallery';
+import { carouselRouter } from './carousel';
 
 export const appRouter = createTRPCRouter({
   product: productRouter,
@@ -21,7 +22,8 @@ export const appRouter = createTRPCRouter({
   event: eventRouter,
   courier: courierRouter,
   voucher: voucherRouter,
-  gallery: galleryRouter
+  gallery: galleryRouter,
+  carousel: carouselRouter
 });
 // export type definition of API
 export type AppRouter = typeof appRouter;

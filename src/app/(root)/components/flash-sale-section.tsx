@@ -2,7 +2,7 @@ import ProductCard from "@/components/shared/product-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/trpc/server";
 
-export default async function FlashSaleSection() {
+export async function FlashSaleSection() {
   const products = await trpc.product.getFlashSale();
 
   return (
