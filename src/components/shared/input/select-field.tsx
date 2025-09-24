@@ -121,44 +121,53 @@ export const MultiSelect = ({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "w-full justify-between min-h-[40px]",
+            "w-full justify-between min-h-[40px] h-auto",
             isError ? "border-red-600" : "border-black",
-            selectedOptions.length > 0 ? "py-2" : "",
+            // Remove fixed padding, use dynamic padding
+            "py-2 px-3",
+            // Ensure proper height adjustment
+            selectedOptions.length > 0 ? "items-start" : "items-center",
             className
           )}
           disabled={disabled}
         >
-          {selectedOptions.length > 0 ? (
-            <div className="flex gap-1 flex-wrap">
-              {selectedOptions.map((option) => (
-                <Badge key={option.id} className="mr-1">
-                  {option.name}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 inline-flex cursor-pointer"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
+          <div className="flex-1 text-left">
+            {selectedOptions.length > 0 ? (
+              <div className="flex flex-wrap gap-1 py-1">
+                {selectedOptions.map((option) => (
+                  <Badge key={option.id} className="mb-1">
+                    <span className="max-w-[200px] truncate">{option.name}</span>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 inline-flex cursor-pointer"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleRemove(option.id, e as any);
+                        }
+                      }}
+                      onMouseDown={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        handleRemove(option.id, e as any);
-                      }
-                    }}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onClick={(e) => handleRemove(option.id, e)}
-                  >
-                    <X className="size-3 hover:text-foreground pointer-events-none" />
-                  </div>
-                </Badge>
-              ))}
-            </div>
-          ) : (
-            <span className="text-muted-foreground">{placeholder}</span>
-          )}
-          <div className="flex items-center gap-1">
+                      }}
+                      onClick={(e) => handleRemove(option.id, e)}
+                    >
+                      <X className="size-3 hover:text-foreground pointer-events-none" />
+                    </div>
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <span className="text-muted-foreground">{placeholder}</span>
+            )}
+          </div>
+          <div className={cn(
+            "flex items-center gap-1 ml-2",
+            // Align icons properly when there are multiple badges
+            selectedOptions.length > 0 ? "self-start mt-2" : "self-center"
+          )}>
             {isClearable && selectedOptions.length > 0 && (
               <div
                 role="button"
