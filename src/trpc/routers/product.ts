@@ -162,15 +162,46 @@ export const productRouter = createTRPCRouter({
         },
       },
       include: {
-        variants: true,
-      },
+        images: {
+          take: 1,
+          select: {
+            mediaFile: {
+              select: {
+                secure_url: true
+              }
+            }
+          }
+        }, 
+        variants: {
+          select: {
+            regularPrice: true,
+            discount: true
+          }
+        }
+      }
     });
 
     const convertedData = serializeType(data);
-    return convertedData.map((product) => ({
-      ...product,
-      price: calculateDiscountedPrice(product.regularPrice, product.discount),
-    }));
+    return convertedData.map((product) => {
+      let price: number;
+
+      if(product.variants.length !== 0){
+        // If product has variants, get the cheapest variant price
+        const variantPrices = product.variants.map(variant =>
+          calculateDiscountedPrice(variant.regularPrice, variant.discount)
+        );
+        price = Math.min(...variantPrices);
+      } else {
+        // If no variants, use product price
+        price = calculateDiscountedPrice(product.regularPrice, product.discount);
+      }
+
+      return {
+        ...product,
+        images: product.images[0].mediaFile.secure_url,
+        price,
+      }
+    });
   }),
 
   // Get product by slug
@@ -366,7 +397,6 @@ export const productRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       try {
         const { subCategory, price, hasVariant, variants, images, ...rest } = input;
-        console.log(input);
 
         await prisma.product.create({
           data: {

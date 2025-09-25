@@ -79,7 +79,7 @@ export default function SearchBar() {
       </div>
 
       {showDropdown && (
-        <div className="absolute mt-1 w-full bg-background border border-accent shadow-lg z-10 max-h-96 overflow-y-auto">
+        <div className="absolute mt-1 w-full bg-background border border-accent shadow-lg z-10 max-h-96 overflow-y-auto rounded-md">
           {isLoading ? (
             <div className="p-4 text-center text-gray-500">Searching product...</div>
           ) : products.length > 0 ? (
@@ -93,7 +93,7 @@ export default function SearchBar() {
                 >
                   {product.images && (
                     <Image
-                      src={product.images[0]}
+                      src={product.images}
                       alt={product.name}
                       width={50}
                       height={50}
@@ -102,7 +102,11 @@ export default function SearchBar() {
                   )}
                   <div>
                     <div className="font-bold text-sm line-clamp-1">{product.name}</div>
-                    <div className="text-sm text-gray-600">Rp{product.price.toLocaleString()}</div>
+
+                    <div className="text-sm text-gray-600">
+                      {product.variants.length !== 0 &&("from ")}
+                      Rp{product.price.toLocaleString()}
+                    </div>
                   </div>
                 </Link>
               ))}

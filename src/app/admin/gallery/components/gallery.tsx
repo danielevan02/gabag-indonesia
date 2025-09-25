@@ -3,22 +3,25 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { deleteGalleryImages } from "@/lib/actions/gallery.action";
-import { useEdgeStore } from "@/lib/edge-store";
 import { cn } from "@/lib/utils";
-import { GalleryImage } from "@prisma/client";
+import { MediaFile } from "@/generated/prisma";
+import { trpc } from "@/trpc/client";
 import { X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export default function Gallery({ images }: { images: GalleryImage[] }) {
+export default function Gallery({ images }: { images: MediaFile[] }) {
   const [imageModal, setImageModal] = useState("");
   const [manage, setManage] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string[]>([]);
+  const utils = trpc.useUtils();
+  const deleteImagesMutation = trpc.gallery.deleteImages.useMutation({
+    onSuccess: () => {
+      utils.gallery.getAll.invalidate();
+    },
+  });
   const [loading, setLoading] = useState(false);
-
-  const { edgestore } = useEdgeStore();
 
   const handleImageModal = (url: string) => {
     if (manage) {
@@ -33,6 +36,26 @@ export default function Gallery({ images }: { images: GalleryImage[] }) {
     }
   };
 
+  const deleteFromCloudinary = async (publicIds: string[]) => {
+    try {
+      const deletePromises = publicIds.map(async (publicId) => {
+        const response = await fetch("/api/delete-cloudinary-image", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ publicId }),
+        });
+        return response.json();
+      });
+
+      await Promise.all(deletePromises);
+    } catch (error) {
+      console.error("Error deleting from Cloudinary:", error);
+      throw error;
+    }
+  };
+
   const handleActiveManage = () => {
     setManage((prev) => !prev);
     setSelectedImage([]);
@@ -40,22 +63,32 @@ export default function Gallery({ images }: { images: GalleryImage[] }) {
 
   const handleDelete = async () => {
     if (selectedImage.length === 0) return;
-    
-    setLoading(true)
-    try {
-      await Promise.all(selectedImage.map((url) => edgestore.publicImages.delete({ url })));
-      const resp = await deleteGalleryImages(selectedImage);
 
-      if (resp?.status === 200) {
+    setLoading(true);
+    try {
+      // Get public_ids from selected images
+      const selectedMediaFiles = images.filter((img) => selectedImage.includes(img.secure_url));
+      const publicIds = selectedMediaFiles.map((img) => img.public_id);
+
+      // Delete from Cloudinary first
+      await deleteFromCloudinary(publicIds);
+
+      // Delete from database
+      const result = await deleteImagesMutation.mutateAsync({
+        secure_urls: selectedImage,
+      });
+
+      if (result?.status === 200) {
         setSelectedImage([]);
-        toast.success(resp.message);
+        toast.success(result.message);
       } else {
-        toast.error(resp?.message);
+        toast.error(result?.message || "Failed to delete images");
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error deleting images:", error);
+      toast.error("Failed to delete images");
     }
-    setLoading(false)
+    setLoading(false);
   };
 
   return (
@@ -75,7 +108,7 @@ export default function Gallery({ images }: { images: GalleryImage[] }) {
         {manage ? (
           <Button
             variant="destructive"
-            disabled={selectedImage.length === 0||loading}
+            disabled={selectedImage.length === 0 || loading}
             onClick={handleDelete}
           >
             Delete Selected {selectedImage.length !== 0 && `(${selectedImage.length})`}
@@ -85,41 +118,39 @@ export default function Gallery({ images }: { images: GalleryImage[] }) {
         )}
       </div>
       <div className="flex-1 overflow-y-scroll grid grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-2 p-2">
-        {!loading ? (
-          images?.map((image) => {
-            const imageIncludedValidation = manage && selectedImage.includes(image.imageUrl);
-            return (
-              <div
-                key={image.id}
-                className={cn(
-                  "relative cursor-pointer col-span-1 aspect-square rounded-md border overflow-clip select-none",
-                  imageIncludedValidation && "bg-black/20 ring-2 ring-red-400"
-                )}
-                onClick={() => handleImageModal(image.imageUrl)}
-              >
-                <Image
-                  src={image.imageUrl}
-                  alt="Images Gallery"
-                  width={200}
-                  height={200}
-                  className="size-full object-cover"
-                />
-                {manage && (
-                  <Checkbox
-                    checked={imageIncludedValidation}
-                    className="absolute top-2 left-2 bg-white"
+        {!loading
+          ? images?.map((image) => {
+              const imageIncludedValidation = manage && selectedImage.includes(image.secure_url);
+              return (
+                <div
+                  key={image.id}
+                  className={cn(
+                    "relative cursor-pointer col-span-1 aspect-square rounded-md border overflow-clip select-none",
+                    imageIncludedValidation && "bg-black/20 ring-2 ring-red-400"
+                  )}
+                  onClick={() => handleImageModal(image.secure_url)}
+                >
+                  <Image
+                    src={image.secure_url}
+                    alt="Images Gallery"
+                    width={200}
+                    height={200}
+                    className="size-full object-cover"
                   />
-                )}
+                  {manage && (
+                    <Checkbox
+                      checked={imageIncludedValidation}
+                      className="absolute top-2 left-2 bg-white"
+                    />
+                  )}
+                </div>
+              );
+            })
+          : [...Array(30)].map((_, index) => (
+              <div key={index} className="col-span-1 aspect-square rounded-md border overflow-clip">
+                <Skeleton className="size-full" />
               </div>
-            );
-          })
-        ) : (
-          [...Array(30)].map((_, index) => (
-            <div key={index} className="col-span-1 aspect-square rounded-md border overflow-clip">
-              <Skeleton className="size-full"/>
-            </div>
-          ))
-        )}
+            ))}
       </div>
       {imageModal && (
         <div

@@ -270,6 +270,7 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>(
               <FormControl>
                 <Input
                   type={type}
+                  min={0}
                   className="border border-black py-5"
                   placeholder={placeholder}
                   disabled={disabled}

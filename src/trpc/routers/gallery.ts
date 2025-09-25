@@ -14,6 +14,7 @@ export const galleryRouter = createTRPCRouter({
           select: {
             id: true,
             secure_url: true,
+            public_id: true,
           }
         });
 

@@ -9,7 +9,6 @@ import {
   SquareTerminal,
   TicketPercent,
 } from "lucide-react"
-
 import { NavMain } from "@/components/admin/nav-main"
 import { NavUser } from "@/components/admin/nav-user"
 import {
@@ -21,7 +20,6 @@ import {
 } from "@/components/ui/sidebar"
 import { SessionProvider } from "next-auth/react"
 import { NavHeader } from "./nav-header"
-import { title } from "process"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const data = {
@@ -46,11 +44,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
         ],
       },
-      // {
-      //   title: "Image Gallery",
-      //   url: "/admin/gallery",
-      //   icon: BookImage,
-      // },
+      {
+        title: "Image Gallery",
+        url: "/admin/gallery",
+        icon: BookImage,
+      },
       {
         title: "Events",
         url: "/admin/event",
