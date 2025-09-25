@@ -1,24 +1,9 @@
-"use client";
-
 import { DataTable } from "@/components/shared/table/data-table";
 import { columns } from "./columns";
-import { trpc } from "@/trpc/client";
-import { useDeleteManyMutation } from "@/hooks/use-delete-mutation";
+import { trpc } from "@/trpc/server";
 
-export default function AdminCategoryPage() {
-  const { data: categories, isLoading } = trpc.category.getAll.useQuery();
-  const deleteManyMutation = useDeleteManyMutation({ type: "category" });
-
-  if (isLoading) {
-    return (
-      <div className="form-page">
-        <h1 className="font-medium text-2xl">Category List</h1>
-        <div className="flex-1 flex items-center justify-center">
-          <div>Loading categories...</div>
-        </div>
-      </div>
-    );
-  }
+export default async function AdminCategoryPage() {
+  const categories = await trpc.category.getAll();
 
   return (
     <div className="form-page">
@@ -27,9 +12,7 @@ export default function AdminCategoryPage() {
         <DataTable
           columns={columns}
           data={categories || []}
-          deleteManyMutation={deleteManyMutation}
           searchPlaceholder="Search Categories"
-          deleteTitle="Delete Categories"
         />
       </div>
     </div>

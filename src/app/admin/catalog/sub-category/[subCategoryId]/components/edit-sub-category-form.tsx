@@ -3,19 +3,16 @@
 import { Button } from "@/components/ui/button";
 import { subCategorySchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImagePlus, Loader } from "lucide-react";
+import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Label } from "@/components/ui/label";
-import Image from "next/image";
-// import {GalleryModal} from "@/components/gallery/gallery-modal";
 import { trpc } from "@/trpc/client";
 import { Form } from "@/components/ui/form";
 import { FormInput } from "@/components/shared/input/form-input";
 import { RouterOutputs } from "@/trpc/routers/_app";
 import z from "zod";
-import GalleryModal from "@/components/shared/gallery/gallery-modal";
+import { SubCategoryImageField } from "../../components/subcategory-image-field";
 
 interface EditSubCategoryFormProps {
   subCategory: RouterOutputs["subCategory"]["getById"];
@@ -44,18 +41,13 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
     resolver: zodResolver(subCategorySchema),
     defaultValues: {
       name: subCategory?.name,
-      category: subCategory?.category,
-      products: subCategory?.products,
+      category: subCategory?.category.id,
+      products: subCategory?.products.map((prod) => prod.id),
       discount: subCategory?.discount,
       mediaFileId: subCategory?.mediaFileId,
     },
   });
 
-  const mediaFileId = form.watch("mediaFileId");
-  const { data: mediaFile } = trpc.gallery.getById.useQuery(
-    { id: mediaFileId! },
-    { enabled: !!mediaFileId }
-  );
   const { data: allMediaFiles } = trpc.gallery.getAll.useQuery();
 
   const onSubmit = async (data: SubCategoryFormType) => {
@@ -72,55 +64,10 @@ const EditSubCategoryForm = ({ subCategory, categoryList }: EditSubCategoryFormP
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex flex-col my-5 flex-1 overflow-y-scroll px-1 gap-3"
       >
-        <Controller
-          control={form.control}
-          name="mediaFileId"
-          render={({ field }) => (
-            <div className="flex gap-2 flex-col mb-5">
-              <Label>Sub-Category Photo</Label>
-              <p className="text-xs text-neutral-600">NOTE: Select one image for the sub-category</p>
-              <div className="flex flex-col gap-2">
-                {field.value && mediaFile?.secure_url ? (
-                  // SHOW THIS IF THERE IS IMAGE
-                  <div className="w-full flex gap-2 justify-start flex-wrap">
-                    <div className="size-32 overflow-hidden rounded-md border">
-                      <Image
-                        src={mediaFile.secure_url}
-                        alt={`sub-category-image`}
-                        width={100}
-                        height={100}
-                        className="size-full object-cover"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  // SHOW THIS IF THERE IS NO IMAGE
-                  <div className="flex flex-col items-center justify-center size-44 rounded-md border bg-accent gap-4">
-                    <ImagePlus />
-                    <span className="text-sm text-neutral-700">Add sub-category image</span>
-                  </div>
-                )}
-
-                <GalleryModal
-                  multiple={false}
-                  initialSelectedImages={mediaFile?.secure_url ? [mediaFile.secure_url] : []}
-                  setInitialSelectedImages={(value) => {
-                    // Find the mediaFile ID that corresponds to the selected secure_url
-                    if (typeof value === "string" && value && allMediaFiles?.images) {
-                      const selectedMediaFile = allMediaFiles.images.find(
-                        (file) => file.secure_url === value
-                      );
-                      if (selectedMediaFile) {
-                        field.onChange(selectedMediaFile.id);
-                      }
-                    } else {
-                      field.onChange("");
-                    }
-                  }}
-                />
-              </div>
-            </div>
-          )}
+        <SubCategoryImageField
+          form={form}
+          fieldName="mediaFileId"
+          allMediaFiles={allMediaFiles}
         />
 
         <FormInput

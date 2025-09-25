@@ -1,45 +1,27 @@
 "use client";
 
-import ActionTable from "@/components/shared/table/action-table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Category } from "@/generated/prisma";
+import { Button } from "@/components/ui/button";
+import { RouterOutputs } from "@/trpc/routers/_app";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
+import { Edit } from "lucide-react";
 import Image from "next/image";
-import { useDeleteMutation } from "@/hooks/use-delete-mutation";
+import Link from "next/link";
+
+type Category = RouterOutputs['category']['getAll'][number]
 
 const CategoryActionCell = ({ categoryId }: { categoryId: string }) => {
-  const deleteCategoryMutation = useDeleteMutation({ type: "category" });
-
   return (
-    <ActionTable
-      type="category"
-      deleteMutation={deleteCategoryMutation}
-      id={categoryId}
-      title="Delete Category"
-      desc="Are you sure you want to delete this category? This action cannot be undone"
-    />
+    <Link href={`/admin/catalog/category/${categoryId}`}>
+      <Button variant="outline" size="sm">
+        <Edit className="h-4 w-4" />
+        Edit
+      </Button>
+    </Link>
   );
 };
 
 export const columns: ColumnDef<Category>[] = [
-  {
-    id: 'select',
-    header: ({table}) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected() || table.getIsSomeRowsSelected() && 'indeterminate'}
-        onCheckedChange={(val)=>table.toggleAllPageRowsSelected(!!val)}
-        aria-label="select all"
-      />
-    ),
-    cell: ({row}) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(val)=>row.toggleSelected(!!val)}
-        aria-label="select row"
-      />
-    )
-  },
   {
     header: "#",
     cell: ({ row }) => row.index + 1,
@@ -57,7 +39,7 @@ export const columns: ColumnDef<Category>[] = [
     cell: ({ row }) => (
       <div className="w-56 h-32 rounded-lg overflow-clip border">
         <Image
-          src={row.getValue('image')}
+          src={row.original.mediaFile.secure_url}
           alt={row.original.name}
           width={100}
           height={100}

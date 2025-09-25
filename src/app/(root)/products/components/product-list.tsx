@@ -1,0 +1,69 @@
+import ProductCard from "@/components/shared/product-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { trpc } from "@/trpc/server";
+
+interface ProductListProps {
+  search?: string;
+  subCategoryIds?: string[];
+  sort?: string;
+  max?: string;
+  min?: string;
+}
+
+const ProductList = async ({ search, max, min, sort, subCategoryIds: subCategoriesId }: ProductListProps) => {
+  const products = await trpc.product.getAll({
+    search,
+    subCategoriesId,
+    price: {
+      max,
+      min,
+    },
+  });
+
+  return (
+    <div
+      className={`
+        grid 
+        w-full 
+        gap-2 
+        md:gap-5 
+        grid-cols-2 
+        lg:grid-cols-3
+        xl:grid-cols-4
+        h-full
+      `}
+    >
+      {products && products?.length !== 0 ? (
+        products.map((product) => (
+          <ProductCard key={product.slug} className="col-span-1" {...product} />
+        ))
+      ) : (
+        <p className="text-lg text-neutral-500 text-center mt-36 col-span-4">
+          There is no products.
+        </p>
+      )}
+    </div>
+  );
+};
+
+export const ProductListFallback = () => {
+  return (
+    <div
+      className={`
+        grid 
+        w-full 
+        gap-2 
+        md:gap-5 
+        grid-cols-2 
+        lg:grid-cols-4
+        h-full
+      `}
+    >
+      {[...Array(6)].map((_, index) => (
+        <Skeleton key={index} className="col-span-1 aspect-[1/1.9]" />
+      ))}
+    </div>
+  );
+};
+
+export default ProductList;

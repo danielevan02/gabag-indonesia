@@ -15,9 +15,9 @@ const NavLinks = ({device}: {device: string}) => {
   const path = usePathname();
   const links: LinkType[] = [
     { label: "Home", link: "/", icon: HomeIcon },
-    { label: "Mom", link: "/products?category=e827dd23-8c59-4360-bcd7-147e3d5a5224", icon: HandHeart },
-    { label: "Beauty", link: "/products?category=6329a950-5652-476d-94c6-7a73381936a5", icon: Sparkles },
-    { label: "Kids", link: "/products?category=4bea0680-9151-4372-9b5d-b8dc0f9e77b8", icon: Baby },
+    { label: "Mom", link: "/products?category=f6a1e8e9-5a62-4f4b-a429-ffc8276a11e9", icon: HandHeart },
+    { label: "Beauty", link: "/products?category=f4b48800-d115-4384-a109-98725e506730", icon: Sparkles },
+    { label: "Kids", link: "/products?category=d3cfc5e0-e98e-4b71-92bd-46a238e787c5", icon: Baby },
     { label: "Order", link: "/orders", icon: ClipboardList },
     { label: "About", link: "/about", icon: Info },
   ];

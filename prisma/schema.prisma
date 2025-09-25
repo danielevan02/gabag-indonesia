@@ -82,10 +82,9 @@ model Category {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String
   createdAt DateTime @default(now()) @db.Timestamp(6)
-  image     String
 
-  mediaFileId String?
-  mediaFile   MediaFile? @relation(fields: [mediaFileId], references: [id])
+  mediaFileId String
+  mediaFile   MediaFile @relation(fields: [mediaFileId], references: [id])
 
   subCategories SubCategory[]
   vouchers      Voucher[] // Relasi untuk voucher yang spesifik untuk category

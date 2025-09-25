@@ -38,7 +38,7 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   searchPlaceholder: string;
-  deleteManyMutation: DeleteManyMutation;
+  deleteManyMutation?: DeleteManyMutation;
   deleteTitle?: string;
   searchColumn?: string;
 }
@@ -105,7 +105,7 @@ export function   DataTable<TData, TValue>({
   const searchableColumn = getSearchableColumn();
 
   const handleManyDelete = () => {
-    if (selectedRows === 0) return;
+    if (selectedRows === 0 || !deleteManyMutation) return;
     const rows = table.getFilteredSelectedRowModel().rows.map((item) => item.original);
     //@ts-expect-error there is no id in TData
     const selectedIds = rows.map((row) => row.id);
@@ -157,23 +157,25 @@ export function   DataTable<TData, TValue>({
           />
         </div>
 
-        <div
-          className={cn(
-            "opacity-0 transition-all pointer-events-none flex items-center gap-2",
-            selectedRows !== 0 && "opacity-100 pointer-events-auto"
-          )}
-        >
-          {path === "/admin/order" && (
-            <Button>
-              <Truck />
-              Create Shipment for {`${selectedRows} order(s)`}
+        {deleteManyMutation && (
+          <div
+            className={cn(
+              "opacity-0 transition-all pointer-events-none flex items-center gap-2",
+              selectedRows !== 0 && "opacity-100 pointer-events-auto"
+            )}
+          >
+            {path === "/admin/order" && (
+              <Button>
+                <Truck />
+                Create Shipment for {`${selectedRows} order(s)`}
+              </Button>
+            )}
+            <Button variant="destructive" onClick={() => setOpenModal(true)}>
+              <IconTrash />
+              Delete {`${selectedRows} row(s)`}
             </Button>
-          )}
-          <Button variant="destructive" onClick={() => setOpenModal(true)}>
-            <IconTrash />
-            Delete {`${selectedRows} row(s)`}
-          </Button>
-        </div>
+          </div>
+        )}
       </div>
 
       <div className="rounded-md border relative overflow-y-auto flex-1">
@@ -220,15 +222,17 @@ export function   DataTable<TData, TValue>({
         <TablePagination table={table} />
       </div>
 
-      <ModalContent
-        button="Delete"
-        icon={IconTrash}
-        onClick={handleManyDelete}
-        openModal={openModal}
-        setOpenModal={setOpenModal}
-        desc="Are you sure you want to delete the selected rows? this action cannot be undone."
-        title={deleteTitle ?? "Delete"}
-      />
+      {deleteManyMutation && (
+        <ModalContent
+          button="Delete"
+          icon={IconTrash}
+          onClick={handleManyDelete}
+          openModal={openModal}
+          setOpenModal={setOpenModal}
+          desc="Are you sure you want to delete the selected rows? this action cannot be undone."
+          title={deleteTitle ?? "Delete"}
+        />
+      )}
     </>
   );
 }

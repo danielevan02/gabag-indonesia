@@ -5,9 +5,6 @@ import { serializeType } from "@/lib/utils";
 import { TRPCError } from "@trpc/server";
 import { categorySchema } from "@/lib/schema";
 
-// Category schemas
-
-
 const handleMutationError = (error: unknown, operation: string) => {
   console.error(`${operation} error:`, error);
   return {
@@ -24,19 +21,33 @@ const handleMutationSuccess = (message: string) => {
 };
 
 export const categoryRouter = createTRPCRouter({
+  getIdByName: baseProcedure.input(z.string()).query(async ({ input }) => {
+    return await prisma.category.findMany({
+      where: {
+        name: {
+          contains: input,
+          mode: "insensitive",
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+  }),
   getSelect: baseProcedure.query(async () => {
     return await prisma.category.findMany({
       select: {
         id: true,
-        name: true
-      }
-    })
+        name: true,
+      },
+    });
   }),
   // Get all categories
   getAll: baseProcedure.query(async () => {
     const data = await prisma.category.findMany({
       include: {
         subCategories: true,
+        mediaFile: true,
       },
     });
 
@@ -44,24 +55,30 @@ export const categoryRouter = createTRPCRouter({
   }),
 
   // Get category by ID
-  getById: baseProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ input }) => {
-      const data = await prisma.category.findUnique({
-        where: {
-          id: input.id,
+  getById: baseProcedure.input(z.object({ id: z.string() })).query(async ({ input }) => {
+    const data = await prisma.category.findUnique({
+      where: {
+        id: input.id,
+      },
+      include: {
+        mediaFile: true,
+        subCategories: {
+          select: {
+            id: true,
+          },
         },
+      },
+    });
+
+    if (!data) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Category not found",
       });
+    }
 
-      if (!data) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Category not found",
-        });
-      }
-
-      return serializeType(data);
-    }),
+    return serializeType(data);
+  }),
 
   // Get category with sub categories
   getCategory: baseProcedure
@@ -91,7 +108,7 @@ export const categoryRouter = createTRPCRouter({
     .input(categorySchema.extend({ id: z.string() }))
     .mutation(async ({ input }) => {
       try {
-        const { id, image, name } = input;
+        const { id, mediaFileId, name } = input;
 
         if (!id) {
           throw new Error("Category ID is required");
@@ -103,7 +120,7 @@ export const categoryRouter = createTRPCRouter({
           },
           data: {
             name,
-            image,
+            mediaFileId,
           },
         });
 
@@ -114,21 +131,19 @@ export const categoryRouter = createTRPCRouter({
     }),
 
   // Delete category
-  delete: baseProcedure
-    .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }) => {
-      try {
-        await prisma.category.delete({
-          where: {
-            id: input.id,
-          },
-        });
+  delete: baseProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
+    try {
+      await prisma.category.delete({
+        where: {
+          id: input.id,
+        },
+      });
 
-        return handleMutationSuccess("Category Deleted");
-      } catch (error) {
-        return handleMutationError(error, "Delete Category");
-      }
-    }),
+      return handleMutationSuccess("Category Deleted");
+    } catch (error) {
+      return handleMutationError(error, "Delete Category");
+    }
+  }),
 
   // Delete many categories
   deleteMany: baseProcedure

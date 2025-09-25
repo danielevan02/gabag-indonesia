@@ -2,7 +2,6 @@
 
 import { categorySchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Category } from "@/generated/prisma";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -10,8 +9,14 @@ import { z } from "zod";
 import { FormInput } from "@/components/shared/input/form-input";
 import { Form } from "@/components/ui/form";
 import { trpc } from "@/trpc/client";
+import { RouterOutputs } from "@/trpc/routers/_app";
+import { Button } from "@/components/ui/button";
+import { Loader } from "lucide-react";
+import { CategoryImageField } from "../../components/category-image-field";
 
 export type CategoryFormType = z.infer<typeof categorySchema>;
+
+type Category = RouterOutputs['category']['getById']
 
 export default function EditCategoryForm({ category }: { category: Category }) {
   const router = useRouter();
@@ -35,10 +40,12 @@ export default function EditCategoryForm({ category }: { category: Category }) {
   const form = useForm<CategoryFormType>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
-      image: category.image,
+      mediaFileId: category.mediaFileId,
       name: category.name,
     },
   });
+
+  const { data: allMediaFiles } = trpc.gallery.getAll.useQuery();
 
 
   const onSubmit = async (data: CategoryFormType) => {
@@ -48,12 +55,22 @@ export default function EditCategoryForm({ category }: { category: Category }) {
       console.error(error)
     }
   };
+
+  const onError = (error: any) => {
+    console.log(error)
+  }
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col my-5 flex-1 overflow-y-scroll px-1"
+        onSubmit={form.handleSubmit(onSubmit, onError)}
+        className="flex flex-col my-5 flex-1 overflow-y-scroll px-1 gap-3"
       >
+        <CategoryImageField
+          form={form}
+          fieldName="mediaFileId"
+          allMediaFiles={allMediaFiles}
+        />
+
         <FormInput
           form={form}
           fieldType="text"
@@ -63,55 +80,17 @@ export default function EditCategoryForm({ category }: { category: Category }) {
           disabled={isPending}
         />
 
-        {/* <Controller
-          control={form.control}
-          name="image"
-          render={({ field }) => (
-            <div className="flex gap-2 flex-col mb-5">
-              <Label>Category Photo</Label>
-              <div className="flex flex-col gap-2">
-                {field.value ? (
-                  // SHOW THIS IF THERE IS IMAGES
-                  <div className="w-full flex gap-2 justify-start flex-wrap">
-                    <div className="w-96 overflow-hidden rounded-md border">
-                      <Image
-                        src={field.value || "/images/placeholder-product.png"}
-                        alt="category-image"
-                        width={100}
-                        height={100}
-                        className="size-full object-cover"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  // SHOW THIS IF THERE IS NO IMAGES
-                  <div className="flex flex-col items-center justify-center size-44 rounded-md border bg-accent gap-4">
-                    <ImagePlus />
-                    <span className="text-sm text-neutral-700">Add Category Image</span>
-                  </div>
-                )}
-
-                <GalleryModal
-                  initialSelectedImages={field.value ? [field.value] : []}
-                  setInitialSelectedImages={field.onChange}
-                />
-
-                {form.formState.errors.image && (
-                  <ErrorMessage message={form.formState.errors.image.message || "Invalid image"} />
-                )}
-              </div>
-            </div>
-          )}
-        /> */}
-
-        <div className="flex justify-end">
-          <button
-            type="submit"
+         <div className="flex justify-end gap-2">
+          <Button
+            variant="destructive"
+            onClick={() => router.back()}
             disabled={isPending}
-            className="bg-primary text-white px-4 py-2 rounded-md disabled:opacity-50"
           >
-            {isPending ? "Updating..." : "Update Category"}
-          </button>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isPending}>
+            {isPending ? <Loader className="size-4 animate-spin" /> : "Update"}
+          </Button>
         </div>
       </form>
     </Form>

@@ -52,7 +52,7 @@ export const orderSchema = z.object({
 
 export const categorySchema = z.object({
   name: z.string().min(1, "Please enter the name of the category"),
-  image: z.string().min(1, "Please pick an image for the sub category"),
+  mediaFileId: z.string().min(1, "Please pick an image for the category"),
 });
 
 export const productsSchema = z.object({
@@ -79,21 +79,8 @@ export const subCategorySchema = z.object({
   name: z.string().min(1, "Please enter the name of the sub category"),
   mediaFileId: z.string({ message: "Please insert an image for this sub category" }).optional(),
   discount: z.coerce.number().optional(),
-  category: z.object(
-    {
-      id: z.string(),
-      name: z.string(),
-    },
-    { message: "Please choose a category" }
-  ),
-  products: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string(),
-      })
-    )
-    .optional(),
+  category: z.string(),
+  products: z.array(z.string()).optional(),
 });
 
 export const variantSchema = z.object({
