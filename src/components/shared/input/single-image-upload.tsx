@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/trpc/client";
@@ -14,10 +13,9 @@ interface SingleImageUploadProps {
 }
 
 export function SingleImageUpload({ value, onChange, disabled, currentImage }: SingleImageUploadProps) {
-  const [isUploading, setIsUploading] = useState(false);
 
   const { data: mediaFiles } = trpc.gallery.getAll.useQuery();
-  const selectedImage = mediaFiles?.find(file => file.id === value);
+  const selectedImage = mediaFiles?.images.find(file => file.id === value);
 
   const handleImageSelect = (mediaFileId: string) => {
     onChange(mediaFileId);
@@ -59,7 +57,7 @@ export function SingleImageUpload({ value, onChange, disabled, currentImage }: S
       )}
 
       <div className="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto">
-        {mediaFiles?.map((file) => (
+        {mediaFiles?.images.map((file) => (
           <div
             key={file.id}
             className={`relative cursor-pointer border-2 rounded ${
@@ -78,7 +76,7 @@ export function SingleImageUpload({ value, onChange, disabled, currentImage }: S
         ))}
       </div>
 
-      {!mediaFiles?.length && (
+      {!mediaFiles?.images.length && (
         <p className="text-sm text-gray-500 text-center">
           No images available. Please upload images in the gallery first.
         </p>

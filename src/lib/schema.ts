@@ -150,3 +150,17 @@ export const carouselSchema = z.object({
   startDate: z.date().optional(),
   endDate: z.date().optional(),
 });
+
+export const cartItemSchema = z.object({
+  productId: z.string(),
+  variantId: z.string().optional(),
+  name: z.string(),
+  slug: z.string(),
+  image: z.string(),
+  price: z.number(),
+  qty: z.number(),
+  weight: z.number(),
+  length: z.number(),
+  width: z.number(),
+  height: z.number(),
+});

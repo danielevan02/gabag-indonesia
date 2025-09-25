@@ -1,8 +1,9 @@
 "use client";
 
 import { ProductFormType } from "@/app/admin/catalog/product/add/components/product-form";
-import { FormField } from "@/components/shared/input/form-field";
+import { FormInput } from "@/components/shared/input/form-input";
 import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
 import { voucherSchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader } from "lucide-react";
@@ -25,12 +26,7 @@ export default function VoucherForm({
   const router = useRouter();
   const [isLoading, startTransition] = useTransition();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    // control,
-  } = useForm({
+  const form = useForm({
     resolver: zodResolver(voucherSchema),
   });
 
@@ -51,39 +47,40 @@ export default function VoucherForm({
   }
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit, onError)}
-      className="flex flex-col my-5 flex-1 overflow-y-scroll px-1"
-    >
-      <div>
-        <FormField
-          label="Voucher Code"
-          name="code"
-          type="text"
-          register={register}
-          errors={errors}
-          required
-          placeholder="Enter product name"
-          disabled={isLoading}
-        />
-        <Button onClick={handleGenerateVoucher}>Generate Voucher Code</Button>
-      </div>
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit, onError)}
+        className="flex flex-col my-5 flex-1 overflow-y-scroll px-1"
+      >
+        <div>
+          <FormInput
+            form={form}
+            fieldType="text"
+            label="Voucher Code"
+            name="code"
+            type="text"
+            placeholder="Enter product name"
+            disabled={isLoading}
+          />
+          <Button onClick={handleGenerateVoucher}>Generate Voucher Code</Button>
+        </div>
 
-      
+        
 
-      <div className="flex justify-end gap-2">
-        <Button
-          variant="destructive"
-          type="button"
-          disabled={isLoading}
-          onClick={() => router.push("/admin/event")}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? <Loader className="w-4 h-4 animate-spin" /> : "Create Event"}
-        </Button>
-      </div>
-    </form>
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="destructive"
+            type="button"
+            disabled={isLoading}
+            onClick={() => router.push("/admin/event")}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? <Loader className="w-4 h-4 animate-spin" /> : "Create Event"}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

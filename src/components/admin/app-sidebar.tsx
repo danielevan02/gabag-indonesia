@@ -7,7 +7,7 @@ import {
   Images,
   ScrollText,
   SquareTerminal,
-  TicketPercent,
+  // TicketPercent,
 } from "lucide-react"
 import { NavMain } from "@/components/admin/nav-main"
 import { NavUser } from "@/components/admin/nav-user"

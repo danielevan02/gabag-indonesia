@@ -10,13 +10,11 @@ import { Button } from "@/components/ui/button";
 import CartModal from "../cart/cart-modal";
 import { TooltipWrapper } from "../tooltip-wrapper";
 import { ShieldUser } from "lucide-react";
-import { trpc } from "@/trpc/server";
 import Image from "next/image";
 
 const Header = async () => {
   const session = await auth();
   const user = session?.user;
-  const cart = await trpc.cart.getMyCart();
 
   return (
     <div className="nav-container">
@@ -33,6 +31,7 @@ const Header = async () => {
 
       <div className="flex w-full justify-between px-5 lg:px-10 pb-2">
         {/* MENU BUTTON VISIBLE FOR MOBILE SCREEN */}
+        {/* @ts-expect-error just react 19 issue */}
         <SessionProvider session={session}>
           <MobileDrawer />
         </SessionProvider>
@@ -46,7 +45,7 @@ const Header = async () => {
         </div>
 
         <div className="hidden lg:flex gap-5 justify-end items-center w-1/3">
-          <CartModal cart={cart} userId={user?.id} />
+          <CartModal userId={user?.id} />
 
           {session?.user?.role === "admin" && (
             <TooltipWrapper text="Admin Panel">
@@ -86,7 +85,7 @@ const Header = async () => {
 
         {/* MOBILE CART BUTTON */}
         <div className="lg:hidden">
-          <CartModal cart={cart} userId={user?.id} />
+          <CartModal userId={user?.id} />
         </div>
       </div>
     </div>

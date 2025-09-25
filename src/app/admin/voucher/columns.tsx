@@ -1,6 +1,6 @@
 "use client";
 
-import ActionTable from "@/components/shared/table/action-table";
+// import ActionTable from "@/components/shared/table/action-table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";

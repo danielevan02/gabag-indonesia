@@ -4,14 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { MediaFile } from "@/generated/prisma";
 import { trpc } from "@/trpc/client";
 import { X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export default function Gallery({ images }: { images: MediaFile[] }) {
+export default function Gallery({
+  images,
+}: {
+  images: { id: string; public_id: string; secure_url: string }[];
+}) {
   const [imageModal, setImageModal] = useState("");
   const [manage, setManage] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string[]>([]);

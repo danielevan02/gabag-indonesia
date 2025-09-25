@@ -1,6 +1,8 @@
 import { cn } from "@/lib/utils";
-import { Variant } from "@/types";
+import { RouterOutputs } from "@/trpc/routers/_app";
 import Image from "next/image";
+
+export type Variant = RouterOutputs['product']['getBySlug']['variants'][number]
 
 interface VariantSectionProps {
   variants: Variant[];
@@ -39,7 +41,7 @@ export const VariantItem = ({
   >
     <div className="relative">
       <Image
-        src={variant.image}
+        src={variant.mediaFile.secure_url}
         alt={variant.name}
         width={100}
         height={100}

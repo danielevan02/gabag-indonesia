@@ -5,6 +5,7 @@ import { serializeType } from "@/lib/utils";
 import { TRPCError } from "@trpc/server";
 import { auth } from "@/auth"
 import { CartItem } from "@/types";
+import { cartItemSchema } from "@/lib/schema";
 
 // Helper function to calculate cart prices
 const calcPrice = (items: CartItem[]) => {
@@ -32,7 +33,7 @@ export const getCartHelper = async (userId?: string) => {
       : { sessionCartId },
   });
 
-  if (!cart) return undefined;
+  if (!cart) return null;
 
   return serializeType({
     ...cart,
@@ -44,18 +45,6 @@ export const getCartHelper = async (userId?: string) => {
     userId,
   });
 };
-
-// Cart item input schema
-const cartItemSchema = z.object({
-  productId: z.string(),
-  variantId: z.string().optional(),
-  name: z.string(),
-  slug: z.string(),
-  category: z.string(),
-  image: z.string(),
-  price: z.number(),
-  qty: z.number(),
-});
 
 export const cartRouter = createTRPCRouter({
   // Get current user's cart
@@ -76,12 +65,9 @@ export const cartRouter = createTRPCRouter({
 
   // Add item to cart
   addToCart: baseProcedure
-    .input(z.object({
-      item: cartItemSchema,
-    }))
-    .mutation(async ({ input }) => {
+    .input(cartItemSchema)
+    .mutation(async ({ input: item }) => {
       try {
-        const { item } = input;
 
         const session = await auth();
         const userId = session?.user?.id;

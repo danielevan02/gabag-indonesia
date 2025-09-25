@@ -32,7 +32,7 @@ export default function EditCarouselForm({ carousel }: EditCarouselFormProps) {
       } else {
         toast.error(resp.message);
       }
-    }
+    },
   });
 
   const form = useForm({
@@ -44,7 +44,6 @@ export default function EditCarouselForm({ carousel }: EditCarouselFormProps) {
       desktopImageId: carousel.desktopImageId,
       mobileImageId: carousel.mobileImageId,
       isActive: carousel.isActive,
-      openInNewTab: carousel.openInNewTab,
       startDate: carousel.startDate ? new Date(carousel.startDate) : undefined,
       endDate: carousel.endDate ? new Date(carousel.endDate) : undefined,
     },
@@ -125,7 +124,15 @@ export default function EditCarouselForm({ carousel }: EditCarouselFormProps) {
             <p className="text-sm text-red-500">{form.formState.errors.mobileImageId.message}</p>
           )}
         </div>
-
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="isActive"
+            checked={form.watch("isActive")}
+            onCheckedChange={(checked) => form.setValue("isActive", !!checked)}
+            disabled={isPending}
+          />
+          <Label htmlFor="isActive">Active</Label>
+        </div>
         {/* Date Range */}
         <div className="grid grid-cols-2 gap-4">
           <FormInput
@@ -144,28 +151,6 @@ export default function EditCarouselForm({ carousel }: EditCarouselFormProps) {
           />
         </div>
 
-        {/* Checkboxes */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="isActive"
-              checked={form.watch("isActive")}
-              onCheckedChange={(checked) => form.setValue("isActive", !!checked)}
-              disabled={isPending}
-            />
-            <Label htmlFor="isActive">Active</Label>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="openInNewTab"
-              checked={form.watch("openInNewTab")}
-              onCheckedChange={(checked) => form.setValue("openInNewTab", !!checked)}
-              disabled={isPending}
-            />
-            <Label htmlFor="openInNewTab">Open in new tab</Label>
-          </div>
-        </div>
 
         <div className="flex justify-end gap-2">
           <Button

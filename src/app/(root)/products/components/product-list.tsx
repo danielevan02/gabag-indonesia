@@ -10,7 +10,7 @@ interface ProductListProps {
   min?: string;
 }
 
-const ProductList = async ({ search, max, min, sort, subCategoryIds: subCategoriesId }: ProductListProps) => {
+const ProductList = async ({ search, max, min, subCategoryIds: subCategoriesId }: ProductListProps) => {
   const products = await trpc.product.getAll({
     search,
     subCategoriesId,

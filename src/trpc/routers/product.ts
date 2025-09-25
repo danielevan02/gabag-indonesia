@@ -209,8 +209,25 @@ export const productRouter = createTRPCRouter({
     const data = await prisma.product.findFirst({
       where: { slug: input.slug },
       include: {
+        images: {
+          include: {
+            mediaFile: {
+              select: {
+                secure_url: true
+              }
+            }
+          }
+        },
         subCategory: true,
-        variants: true,
+        variants: {
+          include: {
+            mediaFile: {
+              select: {
+                secure_url: true
+              }
+            }
+          }
+        },
         orderItems: {
           where: {
             order: {
@@ -233,6 +250,7 @@ export const productRouter = createTRPCRouter({
     const convertedData = serializeType(data);
     return {
       ...convertedData,
+      images: convertedData.images.map((image) => image.mediaFile.secure_url),
       variants: convertedData.variants.map((variant) => ({
         ...variant,
         price: calculateDiscountedPrice(variant.regularPrice, variant.discount),

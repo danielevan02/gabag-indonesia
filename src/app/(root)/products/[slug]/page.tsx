@@ -1,18 +1,18 @@
-import { getAllProducts, getProductBySlug } from "@/lib/actions/product.action";
 import ProductDetailSection from "./components/product-detail-section";
 import { Metadata } from "next";
-import ProductCard from "@/components/shared/product/product-card";
+import ProductCard from "@/components/shared/product-card";
+import { trpc } from "@/trpc/server";
 
 type tParams = Promise<{ slug: string }>;
 
 export async function generateStaticParams() {
-  const products = await getAllProducts();
+  const products = await trpc.product.getAll({});
   return products.map((product) => ({ slug: product.slug }));
 }
 
 export async function generateMetadata({ params }: {params: tParams}): Promise<Metadata> {
   const { slug }: {slug: string} = await params;
-  const product = await getProductBySlug(slug);
+  const product = await trpc.product.getBySlug({slug});
 
   return {
     title: product?.name || "Product Details",
@@ -21,8 +21,8 @@ export async function generateMetadata({ params }: {params: tParams}): Promise<M
 }
 const ProductDetailsPage = async ({ params }: {params: tParams}) => {
   const { slug }: {slug: string} = await params;
-  const product = await getProductBySlug(slug);
-  const products = await getAllProducts(product.subCategory?.name)
+  const product = await trpc.product.getBySlug({slug});
+  const products = await trpc.product.getAll({subCategory: product.subCategory.name})
   
   if (!product) {
     return <div>Product not found</div>;

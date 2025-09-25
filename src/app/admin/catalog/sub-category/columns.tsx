@@ -58,7 +58,7 @@ export const columns: ColumnDef<SubCategory>[] = [
     cell: ({ row }) => (
       <div className="w-56 h-32 rounded-lg overflow-clip border">
         <Image
-          src={row.original.mediaFile?.secure_url}
+          src={row.original.mediaFile?.secure_url|| "/placeholder-product.png"}
           alt={row.original.name}
           width={100}
           height={100}

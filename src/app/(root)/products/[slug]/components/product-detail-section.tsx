@@ -1,23 +1,22 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { addToCart } from "@/lib/actions/cart.action";
-import { useCartStore } from "@/lib/stores/cart-store";
-import { Variant } from "@/types";
+import { useCartStore } from "@/lib/stores/cart.store";
 import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { getProductBySlug } from "@/lib/actions/product.action";
 import { useProductData } from "@/hooks/useProductData";
 import { useQuantityControls } from "@/hooks/useQuantityControls";
 import { ImageModal } from "./image-modal";
 import { ImageGallery } from "./image-gallery";
-import { VariantSection } from "./variant-section";
+import { Variant, VariantSection } from "./variant-section";
 import { QuantityControl } from "./quantity-control";
 import { PriceTag } from "./price-tag";
+import { RouterOutputs } from "@/trpc/routers/_app";
+import { trpc } from "@/trpc/client";
 
-type Product = Awaited<ReturnType<typeof getProductBySlug>>;
+type Product = RouterOutputs['product']['getBySlug'];
 
 interface ProductDetailSectionProps {
   product: Product;
@@ -27,10 +26,24 @@ interface ProductDetailSectionProps {
 const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
   const router = useRouter();
   const { setOpenModal } = useCartStore();
-  
+  const trpcUtils = trpc.useUtils();
+  const {mutateAsync, isPending: isLoading} = trpc.cart.addToCart.useMutation({
+    onSuccess: async (res) => {
+      // Force refetch cart data to get latest state
+      await trpcUtils.cart.getMyCart.refetch();
+      setOpenModal(true);
+      toast(res.message, {
+        description: "Check out your cart to see the product",
+        action: {
+          label: "Go to Cart",
+          onClick: () => router.push("/cart"),
+        },
+        duration: 5000,
+      });
+    }
+  })
   const [imageModal, setImageModal] = useState("");
   const [variant, setVariant] = useState<Variant>();
-  const [isLoading, setIsLoading] = useState(false);
   
   // Computed values
   const { lowestPrice, imagesList, sold, stock } = useProductData(product);
@@ -40,7 +53,7 @@ const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
 
   const handleVariantSelect = useCallback((selectedVariant: Variant) => {
     setVariant(selectedVariant);
-    setMainImage(selectedVariant.image);
+    setMainImage(selectedVariant.mediaFile.secure_url);
     quantityControls.resetQuantity();
   }, [quantityControls]);
 
@@ -48,11 +61,9 @@ const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
     if (product.hasVariant && !variant) {
       return toast.error("Please select one variant");
     }
-
-    setIsLoading(true);
     try {
-      const res = await addToCart({
-        image: variant?.image || product.images?.[0] || "/images/placeholder-product.png",
+      await mutateAsync({
+        image: variant?.mediaFile.secure_url || product.images?.[0] || "/images/placeholder-product.png",
         name: variant ? `${product.name} - ${variant.name}` : product.name!,
         price: variant?.price || product.price!,
         productId: product.id!,
@@ -65,18 +76,10 @@ const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
         width: product.width,
       });
 
-      setOpenModal(true);
-      toast(res.message, {
-        description: "Check out your cart to see the product",
-        action: {
-          label: "Go to Cart",
-          onClick: () => router.push("/cart"),
-        },
-        duration: 5000,
-      });
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      console.log(error)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product, variant, quantityControls.quantity, setOpenModal, router]);
 
   const isAddToCartDisabled = 

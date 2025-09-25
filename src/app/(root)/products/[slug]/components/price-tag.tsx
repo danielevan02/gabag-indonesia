@@ -1,4 +1,4 @@
-import { Variant } from "@/types";
+import { Variant } from "./variant-section";
 
 interface PriceTagProps {
   regularPrice?: number;

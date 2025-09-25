@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,7 @@ export default function SelectedImagesSection({
       <div className="flex flex-col gap-1">
         <Label className="text-base">Selected Image(s)</Label>
         <div className="gallery-image-container">
+          {/* @ts-expect-error just react 19 issue */}
           <SortableContext items={images || []} strategy={rectSortingStrategy}>
             {multiple ? (
               images.length > 0 ? (
