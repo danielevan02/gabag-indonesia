@@ -26,6 +26,7 @@ const HomeCarousel = ({ slideDuration, carousels }: HomeCarouselProps) => {
       mobile: carousel.mobileImage.secure_url,
       url: carousel.linkUrl,
       isActive: carousel.isActive,
+      alt: carousel.altText
     }))
     .filter((val) => val.isActive);
 
@@ -34,28 +35,44 @@ const HomeCarousel = ({ slideDuration, carousels }: HomeCarouselProps) => {
       <Carousel
         plugins={[
           Autoplay({
-            delay: slideDuration ?? 2000,
+            delay: slideDuration ?? 3000,
           }),
         ]}
+        opts={{
+          align: "start",
+          loop: true,
+        }}
       >
         <CarouselContent className="rounded-4xl">
-          {carouselImg.map((item) => (
-            <CarouselItem key={item.desktop}>
-              <a href={item.url}>
+          {carouselImg.map((item, index) => (
+            <CarouselItem key={index}>
+              <a
+                href={item.url}
+                aria-label={`Go to ${item.alt || "carousel item"}`}
+                className="block focus:ring-2 focus:ring-blue-500 focus:outline-none rounded-md"
+                tabIndex={0}
+              >
                 <Image
                   src={isMobile ? item.mobile : item.desktop}
                   className="w-full max-h-[700px] object-cover rounded-md"
-                  alt={isMobile ? item.mobile : item.desktop}
-                  width={600}
-                  height={600}
-                  priority
+                  alt={item.alt || `Carousel Image ${index}`}
+                  width={isMobile ? 400 : 1000}
+                  height={isMobile ? 300 : 800}
+                  priority={index === 0}
+                  loading={index === 0 ? "eager" : "lazy"}
                 />
               </a>
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
+        <CarouselPrevious
+          aria-label="Previous carousel item"
+          className="focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        />
+        <CarouselNext
+          aria-label="Next carousel item"
+          className="focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        />
       </Carousel>
     </div>
   );

@@ -13,8 +13,8 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { SingleImageUpload } from "@/components/shared/input/single-image-upload";
 import { RouterOutputs } from "@/trpc/routers/_app";
+import { CarouselImageField } from "../../components/carousel-images-field";
 
 export type CarouselFormType = z.infer<typeof carouselSchema>;
 
@@ -61,6 +61,8 @@ export default function EditCarouselForm({ carousel }: EditCarouselFormProps) {
     }
   };
 
+  const { data: allMediaFiles } = trpc.gallery.getAll.useQuery();
+
   return (
     <Form {...form}>
       <form
@@ -97,33 +99,18 @@ export default function EditCarouselForm({ carousel }: EditCarouselFormProps) {
           disabled={isPending}
         />
 
-        {/* Desktop Image Upload */}
-        <div className="space-y-2">
-          <Label>Desktop Image</Label>
-          <SingleImageUpload
-            value={form.watch("desktopImageId")}
-            onChange={(mediaFileId) => form.setValue("desktopImageId", mediaFileId)}
-            disabled={isPending}
-            currentImage={carousel.desktopImage.secure_url}
-          />
-          {form.formState.errors.desktopImageId && (
-            <p className="text-sm text-red-500">{form.formState.errors.desktopImageId.message}</p>
-          )}
-        </div>
+        <CarouselImageField
+          form={form}
+          fieldName="desktopImageId"
+          allMediaFiles={allMediaFiles}
+        />
 
-        {/* Mobile Image Upload */}
-        <div className="space-y-2">
-          <Label>Mobile Image</Label>
-          <SingleImageUpload
-            value={form.watch("mobileImageId")}
-            onChange={(mediaFileId) => form.setValue("mobileImageId", mediaFileId)}
-            disabled={isPending}
-            currentImage={carousel.mobileImage.secure_url}
-          />
-          {form.formState.errors.mobileImageId && (
-            <p className="text-sm text-red-500">{form.formState.errors.mobileImageId.message}</p>
-          )}
-        </div>
+        <CarouselImageField
+          form={form}
+          fieldName="mobileImageId"
+          allMediaFiles={allMediaFiles}
+        />
+
         <div className="flex items-center space-x-2">
           <Checkbox
             id="isActive"

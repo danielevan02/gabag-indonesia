@@ -18,17 +18,24 @@ interface CartItemProps {
 }
 
 const CartItem = ({ item, cartItemsLength, index, startTransition }: CartItemProps) => {
+  const utils = trpc.useUtils();
+
   const deleteCartItem = trpc.cart.deleteCartItem.useMutation({
     onSuccess: (res) => {
       if (res.success) {
         toast.success(res.message);
+        utils.cart.getMyCart.invalidate();
       } else {
         toast.error(res.message);
       }
     },
   });
 
-  const updateCartItem = trpc.cart.updateCartItem.useMutation();
+  const updateCartItem = trpc.cart.updateCartItem.useMutation({
+    onSuccess: () => {
+      utils.cart.getMyCart.invalidate();
+    },
+  });
 
   const [qty, setQty] = useState(item.qty);
   const [maxQty, setMaxQty] = useState(0);

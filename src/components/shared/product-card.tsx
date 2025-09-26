@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import BlurImage from "./blur-image";
+import Image from "next/image";
 
 interface ProductCardProps {
   name: string;
@@ -60,13 +60,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* Image Container */}
       <div className="product-card-image-container">
-        <BlurImage
+        <Image
           src={images}
-          className="w-full object-cover h-full group-hover:scale-110 transition-all"
+          className="size-full object-cover group-hover:scale-110 transition-all"
           alt={`${name} product image`}
-          height={200}
-          width={200}
-          dynamic
+          height={1000}
+          width={800}
         />
       </div>
 

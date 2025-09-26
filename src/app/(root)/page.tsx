@@ -1,4 +1,3 @@
-import { Metadata } from "next";
 import { Suspense } from "react";
 import { CategorySection, CategorySectionFallback } from "./components/category-section";
 import { FlashSaleSection, FlashSaleSectionFallback } from "./components/flash-sale-section";
@@ -7,17 +6,14 @@ import {NewArrivalSection, NewArrivalSectionFallback } from "./components/new-ar
 import {BeautySection, BeautySectionFallback } from "./components/beauty-section";
 import { CarouselSection, CarouselSectionFallback } from "./components/carousel-section";
 
-export const metadata: Metadata = {
-  description:
-    "Temukan Gabag! pompa ASI dan tas cooler premium untuk ibu modern. Praktis, stylish, dan sempurna untuk kebutuhan menyusui di mana saja!",
-  openGraph: {
-    type: "website",
-  },
+export const metadata = {
+  title: "Gabag Indonesia - Pompa ASI & Tas Cooler Premium",
+  description: "Produk premium pompa ASI dan tas cooler untuk ibu modern",
 };
 
 export default function LandingPage() {
   return (
-    <div>
+    <main className="min-h-screen">
       <div className="flex flex-col w-full max-w-screen px-2 md:px-5 lg:px-10">
         <Suspense fallback={<CarouselSectionFallback/>}>
           <CarouselSection/>
@@ -43,6 +39,6 @@ export default function LandingPage() {
           <BeautySection />
         </Suspense>
       </div>
-    </div>
+    </main>
   );
 }

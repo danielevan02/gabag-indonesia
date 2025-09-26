@@ -1,10 +1,9 @@
 import ProductCard from "@/components/shared/product-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/trpc/server";
-import CloudinaryVideoPlayer from "@/components/shared/cloudinary-video-player"
 
 export const BreastPumpSection = async () => {
-  const products = await trpc.product.getAll({subCategory: "Breast Pump"});
+  const products = await trpc.product.getAll({ subCategory: "Breast Pump" });
   return (
     <section>
       <div className="flex flex-col w-full md:w-[460px] mx-auto mb-5 mt-10 gap-2">
@@ -17,20 +16,16 @@ export const BreastPumpSection = async () => {
       <hr className="mb-3 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-900 to-transparent opacity-25 dark:via-white" />
 
       <div className="relative">
-        <CloudinaryVideoPlayer
-          src="https://res.cloudinary.com/dkjvksieq/video/upload/v1758695895/home-video_sodvri.mp4"
-          className="w-screen h-screen object-cover"
-        />
+        <video muted autoPlay preload="none">
+          <source src="/home-video.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
         <div className="absolute inset-0 -bottom-1 bg-gradient-to-b from-transparent via-transparent to-background" />
       </div>
 
       <div className="flex gap-1 mt-5 md:gap-5 overflow-scroll no-scrollbar py-px snap-x snap-mandatory">
         {products.map((product) => (
-          <ProductCard
-            key={product.slug}
-            {...product}
-            className="product-card-container"
-          />
+          <ProductCard key={product.slug} {...product} className="product-card-container" />
         ))}
       </div>
     </section>
@@ -38,7 +33,7 @@ export const BreastPumpSection = async () => {
 };
 
 export const BreastPumpSectionFallback = () => {
-  return(
+  return (
     <section>
       <div className="flex flex-col w-full md:w-[460px] mx-auto mb-5 mt-10 gap-2">
         <h3 className="text-2xl lg:text-4xl font-bold text-center mt-20">Kolibri Breastpump</h3>
@@ -49,19 +44,16 @@ export const BreastPumpSectionFallback = () => {
       </div>
       <hr className="mb-3 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-900 to-transparent opacity-25 dark:via-white" />
 
-      <div className="relative">
+      <div className="relative bg-neutral-900 flex items-center justify-center">
+        <div className="w-screen h-screen bg-gradient-to-b from-neutral-900 to-neutral-800 animate-pulse" />
         <div className="absolute inset-0 -bottom-1 bg-gradient-to-b from-transparent via-transparent to-background" />
-        <CloudinaryVideoPlayer
-          src="https://res.cloudinary.com/dkjvksieq/video/upload/v1758695895/home-video_sodvri.mp4"
-          className="w-screen h-screen object-cover"
-        />
       </div>
 
       <div className="flex gap-1 mt-10 md:gap-5 overflow-scroll no-scrollbar py-px snap-x snap-mandatory">
         {[...Array(6)].map((_, index) => (
-          <Skeleton key={index} className="min-w-60 md:min-w-sm aspect-[1/1.8]"/>
+          <Skeleton key={index} className="min-w-60 md:min-w-sm aspect-[1/1.8]" />
         ))}
       </div>
     </section>
-  )
-}
+  );
+};

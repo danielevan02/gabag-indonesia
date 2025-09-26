@@ -37,6 +37,7 @@ export const carouselRouter = createTRPCRouter({
             id: true,
             secure_url: true,
             public_id: true,
+            
           },
         },
         mobileImage: {

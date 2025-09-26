@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/trpc/server";
 import Link from "next/link";
-import CategoryImage from "./category-image";
+import Image from "next/image";
 
 export const CategorySection = async () => {
   const subCategories = await trpc.subCategory.display()
@@ -17,12 +17,13 @@ export const CategorySection = async () => {
               href="/"
               key={category.id}
               className={cn(
-                "flex flex-col gap-2 group col-span-4",
+                "flex flex-col gap-2 group col-span-4 focus:ring-2 focus:ring-blue-500 focus:outline-none rounded-md",
               )}
+              tabIndex={0}
             >
               <div className="w-full min-h-72 max-h-72 overflow-hidden">
-                <CategoryImage
-                  src={category.mediaFile?.secure_url}
+                <Image
+                  src={category.mediaFile?.secure_url||"/images/placeholder-product.png"}
                   alt={category.name}
                   width={200}
                   height={200}
@@ -37,10 +38,15 @@ export const CategorySection = async () => {
       {/* MOBILE VIEW */}
       <div className="flex lg:hidden gap-1 md:gap-5 overflow-scroll no-scrollbar px-1 py-px">
         {subCategories.map((category) => (
-          <Link href="/" key={category.id} className="flex flex-col gap-2">
+          <Link
+            href="/"
+            key={category.id}
+            className="flex flex-col gap-2 focus:ring-2 focus:ring-blue-500 focus:outline-none rounded-md"
+            tabIndex={0}
+          >
             <div className="min-w-56 min-h-56 max-h-56 overflow-hidden">
-              <CategoryImage
-                src={category.mediaFile?.secure_url}
+              <Image
+                src={category.mediaFile?.secure_url||"/images/placeholder-product.png"}
                 alt={category.name}
                 width={200}
                 height={200}
@@ -61,10 +67,10 @@ export const CategorySectionFallback = () => {
       <h2 className="text-xl lg:text-2xl font-semibold tracking-widest text-center mb-5 lg:mb-10">
         Shop by Categories
       </h2>
-      <div className="hidden lg:grid grid-cols-12 w-3xl xl:w-4xl mx-auto gap-4">
-        {[...Array(6)].map((_, index) => (
-          <div key={index} className="w-full min-h-72 max-h-72 flex flex-col gap-2 group col-span-4 overflow-hidden">
-            <Skeleton className="h-96 w-md"/>
+      <div className="hidden lg:grid grid-cols-3 w-3xl xl:w-4xl mx-auto gap-4">
+        {[...Array(9)].map((_, index) => (
+          <div key={index} className="w-full min-h-72 max-h-72 flex flex-col gap-2 group col-span-1 overflow-hidden">
+            <Skeleton className="size-full"/>
           </div>
         ))}
       </div>
@@ -73,7 +79,7 @@ export const CategorySectionFallback = () => {
       <div className="flex lg:hidden gap-1 md:gap-5 overflow-scroll no-scrollbar px-1 py-px">
         {[...Array(6)].map((_, index) => (
           <div key={index} className="min-w-56 min-h-56 max-h-56 flex flex-col gap-2 overflow-hidden">
-            <Skeleton className="h-full w-full"/>
+            <Skeleton className="size-full"/>
           </div>
         ))}
       </div>

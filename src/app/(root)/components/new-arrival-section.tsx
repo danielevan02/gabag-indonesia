@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import BlurImage from "@/components/shared/blur-image";
 import { trpc } from "@/trpc/server";
+import Image from "next/image";
 
 export const NewArrivalSection = async () => {
   const newArrival = await trpc.product.getNewArrivals()
@@ -18,7 +18,7 @@ export const NewArrivalSection = async () => {
             key={product.slug}
             className="w-full flex flex-col items-center"
           >
-            <BlurImage
+            <Image
               src={product.image}
               alt={product.name}
               width={300}
@@ -33,7 +33,6 @@ export const NewArrivalSection = async () => {
                   lg:max-h-[600px]
                   object-cover
                 `}
-              dynamic
             />
             <h2 className="text-center mt-3 lg:text-xl w-72 lg:w-96">
               {product.name}

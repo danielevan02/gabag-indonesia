@@ -31,14 +31,15 @@ const ProductPage = async ({searchParams}: {
   return (
     <div className="mx-3 xl:mx-10 flex flex-col items-center">
 
-      <div className="flex justify-center mt-2 mb-10 w-full h-40 md:h-96 xl:h-[460px]">
+      <div className="flex justify-center mt-2 mb-10 w-full h-40 md:h-96">
         <Image
           src={categories?.mediaFile.secure_url||""}
-          width={600}
-          height={600}
+          width={800}
+          height={400}
           alt={categories?.name||"category photo"}
           className="h-full w-full lg:w-[80%] object-cover"
           priority
+          unoptimized
         />
       </div>
 
