@@ -11,6 +11,8 @@ import {
 import Image from "next/image";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { RouterOutputs } from "@/trpc/routers/_app";
+import { useState, useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type HomeCarouselProps = {
   carousels: RouterOutputs["carousel"]["getAll"];
@@ -19,6 +21,11 @@ type HomeCarouselProps = {
 
 const HomeCarousel = ({ slideDuration, carousels }: HomeCarouselProps) => {
   const isMobile = useIsMobile();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const carouselImg = carousels
     .map((carousel) => ({
@@ -29,6 +36,14 @@ const HomeCarousel = ({ slideDuration, carousels }: HomeCarouselProps) => {
       alt: carousel.altText
     }))
     .filter((val) => val.isActive);
+
+  if (!mounted) {
+    return (
+      <div className="w-[85%] m-auto mt-5">
+        <Skeleton className="w-full aspect-[3/5.3] md:aspect-[5/2] rounded-md" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-[85%] m-auto mt-5">
@@ -54,10 +69,10 @@ const HomeCarousel = ({ slideDuration, carousels }: HomeCarouselProps) => {
               >
                 <Image
                   src={isMobile ? item.mobile : item.desktop}
-                  className="w-full max-h-[700px] object-cover rounded-md"
+                  className="w-full aspect-[3/5.3] max-h-[700px] object-cover rounded-md"
                   alt={item.alt || `Carousel Image ${index}`}
                   width={isMobile ? 400 : 1000}
-                  height={isMobile ? 300 : 800}
+                  height={isMobile ? 200 : 550}
                   priority={index === 0}
                   loading={index === 0 ? "eager" : "lazy"}
                 />

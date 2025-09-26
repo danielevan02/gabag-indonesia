@@ -64,8 +64,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
           src={images}
           className="size-full object-cover group-hover:scale-110 transition-all"
           alt={`${name} product image`}
-          height={1000}
-          width={800}
+          width={450}
+          height={450}
+          sizes="(max-width: 768px) 224px, (max-width: 1024px) 320px, (max-width: 1280px) 384px, 450px"
         />
       </div>
 

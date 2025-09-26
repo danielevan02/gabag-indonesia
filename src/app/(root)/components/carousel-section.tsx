@@ -11,7 +11,7 @@ export async function CarouselSection() {
 export const CarouselSectionFallback = () => {
   return (
     <div className="w-[85%] m-auto mt-5">
-      <Skeleton className="w-full aspect-square"/>
+      <Skeleton className="w-96 aspect-[10/3]"/>
     </div>
   );
 };

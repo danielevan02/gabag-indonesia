@@ -11,13 +11,13 @@ export const CategorySection = async () => {
       <h2 className="text-xl lg:text-2xl font-semibold tracking-widest text-center mb-5 lg:mb-10">
         Shop by Categories
       </h2>
-      <div className="hidden lg:grid grid-cols-12 w-3xl xl:w-4xl mx-auto gap-4">
+      <div className="hidden lg:grid grid-cols-3 w-3xl xl:w-4xl mx-auto gap-4">
         {subCategories.map((category) => (
             <Link
               href="/"
               key={category.id}
               className={cn(
-                "flex flex-col gap-2 group col-span-4 focus:ring-2 focus:ring-blue-500 focus:outline-none rounded-md",
+                "flex flex-col gap-2 group col-span-1 focus:ring-2 focus:ring-blue-500 focus:outline-none rounded-md",
               )}
               tabIndex={0}
             >
