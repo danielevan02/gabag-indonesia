@@ -1,9 +1,11 @@
 import NextAuth, { CredentialsSignin, type NextAuthConfig } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import prisma from "@/lib/prisma";
+import prisma from "./lib/prisma";
 import { authConfig } from "./auth.config";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compareSync } from "bcrypt-ts-edge";
+import { getUserById } from "./lib/actions/user.action";
+import { cookies } from "next/headers";
 
 class InvalidLoginError extends CredentialsSignin {
   code: string;
@@ -16,7 +18,6 @@ class InvalidLoginError extends CredentialsSignin {
 }
 
 export const config: NextAuthConfig = {
-  trustHost: true,
   pages: {
     signIn: "/sign-in",
     error: "/sign-in",
@@ -67,46 +68,10 @@ export const config: NextAuthConfig = {
         return true;
       }
 
-      const existingUser = await prisma.user.findFirst({
-        where: { id: user.id??"" }
-      });
+      const existingUser = await getUserById(user.id ?? "");
 
       if (!existingUser?.emailVerified) {
         return false;
-      }
-
-      // Handle cart migration on sign in
-      try {
-        const { cookies } = await import("next/headers");
-        const cookiesObject = await cookies();
-        const sessionCartId = cookiesObject.get("sessionCartId")?.value;
-
-        if (sessionCartId) {
-          const sessionCart = await prisma.cart.findFirst({
-            where: {
-              sessionCartId,
-            },
-          });
-
-          if (sessionCart && sessionCart.userId == null) {
-            await prisma.cart.deleteMany({
-              where: {
-                userId: user.id,
-              },
-            });
-
-            await prisma.cart.update({
-              where: {
-                id: sessionCart.id,
-              },
-              data: {
-                userId: user.id,
-              },
-            }).catch((e) => console.log("CART UPDATE ERROR AUTH:", e));
-          }
-        }
-      } catch (error) {
-        console.log("Cart migration error:", error);
       }
 
       return true;
@@ -126,6 +91,87 @@ export const config: NextAuthConfig = {
               name: token.name,
             },
           });
+        }
+        if (trigger === "signIn" || trigger === "signUp") {
+          const cookiesObject = await cookies();
+          const sessionCartId = cookiesObject.get("sessionCartId")?.value;
+
+          if (sessionCartId) {
+            const sessionCart = await prisma.cart.findFirst({
+              where: {
+                sessionCartId,
+              },
+            });
+
+            if (sessionCart) {
+              // Check if user already has a cart
+              const existingUserCart = await prisma.cart.findFirst({
+                where: {
+                  userId: user.id,
+                },
+              });
+
+              if (existingUserCart) {
+                // Merge items from session cart to user cart
+                const sessionItems = sessionCart.items as any[];
+                const userItems = existingUserCart.items as any[];
+
+                // Merge logic: add session items to user cart, combining quantities if same product
+                const mergedItems = [...userItems];
+
+                sessionItems.forEach((sessionItem) => {
+                  const existingItem = mergedItems.find((userItem) =>
+                    sessionItem.variantId
+                      ? userItem.productId === sessionItem.productId && userItem.variantId === sessionItem.variantId
+                      : userItem.productId === sessionItem.productId && userItem.variantId == null
+                  );
+
+                  if (existingItem) {
+                    existingItem.qty += sessionItem.qty;
+                  } else {
+                    mergedItems.push(sessionItem);
+                  }
+                });
+
+                // Calculate new prices
+                const itemsPrice = mergedItems.reduce((acc, item) => acc + Number(item.price) * item.qty, 0);
+                const taxPrice = Math.round(0.01 * itemsPrice);
+                const totalPrice = itemsPrice + taxPrice;
+
+                // Update user cart with merged items
+                await prisma.cart.update({
+                  where: {
+                    id: existingUserCart.id,
+                  },
+                  data: {
+                    items: mergedItems,
+                    itemsPrice,
+                    taxPrice,
+                    totalPrice,
+                    shippingPrice: 0,
+                  },
+                });
+
+                // Delete session cart
+                await prisma.cart.delete({
+                  where: {
+                    id: sessionCart.id,
+                  },
+                });
+              } else {
+                // User doesn't have cart, transfer session cart to user
+                await prisma.cart.update({
+                  where: {
+                    id: sessionCart.id,
+                  },
+                  data: {
+                    userId: user.id,
+                    sessionCartId: "",
+                  },
+                });
+              }
+            }
+          }
         }
       }
 

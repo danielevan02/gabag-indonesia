@@ -6,8 +6,7 @@ import { hash } from "bcrypt-ts-edge";
 import { v4 as uuidv4 } from "uuid";
 import { sendVerificationEmail } from "@/email/send-verification";
 import { TRPCError } from "@trpc/server";
-import { redirect } from "next/navigation";
-import { auth, signIn, signOut } from "@/auth"
+import { auth, signIn, signOut } from "../../auth"
 import { signInSchema, signUpSchema } from "@/lib/schema";
 import { Address } from "@/types";
 
@@ -85,7 +84,7 @@ const handleAuthSuccess = (message: string) => {
 
 export const authRouter = createTRPCRouter({
   // Sign in with credentials
-  signIn: baseProcedure
+    signIn: baseProcedure
     .input(signInSchema)
     .mutation(async ({ input }) => {
       try {
@@ -208,8 +207,8 @@ export const authRouter = createTRPCRouter({
   // Sign out user
   signOut: baseProcedure.mutation(async () => {
     try {
-      await signOut();
-      redirect("/");
+      await signOut({ redirect: false });
+      return handleAuthSuccess("Sign out successful");
     } catch (error) {
       handleAuthError(error, "Sign out");
     }

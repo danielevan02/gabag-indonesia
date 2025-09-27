@@ -17,6 +17,7 @@ type LoginType = z.infer<typeof signInSchema>;
 
 const SignInForm = () => {
   const router = useRouter();
+  const trpcUtils = trpc.useUtils();
   const form = useForm<LoginType>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -26,8 +27,10 @@ const SignInForm = () => {
   });
 
   const signInMutation = trpc.auth.signIn.useMutation({
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       if (res.success) {
+        // Refresh cart data after successful login to get merged cart
+        await trpcUtils.cart.getMyCart.refetch();
         toast.success(res.message);
         router.push("/")
       } else {

@@ -1,17 +1,17 @@
-'use client'
-
 import { Button } from "@/components/ui/button";
-import { trpc } from "@/trpc/client";
+import { signOutUser } from "@/lib/actions/user.action";
 
 const SignOutButton = () => {
   return (
-    <Button 
-      className="w-full rounded-full uppercase tracking-widest cursor-pointer" 
-      variant='destructive'
-      onClick={()=>trpc.auth.signOut.useMutation()}
-    >
-      Sign Out
-    </Button>
+    <form action={signOutUser}>
+      <Button
+        type="submit"
+        className="w-full rounded-full uppercase tracking-widest cursor-pointer"
+        variant='destructive'
+      >
+        Sign Out
+      </Button>
+    </form>
   );
 }
  

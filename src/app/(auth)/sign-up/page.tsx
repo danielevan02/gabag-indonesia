@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { auth } from "@/auth";
+import { auth } from "../../../auth";
 import { redirect } from "next/navigation";
 import SignUpForm from "./sign-up-form";
 

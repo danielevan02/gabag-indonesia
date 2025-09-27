@@ -1,11 +1,11 @@
 import ProfileForm from "./components/profile-form";
 import AddressForm from "./components/address-form";
-import ImageForm from "./components/image-form";
+import ImageFormWrapper from "./components/image-form-wrapper";
 import SignOutButton from "./components/sign-out-button";
-import { trpc } from "@/trpc/server";
+import { getCurrentUser } from "@/lib/actions/user.action";
 
 const ProfilePage = async () => {
-  const user = await trpc.auth.getCurrentUser()
+  const user = await getCurrentUser()
   return (
     <div className="w-full max-w-screen min-h-screen">
       <div className="flex flex-col w-full py-5 lg:py-10 px-5 lg:px-20">
@@ -18,7 +18,7 @@ const ProfilePage = async () => {
           </div>
           <div className="relative w-full max-w-2xl">
             <div className="lg:sticky lg:top-1/2 lg:-translate-y-1/2 w-full flex justify-center">
-              <ImageForm user={user} />
+              <ImageFormWrapper user={user} />
             </div>
           </div>
         </div>

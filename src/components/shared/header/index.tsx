@@ -2,7 +2,7 @@ import React from "react";
 import NavLinks from "./nav-links";
 import Link from "next/link";
 import SearchBar from "./search-bar";
-import { auth } from "@/auth";
+import { auth } from "../../../auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import MobileDrawer from "./mobile-drawer";
 import { SessionProvider } from "next-auth/react";

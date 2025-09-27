@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { auth } from "../../auth";
 import { AppSidebar } from "@/components/admin/app-sidebar";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";

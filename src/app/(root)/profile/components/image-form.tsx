@@ -1,126 +1,112 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import { getCurrentUser, updateProfile } from "@/lib/actions/user.action";
-import { useEdgeStore } from "@/lib/edge-store";
-import { RouterOutputs } from "@/trpc/routers/_app";
 import { Loader } from "lucide-react";
 import Image from "next/image";
-import { ChangeEvent, useState, useTransition } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
+import { CldUploadWidget } from "next-cloudinary";
+import { trpc } from "@/trpc/client";
+import { useSession } from "next-auth/react";
+import { getCurrentUser } from "@/lib/actions/user.action";
 
-const ImageForm = ({ user }: { user: RouterOutputs['auth']['getCurrentUser'] }) => {
-  const [image, setImage] = useState('')
-  const [file, setFile] = useState<File>()
-  const [progress, setProgress] = useState<number>()
-  const [isLoading, startTransition] = useTransition()
-  const {edgestore} = useEdgeStore()
+const ImageForm = ({ user }: { user: Awaited<ReturnType<typeof getCurrentUser>> }) => {
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
+  const { update: updateSession } = useSession();
+  const { mutateAsync: updateProfile, isPending: isLoading } =
+    trpc.auth.updateProfile.useMutation();
 
-  const handleChangeImage = (e: ChangeEvent<HTMLInputElement>) => {
-    setFile(e.target.files?.[0])
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader();
-      
-      reader.onload = () => {
-        setImage(reader.result as string);
-      };
+  const handleUploadSuccess = async (result: any) => {
+    const newImageUrl = result.info.secure_url;
 
-      reader.readAsDataURL(file);
-    }
-  }
-  
-  const uploadPhoto = async () => {
-    startTransition(async () => {
-      if (file && user?.name) {
-        const fileExt = file.name.split('.').pop(); 
-        const safeUserName = user.name.replace(/\s+/g, '_').toLowerCase();
-        const newFileName = `${safeUserName}-profilePhoto-${Date.now()}.${fileExt}`;
-    
-        const renamedFile = new File([file], newFileName, {
-          type: file.type,
-        });
-    
-        const res = await edgestore.publicImages.upload({
-          file: renamedFile,
-          onProgressChange(progress) {
-            setProgress(progress);
-          },
-          options: {
-            manualFileName: newFileName
-          }
-        });
-  
-        const profileRes = await updateProfile({image: res.url, userId: user.id})
-  
-        if(profileRes.success){
-          setFile(undefined)
-          setImage('')
-          setProgress(undefined)
-          toast.success(profileRes.message as string)
-        } else {
-          toast.error(profileRes.message as string)
-        }
-    
-        setImage(res.url);
+    // Delete old image from Cloudinary if exists
+    if (user?.image && user.image.includes("cloudinary.com")) {
+      try {
+        const publicId = extractPublicId(user.image);
+        await deleteFromCloudinary(publicId);
+      } catch (error) {
+        console.error("Error deleting old image:", error);
       }
-    })
+    }
+
+    // Update profile with new image
+    if (!user?.id) return;
+    const profileRes = await updateProfile({ image: newImageUrl, userId: user.id });
+
+    if (profileRes?.success) {
+      setUploadedImageUrl(newImageUrl);
+      // Update session to refresh image in navbar
+      await updateSession({
+        ...user,
+        image: newImageUrl
+      });
+      toast.success(profileRes.message as string);
+    } else {
+      toast.error(profileRes?.message as string);
+    }
   };
 
+  const extractPublicId = (url: string): string => {
+    const regex = /\/upload\/(?:v\d+\/)?(.+)\./;
+    const match = url.match(regex);
+    return match ? match[1] : "";
+  };
+
+  const deleteFromCloudinary = async (publicId: string) => {
+    await fetch("/api/cloudinary/delete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ publicId }),
+    });
+  };
 
   return (
     <div className="w-full flex flex-col items-center gap-3">
       <div className="relative rounded-full w-1/2 min-w-72 aspect-square overflow-hidden">
         <Image
-          src={ image || user?.image || "/images/user-placeholder.png"}
+          src={uploadedImageUrl || user?.image || "/images/user-placeholder.png"}
           alt={user?.name || "User Profile"}
           width={200}
           height={200}
           className="w-full h-full object-cover"
         />
 
-        {progress && (
-          <div className="absolute inset-0 z-10 bg-background/70 flex items-center">
-            <Progress value={progress}/>
+        {isLoading && (
+          <div className="absolute inset-0 z-10 bg-background/70 flex items-center justify-center">
+            <Loader className="w-8 h-8 animate-spin text-primary" />
           </div>
         )}
       </div>
 
-      {file ? (
-        <div className="flex gap-2 w-56">
-          <Button 
-            className="uppercase tracking-widest flex-1" 
-            variant='outline' 
-            onClick={()=>{
-              setFile(undefined)
-              setImage('')
-            }}
-          >
-            cancel
-          </Button>
-          <Button className="uppercase tracking-widest flex-1" onClick={uploadPhoto} disabled={isLoading}>
-            {isLoading ? (
-              <Loader className="w-3 h-3 animate-spin"/>
-            ):(
-              "save"
-            )}
-          </Button>
-        </div>
-      ):(
-        <div className="w-56">
-          <div className="relative flex items-center justify-center">
-            <Input 
-              accept="image/*" 
-              type="file" 
-              className="file:hidden text-transparent" 
-              onChange={(e) => handleChangeImage(e)}
-            />
-            <p className="absolute pointer-events-none">Change Profile Picture</p>
-          </div>
-        </div>
-      )}
+      <div className="w-56">
+        <CldUploadWidget
+          options={{
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
+            maxImageFileSize: 10000000, // 10MB
+            folder: "profile-images",
+          }}
+          signatureEndpoint="/api/sign-cloudinary-params"
+          onSuccess={handleUploadSuccess}
+          onError={(error) => {
+            toast.error("Upload failed. Please try again.");
+            console.error("Upload error:", error);
+          }}
+        >
+          {({ open }) => (
+            <Button
+              className="uppercase tracking-widest w-full "
+              variant="outline"
+              onClick={() => open()}
+              disabled={isLoading}
+            >
+              {isLoading ? <Loader className="w-4 h-4 animate-spin mr-2" /> : null}
+              Change Profile Picture
+            </Button>
+          )}
+        </CldUploadWidget>
+      </div>
     </div>
   );
 };

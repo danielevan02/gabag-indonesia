@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { nameSchema, phoneSchema } from "@/lib/schema";
-import { trpc } from "@/trpc/client";
-import { RouterOutputs } from "@/trpc/routers/_app";
 import { Loader, Pencil } from "lucide-react";
 import { HTMLInputTypeAttribute, useState } from "react";
 import { toast } from "sonner";
+import { trpc } from "@/trpc/client";
+import { getCurrentUser } from "@/lib/actions/user.action";
 
-const ProfileForm = ({ user }: { user: RouterOutputs['auth']['getCurrentUser']}) => {
+const ProfileForm = ({ user }: { user: Awaited<ReturnType<typeof getCurrentUser>>}) => {
   // for telling typescript that user is always defined
   user = user!
   return (
@@ -72,12 +72,14 @@ const ProfileItem = ({ label, value, editable, type = "text", userId }: ProfileI
         toast.error(result.error.errors[0].message);
       }
     }
+
     // Submit update
     await updateProfile({
       userId: userId!,
       ...(isName && { name: fieldValue }),
       ...(isPhone && { phone: fieldValue }),
     });
+
   };
 
   return (

@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import SignInForm from "./sign-in-form";
-import { auth } from "@/auth";
+import { auth } from "../../../auth";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {

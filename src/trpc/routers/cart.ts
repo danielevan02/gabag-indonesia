@@ -3,7 +3,7 @@ import { baseProcedure, createTRPCRouter } from "../init";
 import prisma from "@/lib/prisma";
 import { serializeType } from "@/lib/utils";
 import { TRPCError } from "@trpc/server";
-import { auth } from "@/auth"
+import { auth } from "../../auth"
 import { CartItem } from "@/types";
 import { cartItemSchema } from "@/lib/schema";
 

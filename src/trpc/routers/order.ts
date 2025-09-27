@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { serializeType } from "@/lib/utils";
 import { TRPCError } from "@trpc/server";
 import { CartItem, ShippingInfo, ItemDetail } from "@/types";
-import { auth } from "@/auth";
+import { auth } from "../../auth";
 import { createTransaction } from "@/lib/midtrans/transaction";
 import { getCartHelper } from "./cart";
 
