@@ -207,6 +207,9 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.1.13
+      '@types/lodash':
+        specifier: ^4.17.20
+        version: 4.17.20
       '@types/midtrans-client':
         specifier: ^1.4.0
         version: 1.4.0
@@ -1569,6 +1572,9 @@ packages:
 
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
+
+  '@types/lodash@4.17.20':
+    resolution: {integrity: sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==}
 
   '@types/midtrans-client@1.4.0':
     resolution: {integrity: sha512-7EhZ3VR/g4JhIpIywuOllBFjaS0ZDjlgbPlPmma6XsC+i6rx5+9P8Rk1y7gtRh7TRL9Zerr4MAtS3m9pIuIveQ==}
@@ -4658,6 +4664,8 @@ snapshots:
   '@types/json-schema@7.0.15': {}
 
   '@types/json5@0.0.29': {}
+
+  '@types/lodash@4.17.20': {}
 
   '@types/midtrans-client@1.4.0': {}
 
