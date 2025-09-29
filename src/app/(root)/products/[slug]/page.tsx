@@ -6,18 +6,37 @@ import { trpc } from "@/trpc/server";
 type tParams = Promise<{ slug: string }>;
 
 export async function generateStaticParams() {
-  const products = await trpc.product.getAll({});
-  return products.map((product) => ({ slug: product.slug }));
+  // Disable static generation for products to prevent database connection timeouts during build
+  // All product pages will be generated on-demand (ISR) for better build performance
+  return [];
+
+  // Original implementation (disabled):
+  // try {
+  //   const products = await trpc.product.getAll({});
+  //   return products.map((product) => ({ slug: product.slug }));
+  // } catch (error) {
+  //   console.error('Failed to generate static params for products:', error);
+  //   return [];
+  // }
 }
 
 export async function generateMetadata({ params }: {params: tParams}): Promise<Metadata> {
-  const { slug }: {slug: string} = await params;
-  const product = await trpc.product.getBySlug({slug});
+  try {
+    const { slug }: {slug: string} = await params;
+    const product = await trpc.product.getBySlug({slug});
 
-  return {
-    title: product?.name || "Product Details",
-    description: product?.description || "Find more information about this product.",
-  };
+    return {
+      title: product?.name || "Product Details",
+      description: product?.description || "Find more information about this product.",
+    };
+  } catch (error) {
+    // Fallback metadata if product fetch fails
+    console.error('Failed to fetch product for metadata:', error);
+    return {
+      title: "Product Details",
+      description: "Find more information about this product.",
+    };
+  }
 }
 const ProductDetailsPage = async ({ params }: {params: tParams}) => {
   const { slug }: {slug: string} = await params;

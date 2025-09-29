@@ -6,18 +6,28 @@ import { trpc } from "@/trpc/server";
 
 type tParams = Promise<{ orderId: string }>;
 
-export async function generateStaticParams() {
-  const orders = await trpc.order.getAll({});
-  return orders.map((order) => ({ orderId: order.id }));
-}
+// Disable static generation for orders - they should be dynamic
+// Orders are user-specific and frequently changing data
+// export async function generateStaticParams() {
+//   const orders = await trpc.order.getAll({});
+//   return orders.map((order) => ({ orderId: order.id }));
+// }
 
 export async function generateMetadata({ params }: { params: tParams }): Promise<Metadata> {
-  const { orderId }: { orderId: string } = await params;
-  const order = await trpc.order.getById({id: orderId});
+  try {
+    const { orderId }: { orderId: string } = await params;
+    const order = await trpc.order.getById({id: orderId});
 
-  return {
-    title: `${order.id} - ${order.paymentStatus}` || "Product Details",
-  };
+    return {
+      title: `${order.id} - ${order.paymentStatus}` || "Order Details",
+    };
+  } catch (error) {
+    // Fallback metadata if order fetch fails
+    console.error('Failed to fetch order for metadata:', error);
+    return {
+      title: "Order Details",
+    };
+  }
 }
 
 const OrderDetailPage = async ({ params }: { params: tParams }) => {

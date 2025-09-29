@@ -7,8 +7,13 @@ declare global {
   var db: PrismaClient | undefined
 }
 
-// Configure Neon for WebSocket support
-neonConfig.webSocketConstructor = ws;
+// Configure Neon for WebSocket support - only in runtime, not during build
+if (typeof window === 'undefined' && process.env.NODE_ENV !== 'test') {
+  // Only set WebSocket constructor in server runtime environment, not during build
+  if (process.env.NEXT_PHASE !== 'phase-production-build') {
+    neonConfig.webSocketConstructor = ws;
+  }
+}
 
 // Connection pool configuration for Neon
 const connectionString = `${process.env.DATABASE_URL}`;
