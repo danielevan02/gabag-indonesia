@@ -10,7 +10,6 @@ interface ImageFormWrapperProps {
 
 const ImageFormWrapper = ({ user }: ImageFormWrapperProps) => {
   return (
-    // @ts-expect-error React 19 compatibility issue with next-auth
     <SessionProvider>
       <ImageForm user={user} />
     </SessionProvider>

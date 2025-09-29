@@ -31,7 +31,6 @@ const Header = async () => {
 
       <div className="flex w-full justify-between px-5 lg:px-10 pb-2">
         {/* MENU BUTTON VISIBLE FOR MOBILE SCREEN */}
-        {/* @ts-expect-error just react 19 issue */}
         <SessionProvider session={session}>
           <MobileDrawer />
         </SessionProvider>

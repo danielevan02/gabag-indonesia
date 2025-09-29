@@ -80,7 +80,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        {/* @ts-expect-error - next-auth beta compatibility issue with React 19 */}
         <SessionProvider>
           <NavUser/>
         </SessionProvider>
