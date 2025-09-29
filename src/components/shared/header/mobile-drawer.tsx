@@ -40,7 +40,7 @@ const MobileDrawer = () => {
         <DrawerHeader className="flex-row items-center justify-between">
           <DrawerTitle className="w-min">Menu</DrawerTitle>
           <div className="flex items-center gap-2">
-            <Link href="/order" className="focus:ring-blue-400">
+            <Link href="/orders" className="focus:ring-blue-400">
               <ClipboardList className="size-6" />
             </Link>
             {user?.role === "admin" && (

@@ -34,10 +34,7 @@ const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
       setOpenModal(true);
       toast(res.message, {
         description: "Check out your cart to see the product",
-        action: {
-          label: "Go to Cart",
-          onClick: () => router.push("/cart"),
-        },
+        closeButton: true,
         duration: 5000,
       });
     }

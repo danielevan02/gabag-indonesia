@@ -87,7 +87,7 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>(
   props: FormInputProps<TFieldValues>
 ) {
   const [visible, setVisible] = useState(false);
-  const { name, form, fieldType, label, description, placeholder, disabled } = props;
+  const { name, form, fieldType, label, description, placeholder, disabled, className } = props;
 
   switch (fieldType) {
     case "password": {
@@ -98,7 +98,7 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>(
           control={form.control}
           name={name}
           render={({ field }) => (
-            <FormItem>
+            <FormItem className={className}>
               <FormLabel>{label}</FormLabel>
               {description && <FormDescription>{description}</FormDescription>}
               <div className="relative flex items-center">
@@ -150,7 +150,7 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>(
           control={form.control}
           name={name}
           render={({ field }) => (
-            <FormItem>
+            <FormItem className={className}>
               <FormLabel>{label}</FormLabel>
               {description && <FormDescription>{description}</FormDescription>}
               <FormControl>
@@ -205,7 +205,7 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>(
           control={form.control}
           name={name}
           render={({ field }) => (
-            <FormItem>
+            <FormItem className={className}>
               <FormLabel>{label}</FormLabel>
               {description && <FormDescription>{description}</FormDescription>}
               <FormControl>
@@ -235,7 +235,7 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>(
           control={form.control}
           name={name}
           render={({ field }) => (
-            <FormItem>
+            <FormItem className={className}>
               <FormLabel>{label}</FormLabel>
               {description && <FormDescription>{description}</FormDescription>}
                 <PhoneInput
@@ -264,7 +264,7 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>(
           control={form.control}
           name={name}
           render={({ field }) => (
-            <FormItem>
+            <FormItem className={className}>
               <FormLabel>{label}</FormLabel>
               {description && <FormDescription>{description}</FormDescription>}
               <FormControl>
@@ -291,7 +291,7 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>(
           control={form.control}
           name={name}
           render={({ field }) => (
-            <FormItem className="flex flex-col">
+            <FormItem className={cn("flex flex-col", className)}>
               <FormLabel>{label}</FormLabel>
               {description && <FormDescription>{description}</FormDescription>}
               <Popover>

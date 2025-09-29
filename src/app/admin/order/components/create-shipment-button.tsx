@@ -13,9 +13,13 @@ export type ShipmentType = {
 };
 
 export default function CreateShipmentButton({ shippingInfo, courier, orderId }: ShipmentType) {
+  const utils = trpc.useUtils();
   const { mutateAsync, isPending } = trpc.courier.createShipment.useMutation({
     onSuccess: () => {
       toast.success("Shipment created");
+      // Invalidate order data to refresh UI
+      utils.order.getById.invalidate({ id: orderId });
+      utils.order.getAll.invalidate();
     },
   });
 

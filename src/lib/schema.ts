@@ -164,3 +164,32 @@ export const cartItemSchema = z.object({
   width: z.number(),
   height: z.number(),
 });
+
+export const courierRatesSchema = z.object({
+  destination_postal_code: z.string(),
+  destination_area_id: z.string(),
+  items: z.array(
+    z.object({
+      name: z.string(),
+      value: z.number(),
+      quantity: z.number(),
+      weight: z.number(),
+      height: z.number(),
+      width: z.number(),
+      length: z.number()
+    })
+  ),
+});
+
+export const createShipmentSchema = z.object({
+  courier: z.string(),
+  orderId: z.string(),
+  shippingInfo: z.object({
+    name: z.string(),
+    phone: z.string(),
+    email: z.string(),
+    address: z.string(),
+    postal_code: z.string(),
+    area_id: z.string(),
+  }),
+});

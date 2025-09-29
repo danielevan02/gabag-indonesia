@@ -4,37 +4,8 @@ import { TRPCError } from "@trpc/server";
 import { Areas, Courier, OrderResponse, Rates } from "@/types";
 import prisma from "@/lib/prisma";
 import { serializeType } from "@/lib/utils";
+import { courierRatesSchema, createShipmentSchema } from "@/lib/schema";
 
-// Courier schemas
-const courierRatesSchema = z.object({
-  destination_postal_code: z.string(),
-  destination_area_id: z.string(),
-  items: z.array(
-    z.object({
-      name: z.string(),
-      value: z.number(),
-      quantity: z.number(),
-      weight: z.number(),
-    })
-  ),
-});
-
-const mapsSearchSchema = z.object({
-  inputSearch: z.string(),
-});
-
-const createShipmentSchema = z.object({
-  courier: z.string(),
-  orderId: z.string(),
-  shippingInfo: z.object({
-    name: z.string(),
-    phone: z.string(),
-    email: z.string(),
-    address: z.string(),
-    postal_code: z.string(),
-    area_id: z.string(),
-  }),
-});
 
 const handleMutationError = (error: unknown, operation: string) => {
   console.error(`${operation} error:`, error);
@@ -81,7 +52,7 @@ export const courierRouter = createTRPCRouter({
     .query(async ({ input }) => {
       try {
         const { destination_area_id, destination_postal_code, items } = input;
-
+        console.log(items)
         const res = await fetch("https://api.biteship.com/v1/rates/couriers", {
           method: "POST",
           headers: {
@@ -110,15 +81,14 @@ export const courierRouter = createTRPCRouter({
 
   // Get maps/areas by search
   getMapsAreas: baseProcedure
-    .input(mapsSearchSchema)
+    .input(z.string())
     .query(async ({ input }) => {
       try {
-        const { inputSearch } = input;
 
         const url = new URL("https://api.biteship.com/v1/maps/areas");
         const searchParams = new URLSearchParams({
           countries: "ID",
-          input: inputSearch,
+          input,
           type: "single",
         });
 

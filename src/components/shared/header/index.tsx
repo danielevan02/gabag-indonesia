@@ -48,7 +48,7 @@ const Header = async () => {
           <CartModal userId={user?.id} />
 
           <TooltipWrapper text="Order List">
-            <Link href="/order" className="hover:bg-muted rounded-md p-2">
+            <Link href="/orders" className="hover:bg-muted rounded-md p-2">
               <ClipboardList className="size-6"/>
             </Link>
           </TooltipWrapper>
