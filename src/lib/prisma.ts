@@ -12,7 +12,6 @@ neonConfig.webSocketConstructor = ws;
 const connectionString = `${process.env.DATABASE_URL}`;
 const pool = new Pool({connectionString})
 const adapter = new PrismaNeon(pool);
-// @ts-expect-error error compatibility
 const prisma = global.db || new PrismaClient({ adapter });
 if (process.env.NODE_ENV === 'development') global.db = prisma;
 
