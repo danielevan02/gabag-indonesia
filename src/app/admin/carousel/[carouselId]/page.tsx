@@ -1,14 +1,15 @@
 import { trpc } from "@/trpc/server";
 import EditCarouselForm from "./components/edit-carousel-form";
 
+type tParams = Promise<{ carouselId: string }>;
+
 interface EditCarouselPageProps {
-  params: {
-    carouselId: string;
-  };
+  params: tParams;
 }
 
 export default async function EditCarouselPage({ params }: EditCarouselPageProps) {
-  const carousel = await trpc.carousel.getById({ id: params.carouselId });
+  const { carouselId } = await params;
+  const carousel = await trpc.carousel.getById({ id: carouselId });
 
   return (
     <div className="form-page">
