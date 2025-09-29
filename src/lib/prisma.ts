@@ -1,27 +1,19 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaNeon } from '@prisma/adapter-neon';
+import { neonConfig, Pool } from '@neondatabase/serverless';
+import ws from 'ws';
 
 declare global {
   var db: PrismaClient | undefined
 }
 
-let prisma: PrismaClient;
+neonConfig.webSocketConstructor = ws;
 
-if (global.db) {
-  prisma = global.db;
-} else {
-  // Use regular Prisma client with connection pooling
-  prisma = new PrismaClient({
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL,
-      },
-    },
-  });
-
-  // Only cache in development to prevent connection issues
-  if (process.env.NODE_ENV === 'development') {
-    global.db = prisma;
-  }
-}
+const connectionString = `${process.env.DATABASE_URL}`;
+const pool = new Pool({connectionString})
+const adapter = new PrismaNeon(pool);
+// @ts-expect-error error compatibility
+const prisma = global.db || new PrismaClient({ adapter });
+if (process.env.NODE_ENV === 'development') global.db = prisma;
 
 export default prisma;
