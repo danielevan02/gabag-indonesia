@@ -133,7 +133,7 @@
 }
 
 .image-section-container {
-  @apply relative md:sticky flex flex-col-reverse md:flex-row size-full lg:max-w-md xl:max-w-xl md:max-h-[500px] lg:max-h-[440px] xl:max-h-[600px] xl:min-h-[600px] gap-2 md:left-0 md:top-56 lg:top-36 xl:top-48 overflow-hidden
+  @apply relative md:sticky flex flex-col-reverse md:flex-row size-full lg:max-w-3xl md:max-h-[500px] lg:max-h-[440px] xl:max-h-[600px] xl:min-h-[600px] gap-2 md:left-0 md:top-56 lg:top-36 xl:top-48 overflow-hidden
 }
 
 .nav-container {

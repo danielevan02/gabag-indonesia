@@ -12,7 +12,7 @@ interface VariantSectionProps {
 
 export const VariantSection = ({ variants, selectedVariant, onVariantSelect }: VariantSectionProps) => (
   <>
-    <span className="uppercase tracking-widest text-sm">Variants:</span>
+    <span className="text-sm">Variants:</span>
     <div className="grid grid-cols-4 gap-2 mt-3">
       {variants?.map((variant) => (
         <VariantItem 
@@ -56,6 +56,6 @@ export const VariantItem = ({
         </div>
       )}
     </div>
-    <h3 className="text-xs text-neutral-500 dark:text-neutral-300">{variant.name}</h3>
+    <h3 className="text-xs text-neutral-500 dark:text-neutral-300 text-center">{variant.name}</h3>
   </div>
 );

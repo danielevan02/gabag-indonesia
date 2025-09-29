@@ -19,12 +19,13 @@ export interface FilterProductProps {
     id: string;
     name: string;
   }[];
+  initialSelectedSubCategories?: string[];
 }
 
-const FilterProduct: React.FC<FilterProductProps> = ({ subCategories }) => {
+const FilterProduct: React.FC<FilterProductProps> = ({ subCategories, initialSelectedSubCategories }) => {
   const [showDialog, setShowDialog] = useState(true);
   const [selectedSort, setSelectedSort] = useState<string | null>(null);
-  const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>([]);
+  const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>(initialSelectedSubCategories || []);
   const [selectedPrice, setSelectedPrice] = useState<{min: number, max: number} | null>(null)
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -32,9 +33,11 @@ const FilterProduct: React.FC<FilterProductProps> = ({ subCategories }) => {
   useEffect(() => {
     const subCategoriesQuery = searchParams.get("subCategories");
     if (subCategoriesQuery) {
-      setSelectedSubCategories(subCategoriesQuery.split(","));
+      setSelectedSubCategories(subCategoriesQuery.split(",").filter(Boolean));
+    } else if (initialSelectedSubCategories) {
+      setSelectedSubCategories(initialSelectedSubCategories);
     }
-  }, [searchParams]);
+  }, [searchParams, initialSelectedSubCategories]);
 
   const handleSubCategory = (subCategoryId: string) => {
     const updatedSubCategories = selectedSubCategories.includes(subCategoryId)

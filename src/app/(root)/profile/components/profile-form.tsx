@@ -16,11 +16,11 @@ const ProfileForm = ({ user }: { user: Awaited<ReturnType<typeof getCurrentUser>
   return (
     <div className="w-full flex flex-col gap-5">
       <div className="flex w-full items-center mb-5 gap-3">
-        <ProfileItem label="Name" value={user.name} editable type="text" userId={user.id} />
-        <ProfileItem label="Phone" value={user.phone} editable type="tel" userId={user.id} />
+        <ProfileItem label="Name" value={user?.name} editable type="text" userId={user?.id} />
+        <ProfileItem label="Phone" value={user?.phone} editable type="tel" userId={user?.id} />
       </div>
       <div className="flex w-full items-center gap-3">
-        <ProfileItem label="Email" value={user.email} />
+        <ProfileItem label="Email" value={user?.email} />
         <div className="flex-1">
           <Label className="lg:text-base mb-5">Password</Label>
           <Button variant="outline" className="cursor-pointer">

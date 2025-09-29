@@ -103,7 +103,7 @@ const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
         <h2 className="uppercase text-foreground/40 text-sm font-semibold">
           {product?.subCategory?.name}
         </h2>
-        <h1 className="md:text-xl font-medium mb-5">{product?.name}</h1>
+        <h1 className="text-xl font-medium mb-3 lg:mb-5">{product?.name}</h1>
 
         <PriceTag
           regularPrice={product.regularPrice}
@@ -163,7 +163,7 @@ const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
 export default ProductDetailSection;
 
 const StockInfo = ({ stock, sold }: { stock: number; sold: number }) => (
-  <div className="flex flex-col gap-3">
+  <div className="flex flex-col">
     {stock > 0 ? (
       <p>
         Stock: <span className="font-medium">{stock}</span>

@@ -17,7 +17,7 @@ export const PriceTag = ({ price, regularPrice, discount, variant, hasVariant }:
 
   if (!hasDiscount) {
     return (
-      <h4 className="font-semibold text-lg tracking-wider mb-5">
+      <h4 className="font-semibold text-2xl tracking-wider mb-5">
         {!variant && hasVariant && <span className="font-normal text-sm">from </span>}
         Rp {displayPrice.toLocaleString()}
       </h4>
@@ -25,14 +25,14 @@ export const PriceTag = ({ price, regularPrice, discount, variant, hasVariant }:
   }
 
   return (
-    <div className="flex flex-row md:flex-col lg:flex-row gap-3 md:gap-0 lg:gap-3 mb-5 items-center md:items-start lg:items-center">
-      <p className="font-semibold md:text-lg tracking-wider">
+    <div className="flex flex-row md:flex-col lg:flex-row gap-2 md:gap-0 lg:gap-3 mb-5 items-center md:items-start lg:items-center">
+      <p className="flex gap-2 font-semibold tracking-wider">
         {!variant && hasVariant && <span className="font-normal text-sm">from </span>}
-        Rp {displayPrice.toLocaleString()}
+        <span className="text-2xl">Rp {displayPrice.toLocaleString()}</span>
       </p>
 
       {displayRegularPrice != null && (
-        <p className="line-through text-neutral-400 text-sm md:text-base">
+        <p className="line-through text-neutral-400 text-sm md:text-lg">
           Rp {displayRegularPrice.toLocaleString()}
         </p>
       )}

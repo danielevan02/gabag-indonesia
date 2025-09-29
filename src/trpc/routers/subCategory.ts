@@ -110,6 +110,7 @@ export const subCategoryRouter = createTRPCRouter({
             secure_url: true,
           },
         },
+        categoryId: true
       },
     });
 

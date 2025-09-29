@@ -40,7 +40,7 @@ const HomeCarousel = ({ slideDuration, carousels }: HomeCarouselProps) => {
   if (!mounted) {
     return (
       <div className="w-[85%] m-auto mt-5">
-        <Skeleton className="w-full aspect-[3/5.3] md:aspect-[5/2] rounded-md" />
+        <Skeleton className="w-full aspect-[3/5.3] md:aspect-[5/2.5] rounded-md" />
       </div>
     );
   }

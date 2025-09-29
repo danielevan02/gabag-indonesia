@@ -22,7 +22,7 @@ const ProductPage = async ({searchParams}: {
   }>
 }) => {
   const {subCategories, search, max, min, sort, category} = await searchParams
-  const subCategoryIds = subCategories?.split(',')
+  const subCategoryIds = subCategories?.split(',').filter(Boolean)
 
   const categories = await trpc.category.getById({id: category})
   
@@ -44,10 +44,16 @@ const ProductPage = async ({searchParams}: {
       </div>
 
       <div className="flex items-start w-full relative flex-col md:flex-row justify-between lg:gap-5 min-h-[500px]">
-        <FilterProduct subCategories={subCategoryList}/>
-        
-        <MobileFilterProduct subCategories={subCategoryList}/>
-        
+        <FilterProduct
+          subCategories={subCategoryList}
+          initialSelectedSubCategories={subCategoryIds}
+        />
+
+        <MobileFilterProduct
+          subCategories={subCategoryList}
+          initialSelectedSubCategories={subCategoryIds}
+        />
+
         <div className="flex flex-col w-full h-full">
           {search && (
             <p className="mb-3">
@@ -57,7 +63,7 @@ const ProductPage = async ({searchParams}: {
 
           <Suspense fallback={<ProductListFallback/>}>
             <ProductList
-              subCategoryIds={subCategoryIds||categories?.subCategories.map((sub) => sub.id)}
+              subCategoryIds={subCategoryIds && subCategoryIds.length > 0 ? subCategoryIds : categories?.subCategories.map((sub) => sub.id)}
               search={search}
               max={max}
               min={min}

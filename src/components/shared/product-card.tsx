@@ -74,7 +74,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <div className="p-1 mt-2 flex-1 flex flex-col justify-between h-auto">
         <div className="flex flex-col">
           <h4 className="text-foreground/50 uppercase text-xs font-semibold">{subCategory.name}</h4>
-          <h3 className="line-clamp-2 text-foreground/80 text-sm lg:text-base font-semibold min-h-14">
+          <h3 className="line-clamp-2 text-foreground/80 text-sm lg:text-base font-semibold">
             {name}
           </h3>
         </div>
@@ -138,8 +138,8 @@ const VariantPricing = ({ variants }: { variants: { price: number; regularPrice:
     const lowestPrice = getLowestPrice({variants});
     return (
       <div className="flex gap-1">
-        <span>from</span>
-        <p>{formatPrice(lowestPrice)}</p>
+        <span className="text-sm">from</span>
+        <p className="text-sm lg:text-base">{formatPrice(lowestPrice)}</p>
       </div>
     );
   }
@@ -150,16 +150,16 @@ const VariantPricing = ({ variants }: { variants: { price: number; regularPrice:
   if (hasDiscount) {
 
     return (
-      <div className="flex flex-col md:flex-row gap-1">
-        <h4 className="line-through text-neutral-400 text-sm">
+      <div className="flex gap-1">
+        <h4 className="line-through text-neutral-400 text-xs lg:text-sm">
           {formatPrice(firstVariant.regularPrice)}
         </h4>
-        <h4>{formatPrice(firstVariant.price)}</h4>
+        <h4 className="text-sm lg:text-base">{formatPrice(firstVariant.price)}</h4>
       </div>
     );
   }
 
-  return <h4>{formatPrice(firstVariant.price)}</h4>;
+  return <h4 className="text-sm lg:text-base">{formatPrice(firstVariant.price)}</h4>;
 };
 
 // Component for displaying regular pricing (no variants)
@@ -171,15 +171,15 @@ const RegularPricing: React.FC<{ price: number; regularPrice: number }> = ({
 
   if (hasDiscount) {
     return (
-      <div className="flex flex-col md:flex-row gap-1">
-        <h4 className="line-through text-neutral-400 text-sm">{formatPrice(regularPrice)}</h4>
-        <h4>{formatPrice(price)}</h4>
+      <div className="flex md:flex-row gap-1">
+        <h4 className="line-through text-neutral-400 text-xs lg:text-sm">{formatPrice(regularPrice)}</h4>
+        <h4 className="text-sm lg:text-base">{formatPrice(price)}</h4>
       </div>
     );
   }
 
-  return <h4>{formatPrice(price)}</h4>;
-};
+  return <h4 className="text-sm lg:text-base">{formatPrice(price)}</h4>;
+}; 
 
 // Main PriceTag component
 const PriceTag: React.FC<PriceTagProps> = ({
@@ -190,14 +190,14 @@ const PriceTag: React.FC<PriceTagProps> = ({
   discount,
 }) => {
   return (
-    <>
+    <div>
       <DiscountBadge discount={discount} />
       {hasVariant && variants ? (
         <VariantPricing variants={variants} />
       ) : (
         <RegularPricing price={price} regularPrice={regularPrice} />
       )}
-    </>
+    </div>
   );
 };
 

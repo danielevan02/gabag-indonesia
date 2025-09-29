@@ -16,21 +16,25 @@ import { priceFilter, sort } from "@/lib/constants";
 
 const MobileFilterProduct = ({
   subCategories,
+  initialSelectedSubCategories,
 }: {
   subCategories?: { id: string; name: string }[];
+  initialSelectedSubCategories?: string[];
 }) => {
   const [selectedSort, setSelectedSort] = useState<string | null>(null);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialSelectedSubCategories || []);
   const [selectedPrice, setSelectedPrice] = useState<{ min: number; max: number } | null>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
 
   useEffect(() => {
-    const categoriesQuery = searchParams.get("categories");
-    if (categoriesQuery) {
-      setSelectedCategories(categoriesQuery.split(","));
+    const subCategoriesQuery = searchParams.get("subCategories");
+    if (subCategoriesQuery) {
+      setSelectedCategories(subCategoriesQuery.split(",").filter(Boolean));
+    } else if (initialSelectedSubCategories) {
+      setSelectedCategories(initialSelectedSubCategories);
     }
-  }, [searchParams]);
+  }, [searchParams, initialSelectedSubCategories]);
 
   const handleCategory = (categoryId: string) => {
     const updatedCategories = selectedCategories.includes(categoryId)
@@ -39,7 +43,7 @@ const MobileFilterProduct = ({
     setSelectedCategories(updatedCategories);
 
     const queryValue = updatedCategories.length > 0 ? updatedCategories.join(",") : undefined;
-    updateQueryParams({ categories: queryValue }, searchParams, router);
+    updateQueryParams({ subCategories: queryValue }, searchParams, router);
   };
 
   const handleSort = (val: string) => {

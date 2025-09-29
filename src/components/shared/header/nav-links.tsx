@@ -72,7 +72,7 @@ const NavLinks = ({device}: {device: string}) => {
           <Link href={link} key={link} className={cn("flex gap-3 rounded-lg p-2 items-center uppercase",
             isLinkActive(link) && 'bg-neutral-100 dark:bg-neutral-800'
           )}>
-            <Icon/>
+            <Icon strokeWidth={1}/>
             <span className="text-xs">
               {label}
             </span>

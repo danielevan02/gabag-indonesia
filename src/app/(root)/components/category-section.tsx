@@ -12,37 +12,36 @@ export const CategorySection = async () => {
         Shop by Categories
       </h2>
       <div className="hidden lg:grid grid-cols-3 w-3xl xl:w-4xl mx-auto gap-4">
-        {subCategories.map((category) => (
+        {subCategories.map((subCategory) => (
             <Link
-              href="/"
-              key={category.id}
+              href={`/products/?category=${subCategory.categoryId}&subCategories=${subCategory.id}`}
+              key={subCategory.id}
               className={cn(
-                "flex flex-col gap-2 group col-span-1 focus:ring-2 focus:ring-blue-500 focus:outline-none rounded-md",
+                "flex flex-col gap-2 group col-span-1 focus:ring-2 focus:ring-blue-500 lg:focus:ring-0 focus:outline-none rounded-md",
               )}
               tabIndex={0}
             >
               <div className="w-full min-h-72 max-h-72 overflow-hidden">
                 <Image
-                  src={category.mediaFile?.secure_url||"/images/placeholder-product.png"}
-                  alt={category.name}
+                  src={subCategory.mediaFile?.secure_url||"/images/placeholder-product.png"}
+                  alt={subCategory.name}
                   width={200}
                   height={200}
                   className="w-full h-full object-cover group-hover:scale-110 transition-all object-center"
                 />
               </div>
-              <h3 className="text-center font-semibold">{category.name}</h3>
+              <h3 className="text-center font-semibold">{subCategory.name}</h3>
             </Link>
           ))}
       </div>
 
       {/* MOBILE VIEW */}
-      <div className="flex lg:hidden gap-1 md:gap-5 overflow-scroll no-scrollbar px-1 py-px">
+      <div className="flex lg:hidden gap-1 md:gap-5 overflow-scroll no-scrollbar px-1 py-px snap-mandatory snap-x">
         {subCategories.map((category) => (
           <Link
-            href="/"
+            href={`/products/?category=${category.categoryId}&subCategories=${category.id}`}
             key={category.id}
-            className="flex flex-col gap-2 focus:ring-2 focus:ring-blue-500 focus:outline-none rounded-md"
-            tabIndex={0}
+            className="flex flex-col gap-2 focus:ring-2 focus:ring-blue-500 focus:outline-none rounded-md snap-start"
           >
             <div className="min-w-56 min-h-56 max-h-56 overflow-hidden">
               <Image

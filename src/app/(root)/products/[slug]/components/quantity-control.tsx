@@ -16,12 +16,12 @@ export const QuantityControl = ({
   isMinusDisabled, 
   isPlusDisabled 
 }: QuantityControlProps) => (
-  <div className="flex items-center rounded-md border border-black w-fit py-1">
-    <Button variant="ghost" disabled={isMinusDisabled} onClick={onDecrease}>
+  <div className="flex items-center rounded-full border border-black w-fit py-1">
+    <Button variant="ghost" className="rounded-full" disabled={isMinusDisabled} onClick={onDecrease}>
       <Minus />
     </Button>
     <div className="py-1 w-16 text-center">{quantity}</div>
-    <Button variant="ghost" disabled={isPlusDisabled} onClick={onIncrease}>
+    <Button variant="ghost" className="rounded-full" disabled={isPlusDisabled} onClick={onIncrease}>
       <Plus />
     </Button>
   </div>

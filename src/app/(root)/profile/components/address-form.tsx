@@ -62,7 +62,7 @@ const AddressForm = ({ address, id }: { address?: Address; id: string }) => {
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5 mb-5">
-          <div className="flex flex-col lg:flex-row lg:gap-5">
+          <div className="flex flex-col lg:flex-row gap-3 lg:gap-5">
             <FormInput
               form={form}
               fieldType="text"
@@ -80,7 +80,7 @@ const AddressForm = ({ address, id }: { address?: Address; id: string }) => {
               disabled={!edit}
             />
           </div>
-          <div className="flex flex-col lg:flex-row lg:gap-5">
+          <div className="flex flex-col lg:flex-row gap-3 lg:gap-5">
             <FormInput
               form={form}
               fieldType="text"
