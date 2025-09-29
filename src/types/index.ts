@@ -1,5 +1,5 @@
 import { addressSchema, orderSchema } from "@/lib/schema";
-import { User as UserPrisma, Order, OrderItem as PrismaOrderItem, SubCategory as PrismaSubCategory, Review, Event as PrismaEvent } from "@/generated/prisma";
+import { User as UserPrisma, Order, OrderItem as PrismaOrderItem, SubCategory as PrismaSubCategory, Review, Event as PrismaEvent } from "@prisma/client";
 import { z } from "zod";
 
 export type SubCategory = Omit<PrismaSubCategory, "image" | "discount"> & {

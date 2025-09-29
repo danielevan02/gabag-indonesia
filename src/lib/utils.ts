@@ -1,4 +1,4 @@
-import { Prisma } from "@/generated/prisma";
+import { Prisma } from "@prisma/client";
 import { clsx, type ClassValue } from "clsx"
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { twMerge } from "tailwind-merge"
