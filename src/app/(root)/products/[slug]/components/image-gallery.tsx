@@ -1,4 +1,6 @@
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 
 export const ImageGallery = ({ 
@@ -15,6 +17,9 @@ export const ImageGallery = ({
   productName?: string;
 }) => (
   <div className="image-section-container">
+    <Button className="rounded-full" variant="outline">
+      <ArrowLeft/> Back to product list 
+    </Button>
     <div className="image-list-container">
       {imagesList?.map((item, index) => (
         <div 

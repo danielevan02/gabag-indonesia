@@ -6,8 +6,8 @@ import { hash } from "bcrypt-ts-edge";
 import { v4 as uuidv4 } from "uuid";
 import { sendVerificationEmail } from "@/email/send-verification";
 import { TRPCError } from "@trpc/server";
-import { auth, signIn, signOut } from "../../auth"
-import { signInSchema, signUpSchema } from "@/lib/schema";
+import { auth, signIn, signOut } from "../../auth";
+import { addressSchema, signInSchema, signUpSchema } from "@/lib/schema";
 import { Address } from "@/types";
 
 const updateProfileSchema = z.object({
@@ -15,17 +15,6 @@ const updateProfileSchema = z.object({
   phone: z.string().optional(),
   image: z.string().optional(),
   userId: z.string(),
-});
-
-const updateAddressSchema = z.object({
-  id: z.string(),
-  address: z.object({
-    street: z.string().optional(),
-    city: z.string().optional(),
-    province: z.string().optional(),
-    postalCode: z.string().optional(),
-    country: z.string().optional(),
-  }),
 });
 
 // Helper functions
@@ -84,125 +73,119 @@ const handleAuthSuccess = (message: string) => {
 
 export const authRouter = createTRPCRouter({
   // Sign in with credentials
-    signIn: baseProcedure
-    .input(signInSchema)
-    .mutation(async ({ input }) => {
-      try {
-        await signIn("credentials", { ...input, redirect: false });
-        return handleAuthSuccess("Login Success");
-      } catch (error: any) {
-        console.log(error);
+  signIn: baseProcedure.input(signInSchema).mutation(async ({ input }) => {
+    try {
+      await signIn("credentials", { ...input, redirect: false });
+      return handleAuthSuccess("Login Success");
+    } catch (error: any) {
+      console.log(error);
 
-        return {
-          success: false,
-          message: error.code as string,
-        };
-      }
-    }),
+      return {
+        success: false,
+        message: error.code as string,
+      };
+    }
+  }),
 
   // Register user
-  register: baseProcedure
-    .input(signUpSchema)
-    .mutation(async ({ input }) => {
-      try {
-        const existUser = await prisma.user.findFirst({
-          where: { email: input.email },
-        });
+  register: baseProcedure.input(signUpSchema).mutation(async ({ input }) => {
+    try {
+      const existUser = await prisma.user.findFirst({
+        where: { email: input.email },
+      });
 
-        if (existUser?.emailVerified) {
-          throw "This email is already in used, please use another email";
-        }
-
-        const existPhone = await prisma.user.findFirst({
-          where: { phone: input.phone },
-        });
-
-        if (existPhone?.emailVerified) {
-          throw "This phone number is already used, please use another number";
-        }
-
-        const email = input.email.toLowerCase();
-        const hashedPassword = await hash(input.password, 10);
-
-        if (!existUser) {
-          await prisma.user.create({
-            data: {
-              email,
-              name: input.fullName,
-              phone: input.phone,
-              password: hashedPassword,
-            },
-          });
-        } else {
-          await prisma.user.update({
-            where: { id: existUser.id },
-            data: {
-              email,
-              password: hashedPassword,
-              phone: input.phone,
-              name: input.fullName,
-            },
-          });
-        }
-
-        const verificationToken = await getVerificationToken(email);
-        await sendVerificationEmail(email, verificationToken.token);
-
-        return handleAuthSuccess("Email verification is sent");
-      } catch (error) {
-        handleAuthError(error, "Register");
+      if (existUser?.emailVerified) {
+        throw "This email is already in used, please use another email";
       }
-    }),
 
-  // Verify email
-  verifyEmail: baseProcedure
-    .input(z.object({ token: z.string() }))
-    .mutation(async ({ input }) => {
-      try {
-        if (!input.token) {
-          throw "There is no token provided";
-        }
+      const existPhone = await prisma.user.findFirst({
+        where: { phone: input.phone },
+      });
 
-        const existToken = await prisma.verificationToken.findFirst({
-          where: { token: input.token },
-        });
+      if (existPhone?.emailVerified) {
+        throw "This phone number is already used, please use another number";
+      }
 
-        if (!existToken) {
-          throw "Invalid token";
-        }
+      const email = input.email.toLowerCase();
+      const hashedPassword = await hash(input.password, 10);
 
-        const isExpired = new Date(existToken.expires) < new Date();
-        if (isExpired) {
-          throw "Token is expired";
-        }
-
-        const existUser = await prisma.user.findFirst({
-          where: { email: existToken.identifier },
-        });
-
-        if (!existUser) {
-          throw "User not found";
-        }
-
-        await prisma.user.update({
-          where: { id: existUser.id },
-          data: { emailVerified: new Date() },
-        });
-
-        await prisma.verificationToken.delete({
-          where: {
-            identifier_token: {
-              identifier: existToken.identifier,
-              token: existToken.token,
-            },
+      if (!existUser) {
+        await prisma.user.create({
+          data: {
+            email,
+            name: input.fullName,
+            phone: input.phone,
+            password: hashedPassword,
           },
         });
-
-        return handleAuthSuccess("Email verified");
-      } catch (error) {
-        handleAuthError(error, "Verify email");
+      } else {
+        await prisma.user.update({
+          where: { id: existUser.id },
+          data: {
+            email,
+            password: hashedPassword,
+            phone: input.phone,
+            name: input.fullName,
+          },
+        });
       }
-    }),
+
+      const verificationToken = await getVerificationToken(email);
+      await sendVerificationEmail(email, verificationToken.token);
+
+      return handleAuthSuccess("Email verification is sent");
+    } catch (error) {
+      handleAuthError(error, "Register");
+    }
+  }),
+
+  // Verify email
+  verifyEmail: baseProcedure.input(z.object({ token: z.string() })).mutation(async ({ input }) => {
+    try {
+      if (!input.token) {
+        throw "There is no token provided";
+      }
+
+      const existToken = await prisma.verificationToken.findFirst({
+        where: { token: input.token },
+      });
+
+      if (!existToken) {
+        throw "Invalid token";
+      }
+
+      const isExpired = new Date(existToken.expires) < new Date();
+      if (isExpired) {
+        throw "Token is expired";
+      }
+
+      const existUser = await prisma.user.findFirst({
+        where: { email: existToken.identifier },
+      });
+
+      if (!existUser) {
+        throw "User not found";
+      }
+
+      await prisma.user.update({
+        where: { id: existUser.id },
+        data: { emailVerified: new Date() },
+      });
+
+      await prisma.verificationToken.delete({
+        where: {
+          identifier_token: {
+            identifier: existToken.identifier,
+            token: existToken.token,
+          },
+        },
+      });
+
+      return handleAuthSuccess("Email verified");
+    } catch (error) {
+      handleAuthError(error, "Verify email");
+    }
+  }),
 
   // Sign out user
   signOut: baseProcedure.mutation(async () => {
@@ -260,46 +243,49 @@ export const authRouter = createTRPCRouter({
   }),
 
   // Update profile
-  updateProfile: baseProcedure
-    .input(updateProfileSchema)
-    .mutation(async ({ input }) => {
-      try {
-        const { userId, ...updateData } = input;
+  updateProfile: baseProcedure.input(updateProfileSchema).mutation(async ({ input }) => {
+    try {
+      const { userId, ...updateData } = input;
 
-        const dataToUpdate: Partial<{ name: string; phone: string; image: string }> = {};
+      const dataToUpdate: Partial<{ name: string; phone: string; image: string }> = {};
 
-        if (updateData.name !== undefined) dataToUpdate.name = updateData.name;
-        if (updateData.phone !== undefined) dataToUpdate.phone = updateData.phone;
-        if (updateData.image !== undefined) dataToUpdate.image = updateData.image;
+      if (updateData.name !== undefined) dataToUpdate.name = updateData.name;
+      if (updateData.phone !== undefined) dataToUpdate.phone = updateData.phone;
+      if (updateData.image !== undefined) dataToUpdate.image = updateData.image;
 
-        if (Object.keys(dataToUpdate).length === 0) {
-          throw "Tidak ada data yang ingin diperbarui.";
-        }
-
-        await prisma.user.update({
-          where: { id: userId },
-          data: dataToUpdate,
-        });
-
-
-        return handleAuthSuccess("Update success!");
-      } catch (error) {
-        handleAuthError(error, "Update profile");
+      if (Object.keys(dataToUpdate).length === 0) {
+        throw "Tidak ada data yang ingin diperbarui.";
       }
-    }),
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: dataToUpdate,
+      });
+
+      return handleAuthSuccess("Update success!");
+    } catch (error) {
+      handleAuthError(error, "Update profile");
+    }
+  }),
 
   // Update address
   updateAddress: baseProcedure
-    .input(updateAddressSchema)
+    .input(addressSchema.extend({ id: z.string() }))
     .mutation(async ({ input }) => {
       try {
-        await prisma.user.update({
-          where: { id: input.id },
-          data: { address: input.address },
+        const { id, ...addressData } = input;
+        console.log("Input data:", input);
+        console.log("Address data to save:", addressData);
+
+        const result = await prisma.user.update({
+          where: { id },
+          data: { address: addressData },
         });
 
+        console.log("Update result:", result);
         return handleAuthSuccess("Address successfully updated");
       } catch (error) {
+        console.error("Database error:", error);
         handleAuthError(error, "Update address");
       }
     }),

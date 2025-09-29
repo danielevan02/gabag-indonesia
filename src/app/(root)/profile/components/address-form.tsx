@@ -41,7 +41,8 @@ const AddressForm = ({ address, id }: { address?: Address; id: string }) => {
   });
 
   const onSubmit = async (data: AddressFormType) => {
-    await updateAddress({ address: data, id });
+    console.log(data)
+    await updateAddress({ ...data, id });
   };
 
   return (
@@ -56,11 +57,11 @@ const AddressForm = ({ address, id }: { address?: Address; id: string }) => {
         </div>
         <p className="text-neutral-500 text-xs lg:text-sm font-medium">
           Fill in your address to have it automatically applied at checkout, so you won&apos;t need
-          to retype it.
+          to re-type it.
         </p>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5 mb-5">
           <div className="flex flex-col lg:flex-row lg:gap-5">
             <FormInput
               form={form}
@@ -114,7 +115,7 @@ const AddressForm = ({ address, id }: { address?: Address; id: string }) => {
             disabled={!edit}
           />
 
-          <div className="w-full flex justify-end mt-5">
+          <div className="w-full flex justify-end">
             {edit && (
               <Button className="uppercase tracking-widest" type="submit" disabled={isLoading}>
                 {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : "Save"}

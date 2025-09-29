@@ -22,8 +22,8 @@ export const phoneSchema = z.object({
   phone: z
     .string()
     .min(1, "Phone number is required")
-    .regex(/^\+62[0-9]{9,13}$/, {
-      message: "Phone number must be start with +62 and consist of 9-13 digit",
+    .regex(/^08[0-9]{7,11}$/, {
+      message: "Phone number must start with 08 and consist of 9-13 digits total",
     }),
 });
 

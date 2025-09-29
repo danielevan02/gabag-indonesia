@@ -88,7 +88,6 @@ const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
 
   return (
     <div className="relative flex flex-col md:flex-row md:gap-5 justify-center items-start w-full">
-      {/* Image Section */}
       <ImageGallery
         imagesList={imagesList}
         mainImage={mainImage}

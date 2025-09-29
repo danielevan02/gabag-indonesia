@@ -10,14 +10,14 @@ import { toast } from "sonner";
 import { trpc } from "@/trpc/client";
 import { getCurrentUser } from "@/lib/actions/user.action";
 
-const ProfileForm = ({ user }: { user: Awaited<ReturnType<typeof getCurrentUser>>}) => {
+const ProfileForm = ({ user }: { user: Awaited<ReturnType<typeof getCurrentUser>> }) => {
   // for telling typescript that user is always defined
-  user = user!
+  user = user!;
   return (
     <div className="w-full flex flex-col gap-5">
       <div className="flex w-full items-center mb-5 gap-3">
-        <ProfileItem label="Name" value={user.name} editable type="text" userId={user.id}/>
-        <ProfileItem label="Phone" value={user.phone} editable type="tel" userId={user.id}/>
+        <ProfileItem label="Name" value={user.name} editable type="text" userId={user.id} />
+        <ProfileItem label="Phone" value={user.phone} editable type="tel" userId={user.id} />
       </div>
       <div className="flex w-full items-center gap-3">
         <ProfileItem label="Email" value={user.email} />
@@ -45,16 +45,19 @@ interface ProfileItemProps {
 const ProfileItem = ({ label, value, editable, type = "text", userId }: ProfileItemProps) => {
   const [onEdit, setOnEdit] = useState(false);
   const [fieldValue, setFieldValue] = useState(value);
-  const {mutateAsync: updateProfile, isPending: isLoading} = trpc.auth.updateProfile.useMutation({
+  const { mutateAsync: updateProfile, isPending: isLoading } = trpc.auth.updateProfile.useMutation({
     onSuccess: (res) => {
       if (res?.success) {
-      toast.success(res.message as string);
-      setOnEdit(false);
-    } else {
-      toast.error(res?.message as string);
-    }
-    }
-  })
+        toast.success(res.message as string);
+        setOnEdit(false);
+        // Update fieldValue dengan nilai terbaru setelah sukses update
+      } else {
+        toast.error(res?.message as string);
+        // Reset fieldValue ke nilai asli jika gagal
+        setFieldValue(value);
+      }
+    },
+  });
 
   const isName = label.toLowerCase() === "name";
   const isPhone = label.toLowerCase() === "phone";
@@ -65,11 +68,13 @@ const ProfileItem = ({ label, value, editable, type = "text", userId }: ProfileI
       const result = nameSchema.safeParse(fieldValue);
       if (!result.success) {
         toast.error(result.error.errors[0].message);
+        return;
       }
     } else if (isPhone) {
       const result = phoneSchema.safeParse({ phone: fieldValue });
       if (!result.success) {
         toast.error(result.error.errors[0].message);
+        return;
       }
     }
 
@@ -79,7 +84,6 @@ const ProfileItem = ({ label, value, editable, type = "text", userId }: ProfileI
       ...(isName && { name: fieldValue }),
       ...(isPhone && { phone: fieldValue }),
     });
-
   };
 
   return (
@@ -91,25 +95,29 @@ const ProfileItem = ({ label, value, editable, type = "text", userId }: ProfileI
           type={type}
           value={fieldValue}
           onChange={(e) => setFieldValue(e.target.value)}
-          pattern={isPhone ? "^\\+62[0-9]{9,13}$" : undefined}
-          placeholder={isPhone ? "+628**********" : ""}
+          pattern={isPhone ? "^08[0-9]{7,11}$" : undefined}
+          placeholder={isPhone ? "08**********" : ""}
         />
       ) : (
-        <p className="text-sm lg:text-base">{value}</p>
+        <p className="text-sm lg:text-base">{fieldValue}</p>
       )}
 
       {editable &&
         (onEdit ? (
           <div className="flex gap-2 mt-3">
-            <Button onClick={() => setOnEdit(false)} variant="outline" className="uppercase" disabled={isLoading}>
+            <Button
+              onClick={() => {
+                setOnEdit(false);
+                setFieldValue(value); // Reset ke nilai asli saat cancel
+              }}
+              variant="outline"
+              className="uppercase"
+              disabled={isLoading}
+            >
               Cancel
             </Button>
             <Button onClick={handleSubmit} className="uppercase" disabled={isLoading}>
-              {isLoading ? (
-                <Loader className="h-4 w-4 animate-spin"/>
-              ):(
-                "Save"
-              )}
+              {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : "Save"}
             </Button>
           </div>
         ) : (

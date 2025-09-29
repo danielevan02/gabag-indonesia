@@ -9,7 +9,7 @@ import { SessionProvider } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import CartModal from "../cart/cart-modal";
 import { TooltipWrapper } from "../tooltip-wrapper";
-import { ShieldUser } from "lucide-react";
+import { ClipboardList, ShieldUser } from "lucide-react";
 import Image from "next/image";
 
 const Header = async () => {
@@ -47,13 +47,19 @@ const Header = async () => {
         <div className="hidden lg:flex gap-5 justify-end items-center w-1/3">
           <CartModal userId={user?.id} />
 
+          <TooltipWrapper text="Order List">
+            <Link href="/order" className="hover:bg-muted rounded-md p-2">
+              <ClipboardList className="size-6"/>
+            </Link>
+          </TooltipWrapper>
+          
           {session?.user?.role === "admin" && (
             <TooltipWrapper text="Admin Panel">
               <Link
                 href="/admin/dashboard"
                 className="cursor-pointer hover:bg-muted rounded-md p-2"
               >
-                <ShieldUser className="w-6 h-6" />
+                <ShieldUser className="size-6" />
               </Link>
             </TooltipWrapper>
           )}
