@@ -72,6 +72,13 @@ const handleMutationSuccess = (message: string) => {
 };
 
 export const productRouter = createTRPCRouter({
+  getAllSlug: baseProcedure.query(async () => {
+    return await prisma.product.findMany({
+      select: {
+        slug: true
+      }
+    })
+  }),
   getSelect: baseProcedure.query(async () => {
     const data = await prisma.product.findMany({
       where: {

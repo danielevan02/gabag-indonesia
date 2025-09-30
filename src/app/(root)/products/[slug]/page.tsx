@@ -6,18 +6,12 @@ import { trpc } from "@/trpc/server";
 type tParams = Promise<{ slug: string }>;
 
 export async function generateStaticParams() {
-  // Disable static generation for products to prevent database connection timeouts during build
-  // All product pages will be generated on-demand (ISR) for better build performance
-  return [];
-
-  // Original implementation (disabled):
-  // try {
-  //   const products = await trpc.product.getAll({});
-  //   return products.map((product) => ({ slug: product.slug }));
-  // } catch (error) {
-  //   console.error('Failed to generate static params for products:', error);
-  //   return [];
-  // }
+  try {
+    return trpc.product.getAllSlug()
+  } catch (error) {
+    console.error('Failed to generate static params for products:', error);
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: {params: tParams}): Promise<Metadata> {
