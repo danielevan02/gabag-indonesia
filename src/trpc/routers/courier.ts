@@ -52,7 +52,6 @@ export const courierRouter = createTRPCRouter({
     .query(async ({ input }) => {
       try {
         const { destination_area_id, destination_postal_code, items } = input;
-        console.log(items)
         const res = await fetch("https://api.biteship.com/v1/rates/couriers", {
           method: "POST",
           headers: {

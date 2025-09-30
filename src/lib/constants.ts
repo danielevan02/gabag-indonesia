@@ -109,3 +109,20 @@ export const priceFilter = [
     },
   },
 ]
+
+// Order constants
+export const WAREHOUSE_LOCATION = "TANGERANG";
+export const DEFAULT_EMAIL = "placeholder@mail.com";
+export const DEFAULT_NAME = "NO_NAME";
+export const DEFAULT_PHONE = "0888888888";
+
+// Order form field requirements
+export const REQUIRED_ORDER_FIELDS = [
+  "address",
+  "city",
+  "district",
+  "name",
+  "postal_code",
+  "province",
+  "village",
+] as const;
