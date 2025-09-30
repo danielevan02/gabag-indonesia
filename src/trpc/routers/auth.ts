@@ -3,7 +3,6 @@ import { baseProcedure, createTRPCRouter } from "../init";
 import prisma from "@/lib/prisma";
 import { serializeType } from "@/lib/utils";
 import { hash } from "bcrypt-ts-edge";
-import { v4 as uuidv4 } from "uuid";
 import { sendVerificationEmail } from "@/email/send-verification";
 import { TRPCError } from "@trpc/server";
 import { auth, signIn, signOut } from "../../auth";
@@ -19,7 +18,7 @@ const updateProfileSchema = z.object({
 
 // Helper functions
 const getVerificationToken = async (email: string) => {
-  const token = uuidv4();
+  const token = crypto.randomUUID();
   const expires = new Date(Date.now() + 1000 * 60 * 60 * 1); // 1 hour
 
   const existingToken = await prisma.verificationToken.findFirst({

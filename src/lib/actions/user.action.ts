@@ -7,7 +7,6 @@ import { Address } from "@/types";
 import { serializeType } from "../utils";
 import { SignUpType } from "@/app/(auth)/sign-up/sign-up-form";
 import {hash} from 'bcrypt-ts-edge'
-import {v4 as uuidv4} from 'uuid'
 import { sendVerificationEmail } from "@/email/send-verification";
 import { revalidatePath, revalidateTag } from "next/cache";
 
@@ -31,7 +30,7 @@ export async function signInWithCredetials(data: {email: string; password: strin
 
 
 async function getVerificationToken(email: string){
-  const token = uuidv4()
+  const token = crypto.randomUUID()
   const expires = new Date(Date.now() + 1000 * 60 * 60 * 1); // 1 hour
 
   const existingToken = await prisma.verificationToken.findFirst({
