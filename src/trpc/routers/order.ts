@@ -76,7 +76,7 @@ export const orderRouter = createTRPCRouter({
           where: {
             userId: input.userId,
             paymentStatus: {
-              not: "",
+              not: null,
             },
           },
           include: {
@@ -98,6 +98,11 @@ export const orderRouter = createTRPCRouter({
         return serializeType(data);
       } else {
         const data = await prisma.order.findMany({
+          where: {
+            paymentStatus: {
+              not: null,
+            },
+          },
           include: {
             user: {
               select: {

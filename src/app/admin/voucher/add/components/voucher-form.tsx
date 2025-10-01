@@ -474,19 +474,19 @@ export default function VoucherForm({
 
           <FormInput
             form={form}
-            fieldType="date"
+            fieldType="datetime"
             name="startDate"
-            label="Start Date"
-            placeholder="Pick a start date"
+            label="Start Date & Time"
+            placeholder="Pick a start date and time"
             disabled={isLoading}
           />
 
           <FormInput
             form={form}
-            fieldType="date"
+            fieldType="datetime"
             name="expiryDate"
-            label="Expiry Date"
-            placeholder="Pick an expiry date"
+            label="Expiry Date & Time"
+            placeholder="Pick an expiry date and time"
             disabled={isLoading}
           />
         </div>

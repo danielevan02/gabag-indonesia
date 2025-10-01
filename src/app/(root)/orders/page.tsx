@@ -29,6 +29,7 @@ const OrderPage = async () => {
               <TableHead>Total Price</TableHead>
               <TableHead>Payment Status</TableHead>
               <TableHead>Paid At</TableHead>
+              <TableHead>Waybill Number</TableHead>
               <TableHead>Delivery Status</TableHead>
               <TableHead>Order Date</TableHead>
               <TableHead className="text-end">Details</TableHead>
@@ -51,7 +52,9 @@ const OrderPage = async () => {
                       {order.paidAt ? format(order.paidAt, "dd/MM/yyyy HH:mm:ss") : "Not Paid"}
                     </TableCell>
                     <TableCell>
-                      {" "}
+                      {order.trackingOrder ? order.trackingOrder : <p className="italic text-muted-foreground">Not Delivered</p>}
+                    </TableCell>
+                    <TableCell>
                       <Badge>{order.isDelivered ? "delivered" : "not delivered"}</Badge>
                     </TableCell>
                     <TableCell>{orderDate}</TableCell>

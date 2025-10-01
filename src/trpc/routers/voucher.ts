@@ -157,7 +157,23 @@ export const voucherRouter = createTRPCRouter({
     )
     .mutation(async ({ input }) => {
       try {
+        // Check if voucher exists and get usedCount
+        const existingVoucher = await prisma.voucher.findUnique({
+          where: { id: input.id },
+          select: { usedCount: true, code: true, totalLimit: true },
+        });
+
+        if (!existingVoucher) {
+          return {
+            success: false,
+            message: "Voucher not found",
+          };
+        }
+
+        const hasBeenUsed = existingVoucher.usedCount > 0;
+
         const {
+          code,
           discountType,
           discountValue,
           maxDiscount,
@@ -178,6 +194,40 @@ export const voucherRouter = createTRPCRouter({
           isActive,
           ...rest
         } = input.data;
+
+        // Validate restricted fields for used vouchers
+        if (hasBeenUsed) {
+          if (code) {
+            return {
+              success: false,
+              message: "Cannot change voucher code after it has been used",
+            };
+          }
+          if (discountType) {
+            return {
+              success: false,
+              message: "Cannot change discount type after voucher has been used",
+            };
+          }
+          if (applicationType) {
+            return {
+              success: false,
+              message: "Cannot change application type after voucher has been used",
+            };
+          }
+          if (categoryId !== undefined || subCategoryId !== undefined || eventId !== undefined || productIds || variantIds) {
+            return {
+              success: false,
+              message: "Cannot change voucher scope (category/product/variant) after it has been used",
+            };
+          }
+          if (totalLimit !== undefined && totalLimit < existingVoucher.usedCount) {
+            return {
+              success: false,
+              message: `Cannot set total limit below used count (${existingVoucher.usedCount})`,
+            };
+          }
+        }
 
         // If productIds provided, first disconnect all, then connect new ones
         const productUpdate =
@@ -240,6 +290,26 @@ export const voucherRouter = createTRPCRouter({
 
   delete: baseProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
     try {
+      // Check if voucher has been used
+      const voucher = await prisma.voucher.findUnique({
+        where: { id: input.id },
+        select: { usedCount: true, code: true },
+      });
+
+      if (!voucher) {
+        return {
+          success: false,
+          message: "Voucher not found",
+        };
+      }
+
+      if (voucher.usedCount > 0) {
+        return {
+          success: false,
+          message: `Cannot delete voucher "${voucher.code}". It has been used ${voucher.usedCount} time(s). Please deactivate instead.`,
+        };
+      }
+
       await prisma.voucher.delete({
         where: {
           id: input.id,
@@ -253,14 +323,45 @@ export const voucherRouter = createTRPCRouter({
 
   deleteMany: baseProcedure.input(z.object({ ids: z.array(z.string()) })).mutation(async ({ input }) => {
     try {
+      // Check if any vouchers have been used
+      const vouchers = await prisma.voucher.findMany({
+        where: {
+          id: { in: input.ids },
+        },
+        select: { id: true, usedCount: true, code: true },
+      });
+
+      const usedVouchers = vouchers.filter((v) => v.usedCount > 0);
+
+      if (usedVouchers.length > 0) {
+        const codes = usedVouchers.map((v) => v.code).join(", ");
+        return {
+          success: false,
+          message: `Cannot delete vouchers: ${codes}. They have been used. Please deactivate instead.`,
+        };
+      }
+
+      // Only delete vouchers that haven't been used
+      const unusedIds = vouchers.filter((v) => v.usedCount === 0).map((v) => v.id);
+
+      if (unusedIds.length === 0) {
+        return {
+          success: false,
+          message: "No vouchers can be deleted. All selected vouchers have been used.",
+        };
+      }
+
       await prisma.voucher.deleteMany({
         where: {
           id: {
-            in: input.ids,
+            in: unusedIds,
           },
         },
       });
-      return handleMutationSuccess("Vouchers Deleted");
+
+      return handleMutationSuccess(
+        `${unusedIds.length} voucher(s) deleted. ${usedVouchers.length} used voucher(s) were skipped.`
+      );
     } catch (error) {
       return handleMutationError(error, "Delete Vouchers");
     }
