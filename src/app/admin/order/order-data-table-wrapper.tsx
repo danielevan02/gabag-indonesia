@@ -23,9 +23,10 @@ export default function OrderDataTableWrapper({ orders }: OrderDataTableWrapperP
   const createBulkShipment = trpc.courier.createBulkShipment.useMutation({
     onSuccess: (data) => {
       if (data.success) {
-        toast.success(
-          `${data.message}. Success: ${data.successCount}, Errors: ${data.errorCount}`
-        );
+        const message = 'successCount' in data && 'errorCount' in data
+          ? `${data.message}. Success: ${data.successCount}, Errors: ${data.errorCount}`
+          : data.message;
+        toast.success(message);
         utils.order.getAll.invalidate();
       } else {
         toast.error(data.message);
