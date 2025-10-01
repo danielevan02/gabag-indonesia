@@ -41,6 +41,7 @@ interface DataTableProps<TData, TValue> {
   deleteManyMutation?: DeleteManyMutation;
   deleteTitle?: string;
   searchColumn?: string;
+  bulkShipmentAction?: (orderIds: string[]) => void;
 }
 
 export function   DataTable<TData, TValue>({
@@ -50,6 +51,7 @@ export function   DataTable<TData, TValue>({
   deleteManyMutation,
   deleteTitle,
   searchColumn,
+  bulkShipmentAction,
 }: DataTableProps<TData, TValue>) {
   const [openModal, setOpenModal] = useState(false);
   const [rowSelection, setRowSelection] = useState({});
@@ -164,8 +166,15 @@ export function   DataTable<TData, TValue>({
               selectedRows !== 0 && "opacity-100 pointer-events-auto"
             )}
           >
-            {path === "/admin/order" && (
-              <Button>
+            {path === "/admin/order" && bulkShipmentAction && (
+              <Button
+                onClick={() => {
+                  const rows = table.getFilteredSelectedRowModel().rows.map((item) => item.original);
+                  //@ts-expect-error there is no id in TData
+                  const selectedIds = rows.map((row) => row.id);
+                  bulkShipmentAction(selectedIds);
+                }}
+              >
                 <Truck />
                 Create Shipment for {`${selectedRows} order(s)`}
               </Button>

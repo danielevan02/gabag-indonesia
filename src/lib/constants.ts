@@ -1,3 +1,12 @@
+import {
+  BookImage,
+  Calendar,
+  Images,
+  ScrollText,
+  SquareTerminal,
+  TicketPercent,
+} from "lucide-react"
+
 export const APP_NAME = process.env.APP_NAME 
   ? process.env.APP_NAME 
   : "GabaG Indonesia"
@@ -109,3 +118,70 @@ export const priceFilter = [
     },
   },
 ]
+
+// Order constants
+export const WAREHOUSE_LOCATION = "TANGERANG";
+export const DEFAULT_EMAIL = "placeholder@mail.com";
+export const DEFAULT_NAME = "NO_NAME";
+export const DEFAULT_PHONE = "0888888888";
+
+// Order form field requirements
+export const REQUIRED_ORDER_FIELDS = [
+  "address",
+  "city",
+  "district",
+  "name",
+  "postal_code",
+  "province",
+  "village",
+] as const;
+
+export const navLink = {
+    navMain: [
+      {
+        title: "Catalog",
+        url: "/admin/catalog",
+        icon: SquareTerminal,
+        isActive: true,
+        items: [
+          {
+            title: "Category",
+            url: '/admin/catalog/category',
+          },
+          {
+            title: "Sub Category",
+            url: "/admin/catalog/sub-category",
+          },
+          {
+            title: "Product",
+            url: "/admin/catalog/product",
+          },
+        ],
+      },
+      {
+        title: "Image Gallery",
+        url: "/admin/gallery",
+        icon: BookImage,
+      },
+      {
+        title: "Events",
+        url: "/admin/event",
+        icon: Calendar
+      },
+      {
+        title: "Voucher",
+        url: "/admin/voucher",
+        icon: TicketPercent
+      },
+      {
+        title: "Order",
+        url: "/admin/order",
+        icon: ScrollText
+      },
+      {
+        title: "Carousel",
+        url: "/admin/carousel",
+        icon: Images
+      }
+    ],
+  }

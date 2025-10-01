@@ -75,13 +75,19 @@ interface DateInputProps<TFieldValues extends FieldValues = FieldValues>
   fieldType: "date";
 }
 
+interface DateTimeInputProps<TFieldValues extends FieldValues = FieldValues>
+  extends BaseFormInputProps<TFieldValues> {
+  fieldType: "datetime";
+}
+
 type FormInputProps<TFieldValues extends FieldValues = FieldValues> =
   | TextInputProps<TFieldValues>
   | PhoneInputProps<TFieldValues>
   | TextareaInputProps<TFieldValues>
   | SelectInputProps<TFieldValues>
   | PasswordInputProps<TFieldValues>
-  | DateInputProps<TFieldValues>;
+  | DateInputProps<TFieldValues>
+  | DateTimeInputProps<TFieldValues>;
 
 export function FormInput<TFieldValues extends FieldValues = FieldValues>(
   props: FormInputProps<TFieldValues>
@@ -327,6 +333,107 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>(
               <FormMessage />
             </FormItem>
           )}
+        />
+      );
+    }
+
+    case "datetime": {
+      return (
+        <FormField
+          control={form.control}
+          name={name}
+          render={({ field }) => {
+            const handleDateSelect = (date: Date | undefined) => {
+              if (!date) {
+                field.onChange(undefined);
+                return;
+              }
+
+              // Preserve existing time if there's already a value
+              if (field.value) {
+                const existingDate = new Date(field.value);
+                date.setHours(existingDate.getHours());
+                date.setMinutes(existingDate.getMinutes());
+              }
+              field.onChange(date);
+            };
+
+            const handleTimeChange = (type: 'hours' | 'minutes', value: string) => {
+              const currentDate = field.value ? new Date(field.value) : new Date();
+
+              if (type === 'hours') {
+                currentDate.setHours(parseInt(value) || 0);
+              } else {
+                currentDate.setMinutes(parseInt(value) || 0);
+              }
+
+              field.onChange(currentDate);
+            };
+
+            return (
+              <FormItem className={cn("flex flex-col", className)}>
+                <FormLabel>{label}</FormLabel>
+                {description && <FormDescription>{description}</FormDescription>}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "border border-black py-5 pl-3 text-left font-normal w-full",
+                          !field.value && "text-muted-foreground"
+                        )}
+                        disabled={disabled}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP 'at' HH:mm")
+                        ) : (
+                          <span>{placeholder || "Pick a date and time"}</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={handleDateSelect}
+                      captionLayout="dropdown"
+                      disabled={disabled}
+                    />
+                    <div className="border-t p-3 space-y-2">
+                      <div className="text-sm font-medium">Time</div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min={0}
+                          max={23}
+                          placeholder="HH"
+                          value={field.value ? format(field.value, "HH") : "00"}
+                          onChange={(e) => handleTimeChange('hours', e.target.value)}
+                          className="w-16 text-center"
+                          disabled={disabled}
+                        />
+                        <span>:</span>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={59}
+                          placeholder="MM"
+                          value={field.value ? format(field.value, "mm") : "00"}
+                          onChange={(e) => handleTimeChange('minutes', e.target.value)}
+                          className="w-16 text-center"
+                          disabled={disabled}
+                        />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
       );
     }

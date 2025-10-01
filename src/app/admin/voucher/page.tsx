@@ -9,9 +9,9 @@ export default async function VoucherPage() {
   return (
     <div className="form-page">
       <div className="flex justify-between items-center">
-        <h1 className="font-medium text-2xl">Event List</h1>
+        <h1 className="font-medium text-2xl">Voucher List</h1>
         <Button>
-          <Link href='/admin/voucher/add'>Add Event</Link>
+          <Link href='/admin/voucher/add'>Add Voucher</Link>
         </Button>
       </div>
 

@@ -23,6 +23,7 @@ export default function VoucherDataTableWrapper({ vouchers }: VoucherDataTableWr
       deleteManyMutation={deleteManyVoucherMutation}
       searchPlaceholder="Search Voucher"
       deleteTitle="Delete Voucher"
+      searchColumn="code"
     />
   );
 }

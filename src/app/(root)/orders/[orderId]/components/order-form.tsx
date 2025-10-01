@@ -1,26 +1,25 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { orderSchema } from "@/lib/schema";
-import { Address, Areas, CartItem, Rates } from "@/types";
+import { Address, CartItem } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
-import debounce from "lodash/debounce";
-import { CircleAlert, Loader } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { Loader } from "lucide-react";
 import Script from "next/script";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import Image from "next/image";
-import { Input } from "@/components/ui/input";
 import { getCurrentUser } from "@/lib/actions/user.action";
-import { trpc } from "@/trpc/client";
 import { Form } from "@/components/ui/form";
 import { FormInput } from "@/components/shared/input/form-input";
+import { useAreaSearch } from "@/hooks/use-area-search";
+import { useCourierRates } from "@/hooks/use-courier-rates";
+import { useOrderPayment } from "@/hooks/use-order-payment";
+import { ShippingMethodList } from "./shipping/shipping-method-list";
+import { OrderSummary } from "./order-summary";
+import { DEFAULT_EMAIL, DEFAULT_NAME, DEFAULT_PHONE, REQUIRED_ORDER_FIELDS } from "@/lib/constants";
+import { trpc } from "@/trpc/client";
 
 declare global {
   interface Window {
@@ -47,158 +46,216 @@ const OrderForm: React.FC<OrderFormProps> = ({
   totalPrice,
   orderId,
 }) => {
-  const router = useRouter();
-  const [area, setArea] = useState<Areas>();
-  const [rateList, setRateList] = useState<Rates[]>();
   const userAddress = user?.address as Address;
   const [shipping, setShipping] = useState<{ price: number; courier: string }>();
-  const [isLoading, startTransition] = useTransition();
-  const [courierLoading, courierTransition] = useTransition();
-  const [voucher, setVoucher] = useState("");
-
-  // tRPC utils and mutations
-  const utils = trpc.useUtils();
-  const makePaymentMutation = trpc.order.makePayment.useMutation();
-  const finalizeOrderMutation = trpc.order.finalize.useMutation();
-  const updatePaymentStatusMutation = trpc.order.updatePaymentStatus.useMutation();
-
-  let lastPrice = totalPrice;
-  if (shipping) {
-    lastPrice += shipping.price;
-  }
+  const [voucherCode, setVoucherCode] = useState("");
+  const [appliedVoucher, setAppliedVoucher] = useState<{
+    code: string;
+    discount: number;
+    shippingDiscount: number;
+    totalDiscount: number;
+  } | null>(null);
+  const [isVoucherManuallyRemoved, setIsVoucherManuallyRemoved] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(orderSchema),
-    mode: "onBlur", // Validate on blur
-    reValidateMode: "onBlur", // Re-validate on blur after first validation
-    criteriaMode: "all", // Show all validation errors
-    shouldFocusError: true, // Focus on first error field
+    mode: "onBlur",
+    reValidateMode: "onBlur",
+    criteriaMode: "all",
+    shouldFocusError: true,
     defaultValues: {
       name: user?.name || "",
       address: userAddress?.address || "",
       city: userAddress?.city || "",
       district: userAddress?.district || "",
       phone: user?.phone || "",
-      postal_code: userAddress?.postalCode || area?.postal_code || "",
+      postal_code: userAddress?.postalCode || "",
       province: userAddress?.province || "",
       village: userAddress?.village || "",
       email: user?.email || "",
     },
   });
 
-  const debouncedFetch = useMemo(
-    () =>
-      debounce(async () => {
-        try {
-          // this is the input for searching location by city and district
-          const res = await utils.courier.getMapsAreas.fetch(
-            `${form.watch("city")} ${form.watch("district")} ${form.watch("postal_code")}`
-          );
-          setArea((prev) => (prev === res[0] ? prev : res[0]));
-        } catch (error) {
-          console.error("Error fetching maps areas:", error);
-        }
-      }, 1000),
-    [form.watch("city"), form.watch("district"), form.watch("postal_code")]
+  // Watch form values for area search
+  const city = form.watch("city");
+  const district = form.watch("district");
+  const postalCode = form.watch("postal_code");
+
+  // Check if all required fields are filled
+  const allFieldsFilled = REQUIRED_ORDER_FIELDS.every((field) => {
+    const value = form.getValues(field);
+    return value && value.length > 0;
+  });
+
+  // Custom hooks for business logic
+  const { area } = useAreaSearch({
+    city,
+    district,
+    postalCode,
+    enabled: allFieldsFilled,
+  });
+
+  // Auto-fill postal code from area if user hasn't entered one
+  useEffect(() => {
+    if (area?.postal_code && !form.getValues("postal_code")) {
+      form.setValue("postal_code", area.postal_code);
+    }
+  }, [area, form]);
+
+  const { rateList, isLoading: courierLoading } = useCourierRates({
+    areaId: area?.id,
+    postalCode: postalCode || area?.postal_code || "",
+    cartItems: cartItem,
+    enabled: !!area,
+  });
+
+  const { processPayment, isLoading } = useOrderPayment({ orderId });
+
+  // Get tRPC utils for manual query
+  const utils = trpc.useUtils();
+
+  // Prepare params for auto-apply voucher
+  // Only auto-apply if user hasn't manually removed the voucher
+  const autoApplyParams = shipping?.price && !appliedVoucher && !isVoucherManuallyRemoved
+    ? {
+        email: form.getValues("email") || user?.email || DEFAULT_EMAIL,
+        userId: user?.id,
+        subtotal: itemsPrice,
+        shippingFee: shipping.price,
+        orderItems: cartItem.map((item) => ({
+          productId: item.productId,
+          variantId: item.variantId,
+          price: item.price,
+          qty: item.qty,
+        })) as any,
+      }
+    : undefined;
+
+  // Fetch auto-apply voucher
+  const { data: autoApplyResult } = trpc.voucher.getAutoApply.useQuery(
+    autoApplyParams!,
+    {
+      enabled: !!autoApplyParams,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    }
   );
 
-  // FOR SEARCHING AREA
+  // Auto-apply voucher when result is available
   useEffect(() => {
-    const requiredFields: (keyof OrderFormType)[] = [
-      "address",
-      "city",
-      "district",
-      "name",
-      "postal_code",
-      "province",
-      "village",
-    ];
-
-    const allFilled = requiredFields.every((field) => form.getValues(field)?.length);
-
-    if (allFilled) {
-      debouncedFetch();
-      return () => debouncedFetch.cancel();
-    }
-  }, [form.watch("city"), form.watch("district")]);
-
-  // TO GET COURIER RATES AFTER USER COMPLETE IDENTITY
-  useEffect(() => {
-    // Create the function to fetch
-    const fetchCourierRates = async () => {
-      courierTransition(async () => {
-        const items = cartItem.map((item) => ({
-          name: item.name,
-          value: item.price,
-          quantity: item.qty,
-          weight: item.weight || 0,
-          height: item.height || 1,
-          length: item.length || 1,
-          width: item.width || 1,
-        }));
-
-        try {
-          const res = await utils.courier.getCourierRates.fetch({
-            destination_area_id: area?.id || "",
-            destination_postal_code: form.getValues("postal_code"),
-            items,
-          });
-
-          setRateList(res);
-        } catch (error) {
-          console.error("Error fetching courier rates:", error);
-        }
+    if (autoApplyResult?.found && autoApplyResult.voucher && !appliedVoucher) {
+      setAppliedVoucher({
+        code: autoApplyResult.voucher.code,
+        discount: autoApplyResult.voucher.discount,
+        shippingDiscount: autoApplyResult.voucher.shippingDiscount,
+        totalDiscount: autoApplyResult.voucher.totalDiscount,
       });
-    };
+      setVoucherCode(autoApplyResult.voucher.code);
+      toast.success(
+        `Voucher "${autoApplyResult.voucher.name || autoApplyResult.voucher.code}" has been automatically applied!`,
+        { duration: 5000 }
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoApplyResult]);
 
-    // RUN THE FETCH FUNCTION IF THERE IS AREA
-    if (area) fetchCourierRates();
-  }, [area]);
+  // Handler untuk apply voucher
+  const handleApplyVoucher = async (code: string) => {
+    if (!code.trim()) {
+      toast.error("Please enter a voucher code");
+      return;
+    }
+
+    if (!shipping?.price) {
+      toast.error("Please select shipping method first");
+      return;
+    }
+
+    try {
+      // Prepare order items untuk validasi voucher
+      const orderItems = cartItem.map((item) => ({
+        productId: item.productId,
+        variantId: item.variantId,
+        price: item.price,
+        qty: item.qty,
+        // categoryId, subCategoryId, eventId akan di-fetch di backend jika diperlukan
+      }));
+
+      const result = await utils.voucher.validate.fetch({
+        code: code.trim(),
+        email: form.getValues("email") || user?.email || DEFAULT_EMAIL,
+        userId: user?.id,
+        subtotal: itemsPrice,
+        shippingFee: shipping.price,
+        orderItems: orderItems as any,
+      });
+
+      if (result.valid && result.discount !== undefined) {
+        setAppliedVoucher({
+          code: code.trim().toUpperCase(),
+          discount: result.discount,
+          shippingDiscount: result.shippingDiscount || 0,
+          totalDiscount: result.totalDiscount,
+        });
+        setIsVoucherManuallyRemoved(false); // Reset flag when manually applying
+        toast.success("Voucher applied successfully!");
+      } else {
+        toast.error(result.message || "Invalid voucher");
+        setAppliedVoucher(null);
+      }
+    } catch (error) {
+      console.error("Voucher validation error:", error);
+      toast.error("Failed to apply voucher");
+      setAppliedVoucher(null);
+    }
+  };
+
+  const handleRemoveVoucher = () => {
+    setAppliedVoucher(null);
+    setVoucherCode("");
+    setIsVoucherManuallyRemoved(true); // Prevent auto-apply after manual removal
+    toast.success("Voucher removed");
+  };
+
+  // Calculate final price with voucher discount
+  const voucherDiscount = appliedVoucher?.totalDiscount || 0;
+  const finalPrice = totalPrice + (shipping?.price || 0) - voucherDiscount;
+
+  // Handler functions
+  const handleSelectCourier = (courier: string, price: number) => {
+    setShipping({ courier, price });
+  };
 
   const onSubmit: SubmitHandler<OrderFormType> = async (data) => {
     if (!shipping || shipping.price === 0) {
       return toast.error("Please choose a courier for your delivery");
     }
-    startTransition(async () => {
-      const res = await makePaymentMutation.mutateAsync({
-        email: data.email || user?.email || "placeholder@mail.com",
-        name: data.name || user?.name || "NO_NAME",
-        phone: data.phone || user?.phone || "0888888888",
-        subTotal: totalPrice,
-        userId: user?.id || "",
-        shippingPrice: shipping.price,
-        orderId,
-        taxPrice,
-        cartItem,
-      });
 
-      if (res?.success && "token" in res && res.token) {
-        await finalizeOrderMutation.mutateAsync({
-          courier: shipping.courier,
-          shippingPrice: shipping.price,
-          totalPrice: totalPrice + shipping.price,
-          token: res.token,
-          itemsPrice,
-          orderId,
-          taxPrice,
-          shippingInfo: {
-            postal_code: data.postal_code,
-            area_id: area?.id || "",
-            email: data.email,
-            name: data.name,
-            phone: data.phone,
-            address: `${data.address}, ${data.village}, ${data.district}, ${data.city}, ${data.province}, ${data.postal_code}`,
-          },
-        });
-        window.snap.pay(res.token, {
-          onSuccess: async () => {
-            await updatePaymentStatusMutation.mutateAsync({ orderId, paymentStatus: "settlement" });
-            router.push("/orders");
-          },
-        });
-      } else {
-        toast.error("Payment failed, there is no token");
-      }
+    if (!area?.id) {
+      return toast.error("Invalid shipping area");
+    }
+
+    await processPayment({
+      email: data.email || user?.email || DEFAULT_EMAIL,
+      name: data.name || user?.name || DEFAULT_NAME,
+      phone: data.phone || user?.phone || DEFAULT_PHONE,
+      userId: user?.id || "",
+      totalPrice,
+      itemsPrice,
+      taxPrice,
+      shippingPrice: shipping.price,
+      courier: shipping.courier,
+      cartItems: cartItem,
+      shippingInfo: {
+        postal_code: data.postal_code,
+        area_id: area.id,
+        email: data.email,
+        name: data.name,
+        phone: data.phone,
+        address: `${data.address}, ${data.village}, ${data.district}, ${data.city}, ${data.province}, ${data.postal_code}`,
+      },
+      voucherCode: appliedVoucher?.code,
+      discountAmount: appliedVoucher?.totalDiscount,
     });
   };
 
@@ -294,66 +351,13 @@ const OrderForm: React.FC<OrderFormProps> = ({
           </div>
           <div className="flex flex-col">
             <h3 className="text-lg font-semibold mb-3">Shipping Method</h3>
-            {rateList ? (
-              rateList.length !== 0 && area ? (
-                <div className="rounded-md border max-h-60 overflow-scroll">
-                  {rateList.map((rate) => {
-                    const rateId = `${rate.company}-${rate.type}`;
-                    return (
-                      <div
-                        className={cn(
-                          "flex justify-between py-3 px-4 border-b hover:bg-neutral-100 transition-all cursor-pointer",
-                          rateId === shipping?.courier && "bg-neutral-200"
-                        )}
-                        key={rateId}
-                        onClick={() => setShipping({ price: rate.price, courier: rateId })}
-                      >
-                        <div className="flex gap-3">
-                          <div
-                            className={cn(
-                              "w-4 h-4 rounded-full border transition",
-                              rateId === shipping?.courier && "border-4 border-foreground"
-                            )}
-                          />
-                          <div className="flex flex-col gap-1 w-40 md:w-auto">
-                            <p className="text-xs">
-                              {rate.courier_name} - {rate.courier_service_name}
-                            </p>
-                            {rate.duration && (
-                              <p className="text-neutral-500 text-xs">{rate.duration}</p>
-                            )}
-                            <p className="text-xs text-neutral-500">
-                              Sending from TANGERANG to{" "}
-                              <span className="uppercase">
-                                {area?.administrative_division_level_2_name}
-                              </span>
-                            </p>
-                          </div>
-                        </div>
-                        <p className="font-semibold text-sm">Rp {rate.price.toLocaleString()}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="p-5 bg-red-100 border border-red-400 flex rounded-md gap-2">
-                  <CircleAlert className="w-10 h-fit text-red-400" />
-                  <div className="flex flex-col gap-2">
-                    <p className="font-semibold text-sm">Shipping not available</p>
-                    <p className="text-xs">
-                      Your order cannot be shipped to the selected address. Review your address to
-                      ensure it&apos;s correct and try again, or select a different address.
-                    </p>
-                  </div>
-                </div>
-              )
-            ) : courierLoading ? (
-              <Skeleton className="rounded-md w-full h-14" />
-            ) : (
-              <div className="py-5 bg-neutral-100 dark:bg-neutral-800 rounded-md text-xs text-center text-neutral-500 dark:text-neutral-300">
-                Enter your shipping address to view available shipping methods.
-              </div>
-            )}
+            <ShippingMethodList
+              rateList={rateList}
+              area={area}
+              isLoading={courierLoading}
+              selectedCourier={shipping?.courier}
+              onSelectCourier={handleSelectCourier}
+            />
           </div>
           <Button
             className="uppercase text-xs tracking-widest rounded-full py-7"
@@ -364,64 +368,18 @@ const OrderForm: React.FC<OrderFormProps> = ({
           </Button>
         </form>
       </Form>
-      <div className="block lg:sticky top-36 right-0 overflow-hidden flex-1 lg:max-w-lg p-5 h-fit">
-        <h2 className="font-semibold text-lg mb-5">Your Cart</h2>
-
-        <div className="flex flex-col gap-3 max-h-72 overflow-scroll pt-1">
-          {cartItem.map((item, index) => (
-            <div className="flex gap-2 justify-between" key={index}>
-              <div className="w-16 h-16 rounded-md relative">
-                <Image
-                  src={item.image}
-                  alt={item.name}
-                  height={100}
-                  width={100}
-                  className="h-full w-full object-cover rounded-md"
-                />
-                <p className="absolute -top-1 -right-1 bg-neutral-500 px-1 rounded-full text-white text-xs">
-                  {item.qty}
-                </p>
-              </div>
-              <div className="flex flex-col max-w-72 justify-between flex-1">
-                <h2 className="text-sm mb-auto line-clamp-2">{item.name}</h2>
-                <p className="text-xs ">Rp {item.price.toLocaleString()}</p>
-              </div>
-              <p className="text-sm font-medium">Rp {(item.price * item.qty).toLocaleString()}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-10 flex flex-col gap-5">
-          <div className="flex items-center gap-2">
-            <Input
-              value={voucher}
-              placeholder="Input your voucher here"
-              onChange={(e) => setVoucher(e.target.value)}
-            />
-            <Button>Apply Voucher</Button>
-          </div>
-          <div className="flex justify-between">
-            <p className="text-sm">Subtotal</p>
-            <p className="text-sm">Rp {itemsPrice.toLocaleString()}</p>
-          </div>
-          <div className="flex justify-between">
-            <p className="text-sm">Tax Price</p>
-            <p className="text-sm">Rp {taxPrice.toLocaleString()}</p>
-          </div>
-          <div className="flex justify-between items-center">
-            <p className="text-sm">Shipping</p>
-            {shipping && shipping.price !== 0 ? (
-              <p className="text-sm">Rp {shipping.price.toLocaleString()}</p>
-            ) : (
-              <p className="text-xs text-neutral-500">Enter shipping address</p>
-            )}
-          </div>
-          <div className="flex justify-between items-center">
-            <p className="text-lg font-semibold">Total</p>
-            <p className="text-2xl font-semibold">Rp {lastPrice.toLocaleString()}</p>
-          </div>
-        </div>
-      </div>
+      <OrderSummary
+        cartItems={cartItem}
+        itemsPrice={itemsPrice}
+        taxPrice={taxPrice}
+        shippingPrice={shipping?.price}
+        totalPrice={finalPrice}
+        voucherCode={voucherCode}
+        onVoucherCodeChange={setVoucherCode}
+        onApplyVoucher={handleApplyVoucher}
+        onRemoveVoucher={handleRemoveVoucher}
+        appliedVoucher={appliedVoucher}
+      />
     </>
   );
 };

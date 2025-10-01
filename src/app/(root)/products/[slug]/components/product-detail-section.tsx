@@ -35,7 +35,7 @@ const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
       toast(res.message, {
         description: "Check out your cart to see the product",
         closeButton: true,
-        duration: 5000,
+        duration: 1000,
       });
     }
   })

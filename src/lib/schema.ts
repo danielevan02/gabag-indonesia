@@ -115,16 +115,6 @@ export const eventSchema = z.object({
   products: z.array(z.string()).optional(),
 });
 
-export const voucherSchema = z.object({
-  code: z.string().min(1, "Please enter the code"),
-  type: z.enum(["FIXED", "PERCENT"]),
-  value: z.coerce.number().min(0, "Value must be greater than or equal to 0"),
-  expires: z.date(),
-  qty: z.coerce.number().min(0, "Quantity must be greater than or equal to 0"),
-  min: z.coerce.number().optional(),
-  autoApply: z.boolean().default(false),
-});
-
 export const mediaFileSchema = z.object({
   thumbnail_url: z.string().url("Must be a valid URL"),
   public_id: z.string().min(1, "Public ID is required"),
@@ -193,3 +183,120 @@ export const createShipmentSchema = z.object({
     area_id: z.string(),
   }),
 });
+
+export const voucherSchema = z.object({
+  code: z.string().min(1, "Voucher code is required").toUpperCase(),
+  name: z.string().optional(),
+  description: z.string().optional(),
+
+  // Discount configuration
+  discountType: z.enum(["FIXED", "PERCENT"], {
+    required_error: "Please select discount type",
+  }),
+  discountValue: z.coerce.number().min(0, "Discount value must be positive"),
+  maxDiscount: z.coerce.number().optional(), // For PERCENT type
+
+  // Application scope
+  applicationType: z.enum(["ALL_PRODUCTS", "CATEGORY", "SUBCATEGORY", "EVENT", "SPECIFIC_PRODUCTS", "SPECIFIC_VARIANTS"], {
+    required_error: "Please select application type",
+  }),
+  categoryId: z.string().optional(),
+  subCategoryId: z.string().optional(),
+  eventId: z.string().optional(),
+  productIds: z.array(z.string()).optional(),
+  variantIds: z.array(z.string()).optional(),
+
+  // Shipping configuration
+  maxShippingDiscount: z.coerce.number().optional(), // Max discount for shipping fee
+
+  // Date range
+  startDate: z.date({ required_error: "Start date is required" }),
+  expiryDate: z.date({ required_error: "Expiry date is required" }),
+
+  // Limits
+  minPurchase: z.coerce.number().optional(),
+  totalLimit: z.coerce.number().optional(), // Total vouchers available
+  limitPerUser: z.coerce.number().optional(),
+
+  // Behavior
+  autoApply: z.boolean().default(false),
+  canCombine: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+}).refine((data) => data.expiryDate > data.startDate, {
+  message: "Expiry date must be after start date",
+  path: ["expiryDate"],
+}).refine((data) => {
+  // If discount type is PERCENT, value should be between 0-100
+  if (data.discountType === "PERCENT") {
+    return data.discountValue <= 100;
+  }
+  return true;
+}, {
+  message: "Percentage discount must be between 0-100",
+  path: ["discountValue"],
+})
+  .refine(
+    (data) => {
+      // If CATEGORY is selected, categoryId must be provided
+      if (data.applicationType === "CATEGORY") {
+        return !!data.categoryId;
+      }
+      return true;
+    },
+    {
+      message: "Please select a category",
+      path: ["categoryId"],
+    }
+  )
+  .refine(
+    (data) => {
+      // If SUBCATEGORY is selected, subCategoryId must be provided
+      if (data.applicationType === "SUBCATEGORY") {
+        return !!data.subCategoryId;
+      }
+      return true;
+    },
+    {
+      message: "Please select a subcategory",
+      path: ["subCategoryId"],
+    }
+  )
+  .refine(
+    (data) => {
+      // If EVENT is selected, eventId must be provided
+      if (data.applicationType === "EVENT") {
+        return !!data.eventId;
+      }
+      return true;
+    },
+    {
+      message: "Please select an event",
+      path: ["eventId"],
+    }
+  )
+  .refine(
+    (data) => {
+      // If SPECIFIC_PRODUCTS is selected, productIds must be provided
+      if (data.applicationType === "SPECIFIC_PRODUCTS") {
+        return data.productIds && data.productIds.length > 0;
+      }
+      return true;
+    },
+    {
+      message: "Please select at least one product",
+      path: ["productIds"],
+    }
+  )
+  .refine(
+    (data) => {
+      // If SPECIFIC_VARIANTS is selected, variantIds must be provided
+      if (data.applicationType === "SPECIFIC_VARIANTS") {
+        return data.variantIds && data.variantIds.length > 0;
+      }
+      return true;
+    },
+    {
+      message: "Please select at least one variant",
+      path: ["variantIds"],
+    }
+  );

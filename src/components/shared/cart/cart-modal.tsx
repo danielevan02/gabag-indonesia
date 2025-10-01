@@ -105,7 +105,7 @@ const CartModal = ({ userId }: CartModalProps) => {
 
           <div className="flex flex-col justify-end">
             <div className="flex flex-col gap-2 mb-2">
-              <Label>Notes(optional)</Label>
+              <Label>Notes (optional)</Label>
               <div className="flex flex-col items-end gap-1">
                 <Textarea
                   onChange={(e) => setNotes(e.target.value)}

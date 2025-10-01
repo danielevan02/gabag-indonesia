@@ -46,7 +46,7 @@ const OrderDetailPage = async ({ params }: { params: tParams }) => {
         w-full 
         max-w-screen 
         flex 
-        flex-col-reverse
+        flex-col
         lg:flex-row
         px-5 
         justify-center

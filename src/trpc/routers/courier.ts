@@ -52,7 +52,6 @@ export const courierRouter = createTRPCRouter({
     .query(async ({ input }) => {
       try {
         const { destination_area_id, destination_postal_code, items } = input;
-        console.log(items)
         const res = await fetch("https://api.biteship.com/v1/rates/couriers", {
           method: "POST",
           headers: {
@@ -187,7 +186,7 @@ export const courierRouter = createTRPCRouter({
         await prisma.order.update({
           where: { id: orderId },
           data: {
-            trackingOrder: data.courier.tracking_id,
+            trackingOrder: data.courier.waybill_id,
             deliveredAt: deliveryDate,
             isDelivered: true,
           },
@@ -274,6 +273,142 @@ export const courierRouter = createTRPCRouter({
         return handleMutationSuccess("Shipment cancelled successfully");
       } catch (error) {
         return handleMutationError(error, "Cancel Shipment");
+      }
+    }),
+
+  // Create bulk shipment
+  createBulkShipment: baseProcedure
+    .input(
+      z.object({
+        orderIds: z.array(z.string()),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const { orderIds } = input;
+
+        // Get eligible orders (settlement/capture and no tracking)
+        const eligibleOrders = await prisma.order.findMany({
+          where: {
+            id: { in: orderIds },
+            paymentStatus: { in: ["settlement", "capture"] },
+            trackingOrder: null,
+            courier: { not: null },
+          },
+          include: {
+            orderItems: true,
+          },
+        });
+
+        if (eligibleOrders.length === 0) {
+          return {
+            success: false,
+            message: "No eligible orders found. Orders must be paid, have courier selected, and not have tracking yet.",
+          };
+        }
+
+        const results = [];
+        const errors = [];
+
+        // Process each order
+        for (const order of eligibleOrders) {
+          try {
+            if (!order.courier) {
+              errors.push({ orderId: order.id, error: "No courier selected" });
+              continue;
+            }
+
+            const shippingInfo = order.shippingInfo as any;
+
+            if (!shippingInfo) {
+              errors.push({ orderId: order.id, error: "No shipping info" });
+              continue;
+            }
+
+            const courier_company = order.courier.split("-")[0];
+            const courier_type = order.courier.split("-")[1];
+
+            const serializedItems = serializeType(
+              order.orderItems.map((item) => ({
+                ...item,
+                weight: Number(item.weight),
+                length: item.length ? Number(item.length) : null,
+                width: item.width ? Number(item.width) : null,
+                height: item.height ? Number(item.height) : null,
+                price: Number(item.price),
+              }))
+            );
+
+            const res = await fetch("https://api.biteship.com/v1/orders", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${process.env.TEST_BITESHIP_API_KEY}`,
+              },
+              body: JSON.stringify({
+                origin_contact_name: process.env.NEXT_PUBLIC_APP_NAME,
+                origin_contact_phone: process.env.NEXT_PUBLIC_PHONE_NUMBER,
+                origin_address: process.env.NEXT_PUBLIC_ADDRESS,
+                origin_postal_code: process.env.NEXT_PUBLIC_ORIGIN_POSTAL_CODE,
+                origin_area_id: process.env.NEXT_PUBLIC_ORIGIN_AREA_ID,
+                destination_contact_name: shippingInfo.name,
+                destination_contact_phone: shippingInfo.phone,
+                destination_contact_email: shippingInfo.email,
+                destination_address: shippingInfo.address,
+                destination_postal_code: shippingInfo.postal_code,
+                destination_area_id: shippingInfo.area_id,
+                courier_company,
+                courier_type,
+                delivery_type: "now",
+                items: serializedItems.map((item) => ({
+                  name: item.name,
+                  value: item.price,
+                  quantity: item.qty,
+                  weight: item.weight,
+                  length: item.length,
+                  width: item.width,
+                  height: item.height,
+                })),
+              }),
+            });
+
+            const data: OrderResponse = await res.json();
+
+            // Update order with shipment info
+            const deliveryDate = new Date(data.delivery.datetime);
+            await prisma.order.update({
+              where: { id: order.id },
+              data: {
+                trackingOrder: data.courier.waybill_id,
+                deliveredAt: deliveryDate,
+                isDelivered: true,
+              },
+            });
+
+            results.push({
+              orderId: order.id,
+              trackingId: data.courier.waybill_id,
+              success: true,
+            });
+          } catch (error) {
+            errors.push({
+              orderId: order.id,
+              error: error instanceof Error ? error.message : "Unknown error",
+            });
+          }
+        }
+
+        return {
+          success: true,
+          message: `Successfully created ${results.length} shipment(s)`,
+          results,
+          errors,
+          total: eligibleOrders.length,
+          successCount: results.length,
+          errorCount: errors.length,
+        };
+      } catch (error) {
+        return handleMutationError(error, "Create Bulk Shipment");
       }
     }),
 });

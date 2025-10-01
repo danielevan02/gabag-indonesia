@@ -15,8 +15,8 @@ export const BreastPumpSection = async () => {
       </div>
       <hr className="mb-3 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-neutral-900 to-transparent opacity-25 dark:via-white" />
 
-      <div className="relative">
-        <video muted autoPlay preload="none">
+      <div className="relative h-screen">
+        <video muted autoPlay preload="none" className="size-full object-cover">
           <source src="/home-video.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>

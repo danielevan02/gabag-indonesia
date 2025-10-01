@@ -108,10 +108,13 @@ const OrderDetails = ({ order }: { order: RouterOutputs['order']['getById'] }) =
         )}
       </div>
       <div className="block lg:sticky top-36 right-0 overflow-hidden flex-1 lg:max-w-lg p-5 h-fit">
+
         <h2 className="font-semibold text-lg mb-5">Your Order</h2>
+
         <div className="flex flex-col gap-3 max-h-72 overflow-scroll pt-1">
           {order.orderItems?.map((item, index) => (
             <div className="flex gap-2 justify-between" key={index}>
+              {/* IMAGE CONTAINER */}
               <div className="w-16 h-16 rounded-md relative">
                 <Image
                   src={item.image}
@@ -124,16 +127,19 @@ const OrderDetails = ({ order }: { order: RouterOutputs['order']['getById'] }) =
                   {item.qty}
                 </p>
               </div>
-              <div className="flex flex-col max-w-72 justify-between flex-1">
-                <h2 className="text-sm mb-auto">{item.name}</h2>
+
+              <div className="flex flex-col max-w-72 justify-between flex-1 py-2">
+                <h2 className="text-sm mb-auto font-semibold">{item.name}</h2>
                 <p className="text-xs ">Rp {Number(item.price).toLocaleString()}</p>
               </div>
+
               <p className="text-sm">
                 Rp {(Number(item.price) * Number(item.qty)).toLocaleString()}
               </p>
             </div>
           ))}
         </div>
+
         <div className="mt-10 flex flex-col gap-5">
           <div className="flex justify-between">
             <p className="text-sm">Subtotal</p>
@@ -147,7 +153,23 @@ const OrderDetails = ({ order }: { order: RouterOutputs['order']['getById'] }) =
             <p className="text-sm">Shipping</p>
             <p className="text-sm">Rp {Number(order.shippingPrice).toLocaleString()}</p>
           </div>
-          <div className="flex justify-between items-center">
+          {order.voucherCodes && order.voucherCodes.length > 0 && (
+            <div className="flex flex-col gap-2 py-3 border-y">
+              <div className="flex justify-between items-center">
+                <p className="text-sm font-medium text-green-700">Voucher Applied</p>
+                <p className="text-xs text-green-600">{order.voucherCodes[0]}</p>
+              </div>
+              {order.discountAmount && Number(order.discountAmount) > 0 && (
+                <div className="flex justify-between items-center">
+                  <p className="text-sm text-green-600">Discount</p>
+                  <p className="text-sm text-green-600 font-medium">
+                    - Rp {Number(order.discountAmount).toLocaleString()}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="flex justify-between items-center pt-3">
             <p className="text-lg font-semibold">Total</p>
             <p className="text-xl md:text-2xl font-semibold">
               Rp {Number(order.totalPrice).toLocaleString()}

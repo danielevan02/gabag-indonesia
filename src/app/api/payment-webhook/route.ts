@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   const { order_id, transaction_status, fraud_status } = statusResponse;
 
   console.log(
-    `🔔 Notifikasi diterima: Order ID: ${order_id}, Status: ${transaction_status}, Fraud: ${fraud_status}`
+    `Notifikasi diterima: Order ID: ${order_id}, Status: ${transaction_status}, Fraud: ${fraud_status}`
   );
 
   await updatePaymentStatus({orderId: order_id, paymentStatus: transaction_status})
