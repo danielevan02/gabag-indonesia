@@ -185,27 +185,31 @@ model Variant {
 
   orderItems OrderItem[]
   product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  vouchers Voucher[]
 }
 
 model Voucher {
-  id              String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  code            String                 @unique
-  name            String // Nama voucher untuk display
-  description     String? // Deskripsi voucher
-  value           Int // Nilai discount
-  type            VoucherType // FIXED atau PERCENT
-  applicationType VoucherApplicationType // ALL_PRODUCTS, CATEGORY, SUBCATEGORY, EVENT, SPECIFIC_PRODUCTS
-  expires         DateTime               @db.Timestamp(6)
-  isActive        Boolean                @default(true)
-  autoApply       Boolean                @default(false)
-  minPurchase     BigInt? // Minimal belanja (opsional)
-  maxDiscount     BigInt? // Maksimal discount untuk type PERCENT (opsional)
-  totalLimit      Int? // Total kupon yang tersedia (opsional)
-  usedCount       Int                    @default(0) // Jumlah kupon yang sudah digunakan
-  limitPerUser    Int? // Berapa kali voucher bisa digunakan per user (opsional)
-  canCombine      Boolean                @default(false) // Apakah bisa digabung dengan voucher lain
-  createdAt       DateTime               @default(now()) @db.Timestamp(6)
-  updatedAt       DateTime               @updatedAt
+  id                  String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                String                 @unique
+  name                String? // Nama voucher untuk display
+  description         String? // Deskripsi voucher
+  value               Int // Nilai discount
+  type                VoucherType // FIXED atau PERCENT
+  applicationType     VoucherApplicationType // ALL_PRODUCTS, CATEGORY, SUBCATEGORY, EVENT, SPECIFIC_PRODUCTS
+  startDate           DateTime               @db.Timestamp(6)
+  expires             DateTime               @db.Timestamp(6)
+  isActive            Boolean                @default(true)
+  autoApply           Boolean                @default(false)
+  minPurchase         BigInt? // Minimal belanja (opsional)
+  maxDiscount         BigInt? // Maksimal discount untuk type PERCENT (opsional)
+  maxShippingDiscount BigInt? // Maksimal potongan biaya pengiriman (opsional)
+  totalLimit          Int? // Total kupon yang tersedia (opsional)
+  usedCount           Int                    @default(0) // Jumlah kupon yang sudah digunakan
+  limitPerUser        Int? // Berapa kali voucher bisa digunakan per user (opsional)
+  canCombine          Boolean                @default(false) // Apakah bisa digabung dengan voucher lain
+  createdAt           DateTime               @default(now()) @db.Timestamp(6)
+  updatedAt           DateTime               @updatedAt
 
   // Relations untuk aplikasi voucher berdasarkan type
   categoryId    String? @db.Uuid
@@ -217,6 +221,7 @@ model Voucher {
   subCategory SubCategory? @relation(fields: [subCategoryId], references: [id])
   event       Event?       @relation(fields: [eventId], references: [id])
   products    Product[] // Untuk SPECIFIC_PRODUCTS type
+  variants    Variant[] 
   redemptions Redemption[]
   orders      Order[]      @relation("OrderToVoucher")
 }
@@ -333,23 +338,24 @@ enum VoucherApplicationType {
   SUBCATEGORY // Berlaku untuk produk dalam subcategory tertentu
   EVENT // Berlaku untuk produk dalam event tertentu
   SPECIFIC_PRODUCTS // Berlaku untuk produk tertentu saja
+  SPECIFIC_VARIANTS // Berlaku untuk variant tertentu saja
 }
 
 model Carousel {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name       String
-  linkUrl    String
-  altText    String?
-  isActive   Boolean   @default(true)
-  startDate  DateTime? @db.Timestamp(6)
-  endDate    DateTime? @db.Timestamp(6)
-  createdAt  DateTime  @default(now()) @db.Timestamp(6)
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  linkUrl   String
+  altText   String?
+  isActive  Boolean   @default(true)
+  startDate DateTime? @db.Timestamp(6)
+  endDate   DateTime? @db.Timestamp(6)
+  createdAt DateTime  @default(now()) @db.Timestamp(6)
 
   // Relations to MediaFile for responsive images
   desktopImageId String
   mobileImageId  String
   desktopImage   MediaFile @relation("CarouselDesktopImage", fields: [desktopImageId], references: [id])
   mobileImage    MediaFile @relation("CarouselMobileImage", fields: [mobileImageId], references: [id])
-  
+
   @@map("carousels")
 }

@@ -153,7 +153,23 @@ const OrderDetails = ({ order }: { order: RouterOutputs['order']['getById'] }) =
             <p className="text-sm">Shipping</p>
             <p className="text-sm">Rp {Number(order.shippingPrice).toLocaleString()}</p>
           </div>
-          <div className="flex justify-between items-center">
+          {order.voucherCodes && order.voucherCodes.length > 0 && (
+            <div className="flex flex-col gap-2 py-3 border-y">
+              <div className="flex justify-between items-center">
+                <p className="text-sm font-medium text-green-700">Voucher Applied</p>
+                <p className="text-xs text-green-600">{order.voucherCodes[0]}</p>
+              </div>
+              {order.discountAmount && Number(order.discountAmount) > 0 && (
+                <div className="flex justify-between items-center">
+                  <p className="text-sm text-green-600">Discount</p>
+                  <p className="text-sm text-green-600 font-medium">
+                    - Rp {Number(order.discountAmount).toLocaleString()}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="flex justify-between items-center pt-3">
             <p className="text-lg font-semibold">Total</p>
             <p className="text-xl md:text-2xl font-semibold">
               Rp {Number(order.totalPrice).toLocaleString()}

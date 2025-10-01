@@ -19,6 +19,7 @@ import { useOrderPayment } from "@/hooks/use-order-payment";
 import { ShippingMethodList } from "./shipping/shipping-method-list";
 import { OrderSummary } from "./order-summary";
 import { DEFAULT_EMAIL, DEFAULT_NAME, DEFAULT_PHONE, REQUIRED_ORDER_FIELDS } from "@/lib/constants";
+import { trpc } from "@/trpc/client";
 
 declare global {
   interface Window {
@@ -47,6 +48,14 @@ const OrderForm: React.FC<OrderFormProps> = ({
 }) => {
   const userAddress = user?.address as Address;
   const [shipping, setShipping] = useState<{ price: number; courier: string }>();
+  const [voucherCode, setVoucherCode] = useState("");
+  const [appliedVoucher, setAppliedVoucher] = useState<{
+    code: string;
+    discount: number;
+    shippingDiscount: number;
+    totalDiscount: number;
+  } | null>(null);
+  const [isVoucherManuallyRemoved, setIsVoucherManuallyRemoved] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(orderSchema),
@@ -102,8 +111,115 @@ const OrderForm: React.FC<OrderFormProps> = ({
 
   const { processPayment, isLoading } = useOrderPayment({ orderId });
 
-  // Calculate final price
-  const finalPrice = totalPrice + (shipping?.price || 0);
+  // Get tRPC utils for manual query
+  const utils = trpc.useUtils();
+
+  // Prepare params for auto-apply voucher
+  // Only auto-apply if user hasn't manually removed the voucher
+  const autoApplyParams = shipping?.price && !appliedVoucher && !isVoucherManuallyRemoved
+    ? {
+        email: form.getValues("email") || user?.email || DEFAULT_EMAIL,
+        userId: user?.id,
+        subtotal: itemsPrice,
+        shippingFee: shipping.price,
+        orderItems: cartItem.map((item) => ({
+          productId: item.productId,
+          variantId: item.variantId,
+          price: item.price,
+          qty: item.qty,
+        })) as any,
+      }
+    : undefined;
+
+  // Fetch auto-apply voucher
+  const { data: autoApplyResult } = trpc.voucher.getAutoApply.useQuery(
+    autoApplyParams!,
+    {
+      enabled: !!autoApplyParams,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    }
+  );
+
+  // Auto-apply voucher when result is available
+  useEffect(() => {
+    if (autoApplyResult?.found && autoApplyResult.voucher && !appliedVoucher) {
+      setAppliedVoucher({
+        code: autoApplyResult.voucher.code,
+        discount: autoApplyResult.voucher.discount,
+        shippingDiscount: autoApplyResult.voucher.shippingDiscount,
+        totalDiscount: autoApplyResult.voucher.totalDiscount,
+      });
+      setVoucherCode(autoApplyResult.voucher.code);
+      toast.success(
+        `Voucher "${autoApplyResult.voucher.name || autoApplyResult.voucher.code}" has been automatically applied!`,
+        { duration: 5000 }
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoApplyResult]);
+
+  // Handler untuk apply voucher
+  const handleApplyVoucher = async (code: string) => {
+    if (!code.trim()) {
+      toast.error("Please enter a voucher code");
+      return;
+    }
+
+    if (!shipping?.price) {
+      toast.error("Please select shipping method first");
+      return;
+    }
+
+    try {
+      // Prepare order items untuk validasi voucher
+      const orderItems = cartItem.map((item) => ({
+        productId: item.productId,
+        variantId: item.variantId,
+        price: item.price,
+        qty: item.qty,
+        // categoryId, subCategoryId, eventId akan di-fetch di backend jika diperlukan
+      }));
+
+      const result = await utils.voucher.validate.fetch({
+        code: code.trim(),
+        email: form.getValues("email") || user?.email || DEFAULT_EMAIL,
+        userId: user?.id,
+        subtotal: itemsPrice,
+        shippingFee: shipping.price,
+        orderItems: orderItems as any,
+      });
+
+      if (result.valid && result.discount !== undefined) {
+        setAppliedVoucher({
+          code: code.trim().toUpperCase(),
+          discount: result.discount,
+          shippingDiscount: result.shippingDiscount || 0,
+          totalDiscount: result.totalDiscount,
+        });
+        setIsVoucherManuallyRemoved(false); // Reset flag when manually applying
+        toast.success("Voucher applied successfully!");
+      } else {
+        toast.error(result.message || "Invalid voucher");
+        setAppliedVoucher(null);
+      }
+    } catch (error) {
+      console.error("Voucher validation error:", error);
+      toast.error("Failed to apply voucher");
+      setAppliedVoucher(null);
+    }
+  };
+
+  const handleRemoveVoucher = () => {
+    setAppliedVoucher(null);
+    setVoucherCode("");
+    setIsVoucherManuallyRemoved(true); // Prevent auto-apply after manual removal
+    toast.success("Voucher removed");
+  };
+
+  // Calculate final price with voucher discount
+  const voucherDiscount = appliedVoucher?.totalDiscount || 0;
+  const finalPrice = totalPrice + (shipping?.price || 0) - voucherDiscount;
 
   // Handler functions
   const handleSelectCourier = (courier: string, price: number) => {
@@ -138,6 +254,8 @@ const OrderForm: React.FC<OrderFormProps> = ({
         phone: data.phone,
         address: `${data.address}, ${data.village}, ${data.district}, ${data.city}, ${data.province}, ${data.postal_code}`,
       },
+      voucherCode: appliedVoucher?.code,
+      discountAmount: appliedVoucher?.totalDiscount,
     });
   };
 
@@ -256,6 +374,11 @@ const OrderForm: React.FC<OrderFormProps> = ({
         taxPrice={taxPrice}
         shippingPrice={shipping?.price}
         totalPrice={finalPrice}
+        voucherCode={voucherCode}
+        onVoucherCodeChange={setVoucherCode}
+        onApplyVoucher={handleApplyVoucher}
+        onRemoveVoucher={handleRemoveVoucher}
+        appliedVoucher={appliedVoucher}
       />
     </>
   );

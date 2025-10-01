@@ -1,3 +1,12 @@
+import {
+  BookImage,
+  Calendar,
+  Images,
+  ScrollText,
+  SquareTerminal,
+  TicketPercent,
+} from "lucide-react"
+
 export const APP_NAME = process.env.APP_NAME 
   ? process.env.APP_NAME 
   : "GabaG Indonesia"
@@ -126,3 +135,53 @@ export const REQUIRED_ORDER_FIELDS = [
   "province",
   "village",
 ] as const;
+
+export const navLink = {
+    navMain: [
+      {
+        title: "Catalog",
+        url: "/admin/catalog",
+        icon: SquareTerminal,
+        isActive: true,
+        items: [
+          {
+            title: "Category",
+            url: '/admin/catalog/category',
+          },
+          {
+            title: "Sub Category",
+            url: "/admin/catalog/sub-category",
+          },
+          {
+            title: "Product",
+            url: "/admin/catalog/product",
+          },
+        ],
+      },
+      {
+        title: "Image Gallery",
+        url: "/admin/gallery",
+        icon: BookImage,
+      },
+      {
+        title: "Events",
+        url: "/admin/event",
+        icon: Calendar
+      },
+      {
+        title: "Voucher",
+        url: "/admin/voucher",
+        icon: TicketPercent
+      },
+      {
+        title: "Order",
+        url: "/admin/order",
+        icon: ScrollText
+      },
+      {
+        title: "Carousel",
+        url: "/admin/carousel",
+        icon: Images
+      }
+    ],
+  }

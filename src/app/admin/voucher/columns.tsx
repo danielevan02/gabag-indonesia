@@ -14,7 +14,7 @@ export const columns: ColumnDef<Voucher>[] = [
     id: 'select',
     header: ({table}) => (
       <Checkbox
-        checked={table.getIsAllPageRowsSelected() || table.getIsSomeRowsSelected() && 'indeterminate'}
+        checked={table.getIsAllPageRowsSelected() || table.getIsSomeRowsSelected() && "indeterminate"}
         onCheckedChange={(val)=>table.toggleAllPageRowsSelected(!!val)}
         aria-label="select all"
       />
@@ -32,11 +32,20 @@ export const columns: ColumnDef<Voucher>[] = [
     cell: ({ row }) => row.index + 1,
   },
   {
-    accessorKey: "name",
-    header: "Name",
-    cell: ({ row }) => (
-      <div className="line-clamp-1 capitalize">{row.getValue("name")}</div>
-    ),
+    accessorKey: "code",
+    header: "Code",
+  },
+  {
+    accessorKey: "type",
+    header: "Type",
+  },
+  {
+    accessorKey: "value",
+    header: "Value",
+  },
+  {
+    header: "Used / Available",
+    cell: ({ row }) => <p>{row.original.usedCount} / {row.original.totalLimit}</p>
   },
   {
     accessorKey: "createdAt",

@@ -23,6 +23,8 @@ const makePaymentSchema = z.object({
   userId: z.string(),
   orderId: z.string(),
   cartItem: z.array(z.any()), // CartItem type
+  discountAmount: z.number().optional(),
+  voucherCode: z.string().optional(),
 });
 
 const finalizeOrderSchema = z.object({
@@ -34,6 +36,8 @@ const finalizeOrderSchema = z.object({
   totalPrice: z.number().optional(),
   courier: z.string().optional(),
   shippingInfo: z.any().optional(), // ShippingInfo type
+  voucherCode: z.string().optional(),
+  discountAmount: z.number().optional(),
 });
 
 const updatePaymentStatusSchema = z.object({
@@ -246,7 +250,7 @@ export const orderRouter = createTRPCRouter({
     .input(makePaymentSchema)
     .mutation(async ({ input }) => {
       try {
-        const { email, name, phone, subTotal, userId, orderId, cartItem, shippingPrice, taxPrice } = input;
+        const { email, name, phone, subTotal, userId, orderId, cartItem, shippingPrice, taxPrice, discountAmount, voucherCode } = input;
 
         if (!userId) throw new Error("You're not authenticated!");
         if (!email) throw new Error("You're not authenticated");
@@ -264,11 +268,38 @@ export const orderRouter = createTRPCRouter({
         const firstName = name.split(" ")[0];
         const lastName = name.split(" ")[name.split(" ").length - 1];
 
+        // Build item_details array
+        const finalItemDetails: ItemDetail[] = [
+          ...item_details,
+          {
+            id: Date.now().toString(),
+            name: "Tax Price",
+            price: taxPrice,
+            quantity: 1,
+          },
+          {
+            id: (Date.now() + 1).toString(),
+            name: "Shipping Price",
+            price: shippingPrice,
+            quantity: 1,
+          },
+        ];
+
+        // Add discount item only if voucher is applied
+        if (discountAmount && discountAmount > 0 && voucherCode) {
+          finalItemDetails.push({
+            id: (Date.now() + 2).toString(),
+            name: `Voucher: ${voucherCode}`,
+            price: -discountAmount, // Negative price for discount
+            quantity: 1,
+          });
+        }
+
         const res = await createTransaction({
           payment_type: "gopay",
           transaction_details: {
             order_id: orderId,
-            gross_amount: subTotal + shippingPrice,
+            gross_amount: subTotal,
           },
           customer_details: {
             first_name: firstName,
@@ -276,21 +307,7 @@ export const orderRouter = createTRPCRouter({
             email,
             phone,
           },
-          item_details: [
-            ...item_details,
-            {
-              id: Date.now().toString(),
-              name: "Tax Price",
-              price: taxPrice,
-              quantity: 1,
-            },
-            {
-              id: (Date.now() + 1).toString(),
-              name: "Shipping Price",
-              price: shippingPrice,
-              quantity: 1,
-            },
-          ],
+          item_details: finalItemDetails,
         });
 
         if (res && "token" in res) {
@@ -316,7 +333,7 @@ export const orderRouter = createTRPCRouter({
     .input(finalizeOrderSchema)
     .mutation(async ({ input }) => {
       try {
-        const { orderId, token, itemsPrice, shippingPrice, taxPrice, totalPrice, courier, shippingInfo } = input;
+        const { orderId, token, itemsPrice, shippingPrice, taxPrice, totalPrice, courier, shippingInfo, voucherCode, discountAmount } = input;
 
         if (!token) {
           throw new TRPCError({
@@ -337,9 +354,16 @@ export const orderRouter = createTRPCRouter({
               shippingInfo: shippingInfo,
               courier,
               paymentStatus: "pending",
+              discountAmount: discountAmount ? BigInt(discountAmount) : 0,
+              voucherCodes: voucherCode ? [voucherCode] : [],
             },
             include: {
               orderItems: true,
+              user: {
+                select: {
+                  email: true,
+                },
+              },
             },
           });
 
@@ -368,6 +392,35 @@ export const orderRouter = createTRPCRouter({
             await tx.orderItem.createMany({
               data: orderItemsData,
             });
+          }
+
+          // Create voucher redemption if voucher was used
+          if (voucherCode) {
+            const voucher = await tx.voucher.findUnique({
+              where: { code: voucherCode },
+            });
+
+            if (voucher) {
+              // Update voucher used count
+              await tx.voucher.update({
+                where: { code: voucherCode },
+                data: {
+                  usedCount: {
+                    increment: 1,
+                  },
+                },
+              });
+
+              // Create redemption record
+              await tx.redemption.create({
+                data: {
+                  voucherId: voucher.id,
+                  userId: userId || null,
+                  email: updatedOrder.user?.email || "",
+                  orderId: orderId,
+                },
+              });
+            }
           }
 
           await tx.cart.update({

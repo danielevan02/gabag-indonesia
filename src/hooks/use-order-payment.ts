@@ -27,6 +27,8 @@ interface ProcessPaymentParams {
     phone: string;
     address: string;
   };
+  voucherCode?: string;
+  discountAmount?: number;
 }
 
 export const useOrderPayment = ({ orderId }: UseOrderPaymentProps) => {
@@ -49,31 +51,40 @@ export const useOrderPayment = ({ orderId }: UseOrderPaymentProps) => {
     courier,
     cartItems,
     shippingInfo,
+    voucherCode,
+    discountAmount,
   }: ProcessPaymentParams) => {
     startTransition(async () => {
       try {
+        // Calculate final total with discount
+        const finalTotal = totalPrice + shippingPrice - (discountAmount || 0);
+
         const res = await makePaymentMutation.mutateAsync({
           email,
           name,
           phone,
-          subTotal: totalPrice,
+          subTotal: finalTotal,
           userId,
           shippingPrice,
           orderId,
           taxPrice,
           cartItem: cartItems,
+          discountAmount,
+          voucherCode,
         });
 
         if (res?.success && "token" in res && res.token) {
           await finalizeOrderMutation.mutateAsync({
             courier,
             shippingPrice,
-            totalPrice: totalPrice + shippingPrice,
+            totalPrice: finalTotal,
             token: res.token,
             itemsPrice,
             orderId,
             taxPrice,
             shippingInfo,
+            voucherCode,
+            discountAmount,
           });
 
           window.snap.pay(res.token, {
