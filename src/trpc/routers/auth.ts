@@ -2,9 +2,10 @@ import { z } from "zod";
 import { baseProcedure, createTRPCRouter } from "../init";
 import prisma from "@/lib/prisma";
 import { serializeType } from "@/lib/utils";
-import { hash } from "bcrypt-ts-edge";
+import { hash, compare } from "bcrypt-ts-edge";
 import { v4 as uuidv4 } from "uuid";
 import { sendVerificationEmail } from "@/email/send-verification";
+import { sendPasswordResetEmail } from "@/email/send-reset-password";
 import { TRPCError } from "@trpc/server";
 import { auth, signIn, signOut } from "../../auth";
 import { addressSchema, signInSchema, signUpSchema } from "@/lib/schema";
@@ -287,6 +288,136 @@ export const authRouter = createTRPCRouter({
       } catch (error) {
         console.error("Database error:", error);
         handleAuthError(error, "Update address");
+      }
+    }),
+
+  // Forgot password - send reset email
+  forgotPassword: baseProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input }) => {
+      try {
+        const email = input.email.toLowerCase();
+
+        const user = await prisma.user.findFirst({
+          where: { email },
+        });
+
+        // Always return success to prevent email enumeration
+        if (!user) {
+          return handleAuthSuccess(
+            "If an account exists with this email, you will receive a password reset link"
+          );
+        }
+
+        // Generate reset token
+        const verificationToken = await getVerificationToken(email);
+        await sendPasswordResetEmail(email, verificationToken.token);
+
+        return handleAuthSuccess(
+          "If an account exists with this email, you will receive a password reset link"
+        );
+      } catch (error) {
+        handleAuthError(error, "Forgot password");
+      }
+    }),
+
+  // Reset password
+  resetPassword: baseProcedure
+    .input(
+      z.object({
+        token: z.string(),
+        password: z.string().min(6),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        if (!input.token) {
+          throw "There is no token provided";
+        }
+
+        const existToken = await prisma.verificationToken.findFirst({
+          where: { token: input.token },
+        });
+
+        if (!existToken) {
+          throw "Invalid or expired reset link";
+        }
+
+        const isExpired = new Date(existToken.expires) < new Date();
+        if (isExpired) {
+          throw "Reset link has expired";
+        }
+
+        const user = await prisma.user.findFirst({
+          where: { email: existToken.identifier },
+        });
+
+        if (!user) {
+          throw "User not found";
+        }
+
+        // Update password
+        const hashedPassword = await hash(input.password, 10);
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { password: hashedPassword },
+        });
+
+        // Delete the token
+        await prisma.verificationToken.delete({
+          where: {
+            identifier_token: {
+              identifier: existToken.identifier,
+              token: existToken.token,
+            },
+          },
+        });
+
+        return handleAuthSuccess("Password has been reset successfully");
+      } catch (error) {
+        handleAuthError(error, "Reset password");
+      }
+    }),
+
+  // Change password (for logged-in users)
+  changePassword: baseProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        currentPassword: z.string(),
+        newPassword: z.string().min(6, "Password must be at least 6 characters"),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const user = await prisma.user.findFirst({
+          where: { id: input.userId },
+        });
+
+        if (!user) {
+          throw "User not found";
+        }
+
+        if (!user.password) {
+          throw "Cannot change password for this account type";
+        }
+
+        // Verify current password
+        const isPasswordValid = await compare(input.currentPassword, user.password);
+        if (!isPasswordValid) {
+          throw "Current password is incorrect";
+        }
+
+        // Update to new password
+        const hashedPassword = await hash(input.newPassword, 10);
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { password: hashedPassword },
+        });
+
+        return handleAuthSuccess("Password has been changed successfully");
+      } catch (error) {
+        handleAuthError(error, "Change password");
       }
     }),
 });

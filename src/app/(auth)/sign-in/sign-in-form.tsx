@@ -63,12 +63,19 @@ const SignInForm = () => {
           showPass
         />
 
-        <p className="mb-5 md:mb-0">
-          Don&apos;t have an account?{" "}
-          <Link href="/sign-up" className="underline hover:text-blue-900">
-            Create Account
-          </Link>
-        </p>
+        <div className="flex gap-2 mb-5 md:mb-0 justify-between">
+          <p className="flex flex-col md:flex-row gap-1">
+            Don&apos;t have an account?{" "}
+            <Link href="/sign-up" className="underline hover:text-blue-900">
+              Create Account
+            </Link>
+          </p>
+          <p>
+            <Link href="/forgot-password" className="underline hover:text-blue-900">
+              Forgot Password?
+            </Link>
+          </p>
+        </div>
 
         <Button
           className="w-fit ml-auto tracking-widest rounded-full py-7 px-10 min-w-40 text-lg"
