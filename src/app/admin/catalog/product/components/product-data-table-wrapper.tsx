@@ -5,7 +5,7 @@ import { columns } from "../columns";
 import { useDeleteManyMutation } from "@/hooks/use-delete-mutation";
 import { RouterOutputs } from "@/trpc/routers/_app";
 
-type Product = RouterOutputs['product']['getAll'][number];
+type Product = RouterOutputs['product']['getAll']['products'][number];
 
 interface ProductDataTableWrapperProps {
   products: Product[];

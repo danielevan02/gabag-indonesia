@@ -4,8 +4,8 @@ import { trpc } from "@/trpc/server";
 import ProductDataTableWrapper from "./components/product-data-table-wrapper";
 
 export default async function AdminProductPage() {
-  const products = await trpc.product.getAll({});
-  
+  const { products } = await trpc.product.getAll({});
+
   return (
     <div className="form-page">
       <div className="flex justify-between items-center">
