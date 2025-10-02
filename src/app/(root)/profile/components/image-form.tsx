@@ -9,9 +9,11 @@ import { CldUploadWidget } from "next-cloudinary";
 import { trpc } from "@/trpc/client";
 import { useSession } from "next-auth/react";
 import { getCurrentUser } from "@/lib/actions/user.action";
+import { useRouter } from "next/navigation";
 
 const ImageForm = ({ user }: { user: Awaited<ReturnType<typeof getCurrentUser>> }) => {
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
+  const router = useRouter();
   const { update: updateSession } = useSession();
   const { mutateAsync: updateProfile, isPending: isLoading } =
     trpc.auth.updateProfile.useMutation();
@@ -35,12 +37,13 @@ const ImageForm = ({ user }: { user: Awaited<ReturnType<typeof getCurrentUser>> 
 
     if (profileRes?.success) {
       setUploadedImageUrl(newImageUrl);
-      // Update session to refresh image in navbar
-      await updateSession({
-        ...user,
-        image: newImageUrl
-      });
       toast.success(profileRes.message as string);
+
+      // Update session with new image
+      await updateSession();
+
+      // Refresh server components (Header) to show new image
+      router.refresh();
     } else {
       toast.error(profileRes?.message as string);
     }
@@ -96,12 +99,12 @@ const ImageForm = ({ user }: { user: Awaited<ReturnType<typeof getCurrentUser>> 
         >
           {({ open }) => (
             <Button
-              className="uppercase tracking-widest w-full "
+              className="tracking-widest w-full "
               variant="outline"
               onClick={() => open()}
               disabled={isLoading}
             >
-              {isLoading ? <Loader className="w-4 h-4 animate-spin mr-2" /> : null}
+              {isLoading && <Loader className="w-4 h-4 animate-spin" />}
               Change Profile Picture
             </Button>
           )}

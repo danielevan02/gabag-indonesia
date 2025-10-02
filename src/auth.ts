@@ -175,8 +175,28 @@ export const config: NextAuthConfig = {
         }
       }
 
-      if (session?.user.name && trigger === "update") {
-        token.name = session.user.name;
+      if (trigger === "update") {
+        // Fetch latest user data from database when session is updated
+        if (token.sub) {
+          const updatedUser = await prisma.user.findUnique({
+            where: { id: token.sub },
+            select: { name: true, image: true, role: true }
+          });
+
+          if (updatedUser) {
+            token.name = updatedUser.name;
+            token.picture = updatedUser.image;
+            token.role = updatedUser.role;
+          }
+        }
+
+        // Allow manual session updates
+        if (session?.user?.name) {
+          token.name = session.user.name;
+        }
+        if (session?.user?.image) {
+          token.picture = session.user.image;
+        }
       }
       return token;
     },
@@ -186,8 +206,9 @@ export const config: NextAuthConfig = {
       session.user.name = token.name;
       session.user.image = token.picture;
 
-      if (trigger === "update") {
-        session.user.name = user.name;
+      if (trigger === "update" && user) {
+        if (user.name) session.user.name = user.name;
+        if (user.image) session.user.image = user.image;
       }
 
       return session;
