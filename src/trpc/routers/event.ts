@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { baseProcedure, createTRPCRouter } from "../init";
+import { baseProcedure, adminProcedure, createTRPCRouter } from "../init";
 import prisma from "@/lib/prisma";
 import { serializeType } from "@/lib/utils";
 import { TRPCError } from "@trpc/server";
@@ -51,8 +51,8 @@ export const eventRouter = createTRPCRouter({
     return serializeType(data);
   }),
 
-  // Get event by ID
-  getById: baseProcedure
+  // Get event by ID (Admin only)
+  getById: adminProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
       const data = await prisma.event.findUnique({
@@ -102,8 +102,8 @@ export const eventRouter = createTRPCRouter({
     return serializeType(data);
   }),
 
-  // Create event
-  create: baseProcedure
+  // Create event (Admin only)
+  create: adminProcedure
     .input(createEventSchema)
     .mutation(async ({ input }) => {
       try {
@@ -126,7 +126,7 @@ export const eventRouter = createTRPCRouter({
     }),
 
   // Update event
-  update: baseProcedure
+  update: adminProcedure
     .input(updateEventSchema)
     .mutation(async ({ input }) => {
       try {
@@ -151,7 +151,7 @@ export const eventRouter = createTRPCRouter({
     }),
 
   // Toggle event active status
-  toggleActive: baseProcedure
+  toggleActive: adminProcedure
     .input(z.object({ id: z.string(), isActive: z.boolean() }))
     .mutation(async ({ input }) => {
       try {
@@ -171,7 +171,7 @@ export const eventRouter = createTRPCRouter({
     }),
 
   // Delete event
-  delete: baseProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input }) => {
       try {
@@ -188,7 +188,7 @@ export const eventRouter = createTRPCRouter({
     }),
 
   // Delete many events
-  deleteMany: baseProcedure
+  deleteMany: adminProcedure
     .input(z.object({ ids: z.array(z.string()) }))
     .mutation(async ({ input }) => {
       try {
@@ -207,7 +207,7 @@ export const eventRouter = createTRPCRouter({
     }),
 
   // Set event dates
-  setDates: baseProcedure
+  setDates: adminProcedure
     .input(
       z.object({
         id: z.string(),
@@ -234,7 +234,7 @@ export const eventRouter = createTRPCRouter({
     }),
 
   // Add products to event
-  addProducts: baseProcedure
+  addProducts: adminProcedure
     .input(
       z.object({
         id: z.string(),
@@ -261,7 +261,7 @@ export const eventRouter = createTRPCRouter({
     }),
 
   // Remove products from event
-  removeProducts: baseProcedure
+  removeProducts: adminProcedure
     .input(
       z.object({
         id: z.string(),

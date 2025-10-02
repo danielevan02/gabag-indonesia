@@ -1,6 +1,6 @@
 import { z } from "zod";
 import prisma from "@/lib/prisma";
-import { baseProcedure, createTRPCRouter } from "../init";
+import { baseProcedure, adminProcedure, createTRPCRouter } from "../init";
 import { mediaFileSchema } from "@/lib/schema";
 
 export const galleryRouter = createTRPCRouter({
@@ -46,7 +46,7 @@ export const galleryRouter = createTRPCRouter({
       }
     }),
 
-  create: baseProcedure
+  create: adminProcedure
     .input(z.array(mediaFileSchema))
     .mutation(async ({ input }) => {
       try {
@@ -66,7 +66,7 @@ export const galleryRouter = createTRPCRouter({
       }
     }),
 
-  deleteImages: baseProcedure
+  deleteImages: adminProcedure
     .input(z.object({
       secure_urls: z.array(z.string())
     }))
