@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/trpc/server";
 
 export const BreastPumpSection = async () => {
-  const products = await trpc.product.getAll({ subCategory: "Breast Pump" });
+  const { products } = await trpc.product.getAll({ subCategory: "Breast Pump" });
   return (
     <section>
       <div className="flex flex-col w-full md:w-[460px] mx-auto mb-5 mt-10 gap-2">

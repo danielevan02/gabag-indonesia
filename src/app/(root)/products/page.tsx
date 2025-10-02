@@ -19,15 +19,16 @@ const ProductPage = async ({searchParams}: {
     min: string;
     max: string;
     category: string;
+    page: string;
   }>
 }) => {
-  const {subCategories, search, max, min, sort, category} = await searchParams
+  const {subCategories, search, max, min, sort, category, page} = await searchParams
   const subCategoryIds = subCategories?.split(',').filter(Boolean)
 
   const categories = await trpc.category.getById({id: category})
-  
+
   const subCategoryList = await trpc.subCategory.getSelect(category)
-  
+
   return (
     <div className="mx-3 xl:mx-10 flex flex-col items-center">
 
@@ -68,9 +69,9 @@ const ProductPage = async ({searchParams}: {
               max={max}
               min={min}
               sort={sort}
+              page={page}
             />
           </Suspense>
-
         </div>
       </div>
     </div>

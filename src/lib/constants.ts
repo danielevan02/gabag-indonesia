@@ -125,6 +125,8 @@ export const DEFAULT_EMAIL = "placeholder@mail.com";
 export const DEFAULT_NAME = "NO_NAME";
 export const DEFAULT_PHONE = "0888888888";
 
+export const PRODUCT_LIST_LIMIT = 24
+
 // Order form field requirements
 export const REQUIRED_ORDER_FIELDS = [
   "address",

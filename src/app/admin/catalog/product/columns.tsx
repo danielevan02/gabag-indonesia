@@ -7,7 +7,7 @@ import Image from "next/image";
 import { RouterOutputs } from "@/trpc/routers/_app";
 import { useDeleteMutation } from "@/hooks/use-delete-mutation";
 
-export type Product = RouterOutputs['product']['getAll'][number]
+export type Product = RouterOutputs['product']['getAll']['products'][number]
 
 const ProductActionCell = ({ productId }: { productId: string }) => {
   const deleteProductMutation = useDeleteMutation({ type: "product" });

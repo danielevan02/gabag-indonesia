@@ -99,64 +99,79 @@ export const productRouter = createTRPCRouter({
         subCategory: z.string().optional(),
         search: z.string().optional(),
         subCategoriesId: z.array(z.string()).optional(),
-        sort: z.string().optional(),
+        limit: z.number().optional(),
+        page: z.number().default(1),
         price: z
           .object({
             min: z.string().optional(),
             max: z.string().optional(),
           })
           .optional(),
-      })
+      }),
     )
     .query(async ({ input }) => {
-      const data = await prisma.product.findMany({
-        where: buildProductFilters(input),
-        select: {
-          id: true,
-          regularPrice: true,
-          discount: true,
-          name: true,
-          slug: true,
-          hasVariant: true,
-          stock: true,
-          images: {
-            take: 1,
-            select: {
-              mediaFile: {
-                select: {
-                  secure_url: true,
+      const limit = input.limit || 12;
+      const skip = ((input.page || 1) - 1) * limit;
+      const where = buildProductFilters(input);
+
+      const [data, totalCount] = await Promise.all([
+        prisma.product.findMany({
+          where,
+          select: {
+            id: true,
+            regularPrice: true,
+            discount: true,
+            name: true,
+            slug: true,
+            hasVariant: true,
+            stock: true,
+            images: {
+              take: 1,
+              select: {
+                mediaFile: {
+                  select: {
+                    secure_url: true,
+                  },
                 },
               },
             },
-          },
-          subCategory: {
-            select: {
-              name: true,
+            subCategory: {
+              select: {
+                name: true,
+              },
             },
-          },
-          event: {
-            select: {
-              name: true,
+            event: {
+              select: {
+                name: true,
+              },
             },
+            variants: true
           },
-          variants: true
-        },
-        orderBy: {
-          createdAt: 'desc'
-        }
-      });
+          orderBy: {
+            createdAt: 'desc'
+          },
+          skip,
+          take: limit
+        }),
+        prisma.product.count({ where })
+      ]);
 
       const convertedData = serializeType(data);
 
-      return convertedData.map((product) => ({
-        ...product,
-        images: product.images[0].mediaFile.secure_url,
-        price: product.regularPrice - product.regularPrice * ((product.discount??0) / 100),
-        variants: product.variants.map((variant) => ({
-          ...variant,
-          price: variant.regularPrice - variant.regularPrice * ((variant.discount ?? 0) / 100),
+      return {
+        products: convertedData.map((product) => ({
+          ...product,
+          images: product.images[0].mediaFile.secure_url,
+          price: product.regularPrice - product.regularPrice * ((product.discount??0) / 100),
+          variants: product.variants.map((variant) => ({
+            ...variant,
+            price: variant.regularPrice - variant.regularPrice * ((variant.discount ?? 0) / 100),
+          })),
         })),
-      }));
+        totalCount,
+        currentPage: input.page || 1,
+        totalPages: Math.ceil(totalCount / limit)
+      };
     }),
 
   // Search products
