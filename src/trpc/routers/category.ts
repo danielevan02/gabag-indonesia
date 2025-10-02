@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { baseProcedure, createTRPCRouter } from "../init";
+import { baseProcedure, adminProcedure, createTRPCRouter } from "../init";
 import prisma from "@/lib/prisma";
 import { serializeType } from "@/lib/utils";
 import { TRPCError } from "@trpc/server";
@@ -54,7 +54,7 @@ export const categoryRouter = createTRPCRouter({
     return serializeType(data);
   }),
 
-  // Get category by ID
+  // Get category by ID (Public - used in product page)
   getById: baseProcedure.input(z.object({ id: z.string() })).query(async ({ input }) => {
     const data = await prisma.category.findUnique({
       where: {
@@ -103,8 +103,8 @@ export const categoryRouter = createTRPCRouter({
       return serializeType(data);
     }),
 
-  // Update category
-  update: baseProcedure
+  // Update category (Admin only)
+  update: adminProcedure
     .input(categorySchema.extend({ id: z.string() }))
     .mutation(async ({ input }) => {
       try {
@@ -130,8 +130,8 @@ export const categoryRouter = createTRPCRouter({
       }
     }),
 
-  // Delete category
-  delete: baseProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
+  // Delete category (Admin only)
+  delete: adminProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
     try {
       await prisma.category.delete({
         where: {
@@ -145,8 +145,8 @@ export const categoryRouter = createTRPCRouter({
     }
   }),
 
-  // Delete many categories
-  deleteMany: baseProcedure
+  // Delete many categories (Admin only)
+  deleteMany: adminProcedure
     .input(z.object({ ids: z.array(z.string()) }))
     .mutation(async ({ input }) => {
       try {

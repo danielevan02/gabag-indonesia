@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Baby, HandHeart, HomeIcon, Info, LucideIcon, Sparkles } from "lucide-react";
+import { Baby, HandHeart, HomeIcon, LucideIcon, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
@@ -21,7 +21,6 @@ const NavLinks = ({device}: {device: string}) => {
     { label: "Mom", link: "/products?category=f6a1e8e9-5a62-4f4b-a429-ffc8276a11e9", icon: HandHeart },
     { label: "Beauty", link: "/products?category=f4b48800-d115-4384-a109-98725e506730", icon: Sparkles },
     { label: "Kids", link: "/products?category=d3cfc5e0-e98e-4b71-92bd-46a238e787c5", icon: Baby },
-    { label: "About", link: "/about", icon: Info },
   ];
 
   // Helper function to check if link is active
@@ -69,7 +68,7 @@ const NavLinks = ({device}: {device: string}) => {
     return(
       <div className="flex flex-col gap-2">
         {links.map(({icon: Icon, label, link})=>(
-          <Link href={link} key={link} className={cn("flex gap-3 rounded-lg p-2 items-center uppercase",
+          <Link href={link} key={link} className={cn("flex gap-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 p-2 items-center uppercase transition-all",
             isLinkActive(link) && 'bg-neutral-100 dark:bg-neutral-800'
           )}>
             <Icon strokeWidth={1}/>

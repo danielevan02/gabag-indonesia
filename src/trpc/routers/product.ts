@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { baseProcedure, createTRPCRouter } from "../init";
+import { baseProcedure, adminProcedure, createTRPCRouter } from "../init";
 import prisma from "@/lib/prisma";
 import { serializeType } from "@/lib/utils";
 import { productSchema } from "@/lib/schema";
@@ -366,8 +366,8 @@ export const productRouter = createTRPCRouter({
       })),
     }));
   }),
-  // Get product by ID with all subcategories
-  getByIdWithSubCategories: baseProcedure
+  // Get product by ID with all subcategories (Admin only)
+  getByIdWithSubCategories: adminProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
       const [product, subCategories] = await Promise.all([
@@ -431,8 +431,8 @@ export const productRouter = createTRPCRouter({
       };
     }),
 
-  // Create product
-  create: baseProcedure
+  // Create product (Admin only)
+  create: adminProcedure
     .input(productSchema.extend({ slug: z.string().min(1, "Slug is required") }))
     .mutation(async ({ input }) => {
       try {
@@ -476,8 +476,8 @@ export const productRouter = createTRPCRouter({
       }
     }),
 
-  // Update product
-  update: baseProcedure
+  // Update product (Admin only)
+  update: adminProcedure
     .input(productSchema.extend({ id: z.string() }))
     .mutation(async ({ input }) => {
       try {
@@ -536,8 +536,8 @@ export const productRouter = createTRPCRouter({
       }
     }),
 
-  // Delete product
-  delete: baseProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
+  // Delete product (Admin only)
+  delete: adminProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
     try {
       await prisma.product.delete({
         where: { id: input.id },
@@ -549,8 +549,8 @@ export const productRouter = createTRPCRouter({
     }
   }),
 
-  // Delete many products
-  deleteMany: baseProcedure
+  // Delete many products (Admin only)
+  deleteMany: adminProcedure
     .input(z.object({ ids: z.array(z.string()) }))
     .mutation(async ({ input }) => {
       try {

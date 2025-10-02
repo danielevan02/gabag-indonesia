@@ -10,6 +10,9 @@ import Link from "next/link";
 
 import { redirect } from "next/navigation";
 
+// Force all admin pages to be dynamic (not static)
+export const dynamic = 'force-dynamic';
+
 export default async function RootLayout({
   children,
 }: Readonly<{
