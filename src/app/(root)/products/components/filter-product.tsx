@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { priceFilter, sort } from "@/lib/constants";
+import { priceFilter } from "@/lib/constants";
 import { cn, updateQueryParams } from "@/lib/utils";
 import { Filter, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -24,7 +24,7 @@ export interface FilterProductProps {
 
 const FilterProduct: React.FC<FilterProductProps> = ({ subCategories, initialSelectedSubCategories }) => {
   const [showDialog, setShowDialog] = useState(true);
-  const [selectedSort, setSelectedSort] = useState<string | null>(null);
+  // const [selectedSort, setSelectedSort] = useState<string | null>(null);
   const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>(initialSelectedSubCategories || []);
   const [selectedPrice, setSelectedPrice] = useState<{min: number, max: number} | null>(null)
   const searchParams = useSearchParams();
@@ -49,30 +49,30 @@ const FilterProduct: React.FC<FilterProductProps> = ({ subCategories, initialSel
     updateQueryParams({ subCategories: queryValue }, searchParams, router);
   };
 
-  const handleSort = (val: string) => {
-    setSelectedSort((prev) => (prev === val ? null : val));
-    if(selectedSort === val){
-      updateQueryParams({sort: undefined, banner: undefined}, searchParams,router)
-    } else {
-      switch (val) {
-        case "new-old":
-          updateQueryParams({sort: "new-old"}, searchParams, router)
-          break;
+  // const handleSort = (val: string) => {
+  //   setSelectedSort((prev) => (prev === val ? null : val));
+  //   if(selectedSort === val){
+  //     updateQueryParams({sort: undefined, banner: undefined}, searchParams,router)
+  //   } else {
+  //     switch (val) {
+  //       case "new-old":
+  //         updateQueryParams({sort: "new-old"}, searchParams, router)
+  //         break;
   
-        case "new-arrival":
-          updateQueryParams({banner: "new-arrival"}, searchParams, router)
-          break;
+  //       case "new-arrival":
+  //         updateQueryParams({banner: "new-arrival"}, searchParams, router)
+  //         break;
   
-        case "exclusive":
-          updateQueryParams({banner: "exclusive"}, searchParams, router)
-          break;
+  //       case "exclusive":
+  //         updateQueryParams({banner: "exclusive"}, searchParams, router)
+  //         break;
   
-        case "best-seller":
-          updateQueryParams({banner: "best-seller"}, searchParams, router)
-          break;
-      }
-    }
-  };
+  //       case "best-seller":
+  //         updateQueryParams({banner: "best-seller"}, searchParams, router)
+  //         break;
+  //     }
+  //   }
+  // };
 
   const handlePrice = (value: {min: number; max: number}) => {
     setSelectedPrice((prev) => (prev === value ? null:value))
@@ -135,7 +135,7 @@ const FilterProduct: React.FC<FilterProductProps> = ({ subCategories, initialSel
               ))}
             </AccordionContent>
           </AccordionItem>
-          <AccordionItem value="item-2">
+          {/* <AccordionItem value="item-2">
             <AccordionTrigger className="font-light">Sort by</AccordionTrigger>
             <AccordionContent className="flex flex-col gap-3">
               {sort.map((item) => (
@@ -159,7 +159,7 @@ const FilterProduct: React.FC<FilterProductProps> = ({ subCategories, initialSel
                 </div>
               ))}
             </AccordionContent>
-          </AccordionItem>
+          </AccordionItem> */}
           <AccordionItem value="item-3">
             <AccordionTrigger className="font-light">Price</AccordionTrigger>
             <AccordionContent className="flex flex-col gap-3">

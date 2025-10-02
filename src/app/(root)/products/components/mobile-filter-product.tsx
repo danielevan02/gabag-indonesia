@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn, updateQueryParams } from "@/lib/utils";
-import { priceFilter, sort } from "@/lib/constants";
+import { priceFilter } from "@/lib/constants";
 
 const MobileFilterProduct = ({
   subCategories,
@@ -21,7 +21,7 @@ const MobileFilterProduct = ({
   subCategories?: { id: string; name: string }[];
   initialSelectedSubCategories?: string[];
 }) => {
-  const [selectedSort, setSelectedSort] = useState<string | null>(null);
+  // const [selectedSort, setSelectedSort] = useState<string | null>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialSelectedSubCategories || []);
   const [selectedPrice, setSelectedPrice] = useState<{ min: number; max: number } | null>(null);
   const searchParams = useSearchParams();
@@ -46,30 +46,30 @@ const MobileFilterProduct = ({
     updateQueryParams({ subCategories: queryValue }, searchParams, router);
   };
 
-  const handleSort = (val: string) => {
-    setSelectedSort((prev) => (prev === val ? null : val));
-    if (selectedSort === val) {
-      updateQueryParams({ sort: undefined, banner: undefined }, searchParams, router);
-    } else {
-      switch (val) {
-        case "new-old":
-          updateQueryParams({ sort: "new-old" }, searchParams, router);
-          break;
+  // const handleSort = (val: string) => {
+  //   setSelectedSort((prev) => (prev === val ? null : val));
+  //   if (selectedSort === val) {
+  //     updateQueryParams({ sort: undefined, banner: undefined }, searchParams, router);
+  //   } else {
+  //     switch (val) {
+  //       case "new-old":
+  //         updateQueryParams({ sort: "new-old" }, searchParams, router);
+  //         break;
 
-        case "new-arrival":
-          updateQueryParams({ banner: "new-arrival" }, searchParams, router);
-          break;
+  //       case "new-arrival":
+  //         updateQueryParams({ banner: "new-arrival" }, searchParams, router);
+  //         break;
 
-        case "exclusive":
-          updateQueryParams({ banner: "exclusive" }, searchParams, router);
-          break;
+  //       case "exclusive":
+  //         updateQueryParams({ banner: "exclusive" }, searchParams, router);
+  //         break;
 
-        case "best-seller":
-          updateQueryParams({ banner: "best-seller" }, searchParams, router);
-          break;
-      }
-    }
-  };
+  //       case "best-seller":
+  //         updateQueryParams({ banner: "best-seller" }, searchParams, router);
+  //         break;
+  //     }
+  //   }
+  // };
 
   const handlePrice = (value: { min: number; max: number }) => {
     setSelectedPrice((prev) => (prev === value ? null : value));
@@ -111,7 +111,7 @@ const MobileFilterProduct = ({
                   ))}
               </AccordionContent>
             </AccordionItem>
-            <AccordionItem value="item-2">
+            {/* <AccordionItem value="item-2">
               <AccordionTrigger className="font-normal">Sort by</AccordionTrigger>
               <AccordionContent className="flex flex-col gap-3">
                 {sort.map((item) => (
@@ -135,7 +135,7 @@ const MobileFilterProduct = ({
                   </div>
                 ))}
               </AccordionContent>
-            </AccordionItem>
+            </AccordionItem> */}
             <AccordionItem value="item-3">
               <AccordionTrigger className="font-normal">Price</AccordionTrigger>
               <AccordionContent className="flex flex-col gap-3">

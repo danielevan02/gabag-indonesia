@@ -9,6 +9,7 @@ import { HTMLInputTypeAttribute, useState } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/trpc/client";
 import { getCurrentUser } from "@/lib/actions/user.action";
+import ChangePasswordForm from "./change-password-form";
 
 const ProfileForm = ({ user }: { user: Awaited<ReturnType<typeof getCurrentUser>> }) => {
   // for telling typescript that user is always defined
@@ -23,9 +24,7 @@ const ProfileForm = ({ user }: { user: Awaited<ReturnType<typeof getCurrentUser>
         <ProfileItem label="Email" value={user?.email} />
         <div className="flex-1">
           <Label className="lg:text-base mb-5">Password</Label>
-          <Button variant="outline" className="cursor-pointer">
-            Reset Password
-          </Button>
+          <ChangePasswordForm userId={user?.id} />
         </div>
       </div>
     </div>
