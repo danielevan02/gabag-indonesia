@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { baseProcedure, createTRPCRouter } from "../init";
+import { baseProcedure, adminProcedure, protectedProcedure, createTRPCRouter } from "../init";
 import prisma from "@/lib/prisma";
 import { serializeType } from "@/lib/utils";
 import { TRPCError } from "@trpc/server";
@@ -177,8 +177,8 @@ export const orderRouter = createTRPCRouter({
       }
     }),
 
-  // Create order
-  create: baseProcedure
+  // Create order (Protected - logged in users only)
+  create: protectedProcedure
     .input(createOrderSchema)
     .mutation(async ({ input }) => {
       try {
@@ -250,8 +250,8 @@ export const orderRouter = createTRPCRouter({
       }
     }),
 
-  // Make payment
-  makePayment: baseProcedure
+  // Make payment (Protected - logged in users only)
+  makePayment: protectedProcedure
     .input(makePaymentSchema)
     .mutation(async ({ input }) => {
       try {
@@ -333,8 +333,8 @@ export const orderRouter = createTRPCRouter({
       }
     }),
 
-  // Finalize order
-  finalize: baseProcedure
+  // Finalize order (Protected - logged in users only)
+  finalize: protectedProcedure
     .input(finalizeOrderSchema)
     .mutation(async ({ input }) => {
       try {
@@ -508,8 +508,8 @@ export const orderRouter = createTRPCRouter({
       }
     }),
 
-  // Update order shipment
-  updateShipment: baseProcedure
+  // Update order shipment (Admin only)
+  updateShipment: adminProcedure
     .input(updateOrderShipmentSchema)
     .mutation(async ({ input }) => {
       try {
@@ -531,8 +531,8 @@ export const orderRouter = createTRPCRouter({
       }
     }),
 
-  // Delete order
-  delete: baseProcedure
+  // Delete order (Admin only)
+  delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input }) => {
       try {
@@ -548,8 +548,8 @@ export const orderRouter = createTRPCRouter({
       }
     }),
 
-  // Delete many orders
-  deleteMany: baseProcedure
+  // Delete many orders (Admin only)
+  deleteMany: adminProcedure
     .input(z.object({ ids: z.array(z.string()) }))
     .mutation(async ({ input }) => {
       try {

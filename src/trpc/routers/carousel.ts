@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { baseProcedure, createTRPCRouter } from "../init";
+import { baseProcedure, adminProcedure, createTRPCRouter } from "../init";
 import prisma from "@/lib/prisma";
 import { serializeType } from "@/lib/utils";
 import { TRPCError } from "@trpc/server";
@@ -114,7 +114,7 @@ export const carouselRouter = createTRPCRouter({
   }),
 
   // Get carousel by ID
-  getById: baseProcedure
+  getById: adminProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
       const data = await prisma.carousel.findUnique({
@@ -150,7 +150,7 @@ export const carouselRouter = createTRPCRouter({
     }),
 
   // Create carousel
-  create: baseProcedure
+  create: adminProcedure
     .input(createCarouselSchema)
     .mutation(async ({ input }) => {
       try {
@@ -176,7 +176,7 @@ export const carouselRouter = createTRPCRouter({
     }),
 
   // Update carousel
-  update: baseProcedure
+  update: adminProcedure
     .input(updateCarouselSchema)
     .mutation(async ({ input }) => {
       try {
@@ -203,7 +203,7 @@ export const carouselRouter = createTRPCRouter({
     }),
 
   // Toggle carousel active status
-  toggleActive: baseProcedure
+  toggleActive: adminProcedure
     .input(z.object({ id: z.string(), isActive: z.boolean() }))
     .mutation(async ({ input }) => {
       try {
@@ -223,7 +223,7 @@ export const carouselRouter = createTRPCRouter({
     }),
 
   // Delete carousel
-  delete: baseProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input }) => {
       try {
@@ -240,7 +240,7 @@ export const carouselRouter = createTRPCRouter({
     }),
 
   // Delete many carousels
-  deleteMany: baseProcedure
+  deleteMany: adminProcedure
     .input(z.object({ ids: z.array(z.string()) }))
     .mutation(async ({ input }) => {
       try {

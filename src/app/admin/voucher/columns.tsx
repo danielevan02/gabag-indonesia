@@ -59,6 +59,10 @@ export const columns: ColumnDef<Voucher>[] = [
     header: "Value",
   },
   {
+    accessorKey: "applicationType",
+    header: "Value",
+  },
+  {
     header: "Used / Available",
     cell: ({ row }) => <p>{row.original.usedCount} / {row.original.totalLimit || "∞"}</p>
   },

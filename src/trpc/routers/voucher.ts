@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { baseProcedure, createTRPCRouter } from "../init";
+import { baseProcedure, adminProcedure, createTRPCRouter } from "../init";
 import { serializeType } from "@/lib/utils";
 import z from "zod";
 
@@ -44,7 +44,7 @@ const handleMutationSuccess = (message: string) => {
 };
 
 export const voucherRouter = createTRPCRouter({
-  getAll: baseProcedure.query(async () => {
+  getAll: adminProcedure.query(async () => {
     const data = await prisma.voucher.findMany({
       include: {
         category: { select: { name: true } },
@@ -59,7 +59,7 @@ export const voucherRouter = createTRPCRouter({
     return serializeType(data);
   }),
 
-  getById: baseProcedure.input(z.object({ id: z.string() })).query(async ({ input }) => {
+  getById: adminProcedure.input(z.object({ id: z.string() })).query(async ({ input }) => {
     const data = await prisma.voucher.findUnique({
       where: { id: input.id },
       include: {
@@ -74,7 +74,7 @@ export const voucherRouter = createTRPCRouter({
     return serializeType(data);
   }),
 
-  create: baseProcedure.input(voucherInputSchema).mutation(async ({ input }) => {
+  create: adminProcedure.input(voucherInputSchema).mutation(async ({ input }) => {
       try {
         const {
           code,
@@ -148,7 +148,7 @@ export const voucherRouter = createTRPCRouter({
       }
     }),
 
-  update: baseProcedure
+  update: adminProcedure
     .input(
       z.object({
         id: z.string(),
@@ -288,7 +288,7 @@ export const voucherRouter = createTRPCRouter({
       }
     }),
 
-  delete: baseProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
+  delete: adminProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
     try {
       // Check if voucher has been used
       const voucher = await prisma.voucher.findUnique({
@@ -321,7 +321,7 @@ export const voucherRouter = createTRPCRouter({
     }
   }),
 
-  deleteMany: baseProcedure.input(z.object({ ids: z.array(z.string()) })).mutation(async ({ input }) => {
+  deleteMany: adminProcedure.input(z.object({ ids: z.array(z.string()) })).mutation(async ({ input }) => {
     try {
       // Check if any vouchers have been used
       const vouchers = await prisma.voucher.findMany({

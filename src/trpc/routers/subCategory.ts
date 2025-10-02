@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { baseProcedure, createTRPCRouter } from "../init";
+import { baseProcedure, adminProcedure, createTRPCRouter } from "../init";
 import prisma from "@/lib/prisma";
 import { serializeType } from "@/lib/utils";
 import { TRPCError } from "@trpc/server";
@@ -48,7 +48,7 @@ export const subCategoryRouter = createTRPCRouter({
     }),
 
   // Get sub category by ID
-  getById: baseProcedure.input(z.object({ id: z.string() })).query(async ({ input }) => {
+  getById: adminProcedure.input(z.object({ id: z.string() })).query(async ({ input }) => {
     const data = await prisma.subCategory.findFirst({
       where: {
         id: input.id,
@@ -117,7 +117,7 @@ export const subCategoryRouter = createTRPCRouter({
     return serializeType(data);
   }),
   // Create sub category
-  create: baseProcedure.input(subCategorySchema).mutation(async ({ input }) => {
+  create: adminProcedure.input(subCategorySchema).mutation(async ({ input }) => {
     try {
       const { category, name, discount, mediaFileId, products } = input;
 
@@ -169,7 +169,7 @@ export const subCategoryRouter = createTRPCRouter({
   }),
 
   // Update sub category
-  update: baseProcedure
+  update: adminProcedure
     .input(subCategorySchema.extend({ id: z.string() }))
     .mutation(async ({ input }) => {
       try {
@@ -270,7 +270,7 @@ export const subCategoryRouter = createTRPCRouter({
     }),
 
   // Delete sub category
-  delete: baseProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
+  delete: adminProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
     try {
       await prisma.subCategory.delete({
         where: {
@@ -285,7 +285,7 @@ export const subCategoryRouter = createTRPCRouter({
   }),
 
   // Delete many sub categories
-  deleteMany: baseProcedure
+  deleteMany: adminProcedure
     .input(z.object({ ids: z.array(z.string()) }))
     .mutation(async ({ input }) => {
       try {
