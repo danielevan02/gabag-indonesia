@@ -32,15 +32,15 @@ const SignInForm = () => {
         // Refresh cart data after successful login to get merged cart
         await trpcUtils.cart.getMyCart.refetch();
         toast.success(res.message);
-        router.push("/")
+        router.push("/");
       } else {
-        toast.error(res.message)
+        toast.error(res.message);
       }
     },
   });
 
   const onSubmit = (data: LoginType) => {
-    signInMutation.mutate(data);
+    signInMutation.mutate({ email: data.email.toLowerCase(), password: data.password });
   };
   return (
     <Form {...form}>

@@ -3,7 +3,7 @@
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signUpSchema } from "@/lib/schema";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { z } from "zod";
 import Link from "next/link";
@@ -16,30 +16,28 @@ import { FormInput } from "@/components/shared/input/form-input";
 export type SignUpType = z.infer<typeof signUpSchema>;
 
 const SignUpForm = () => {
-  const [email, setEmail] = useState('') 
-  const [isLoading, startTransition] = useTransition()
-  const signUpMutation = trpc.auth.register.useMutation()
+  const [email, setEmail] = useState("");
+  const { isPending: isLoading, mutateAsync } = trpc.auth.register.useMutation();
   const form = useForm({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
-      confirmPassword: '',
-      email: '',
-      fullName: '',
-      password: '',
-      phone: ''
-    }
+      confirmPassword: "",
+      email: "",
+      fullName: "",
+      password: "",
+      phone: "",
+    },
   });
 
   const onSubmit: SubmitHandler<SignUpType> = async (data) => {
-    startTransition(async()=>{
-      const res = await signUpMutation.mutateAsync(data)
-      
-      if(!res?.success){
-        toast.error(res?.message as string)
-      } else {
-        setEmail(data.email)
-      }
-    })
+    const { email, ...rest } = data;
+    const res = await mutateAsync({ email: email.toLowerCase(), ...rest });
+
+    if (!res?.success) {
+      toast.error(res?.message as string);
+    } else {
+      setEmail(data.email.toLowerCase());
+    }
   };
 
   return !email ? (
@@ -87,7 +85,7 @@ const SignUpForm = () => {
             placeholder="Re-type your password"
           />
         </div>
-        
+
         <p className="mb-5 md:mb-0 mt-5">
           Already have an account?{" "}
           <Link href="/sign-in" className="underline hover:text-blue-900">
@@ -99,11 +97,7 @@ const SignUpForm = () => {
           type="submit"
           disabled={isLoading}
         >
-          {isLoading ? (
-            <Loader className="w-5 h-5 animate-spin"/>
-          ):(
-            "Register"
-          )}
+          {isLoading ? <Loader className="w-5 h-5 animate-spin" /> : "Register"}
         </Button>
       </form>
     </Form>
@@ -113,7 +107,9 @@ const SignUpForm = () => {
       <p className="font-bold">{email}</p>
       <p className="mt-5">Please verify your email and continue to login page</p>
       <Button asChild className="rounded-full mt-3">
-        <Link href='/sign-in' className="uppercase tracking-widest rounded-full text-sm">Back to login page</Link>
+        <Link href="/sign-in" className="uppercase tracking-widest rounded-full text-sm">
+          Back to login page
+        </Link>
       </Button>
     </div>
   );
