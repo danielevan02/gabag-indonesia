@@ -199,7 +199,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           <div className="space-y-4 max-h-96 overflow-scroll">
             {order.orderItems.map((item) => (
               <div key={item.id} className="flex gap-4 p-4 border rounded-lg">
-                <div className="relative h-20 w-20 flex-shrink-0">
+                <div className="relative size-10 flex-shrink-0">
                   <Image
                     src={item.image}
                     alt={item.name}
@@ -208,15 +208,15 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                   />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold">{item.name}</h3>
-                  <p className="text-sm text-muted-foreground">Quantity: {item.qty}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="font-semibold text-xs md:text-base">{item.name}</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">Quantity: {item.qty}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     Weight: {item.weight}g | Dimensions: {item.length}x{item.width}x{item.height} cm
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold">Rp{Number(item.price).toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-semibold text-xs md:text-base">Rp{Number(item.price).toLocaleString()}</p>
+                  <p className="text-xs md:text-sm   text-muted-foreground">
                     Subtotal: Rp{(Number(item.price) * item.qty).toLocaleString()}
                   </p>
                 </div>
