@@ -26,7 +26,7 @@ import { Button } from "../../ui/button";
 import { cn } from "@/lib/utils";
 import ModalContent from "./modal-content";
 import TablePagination from "./pagination";
-import { Truck } from "lucide-react";
+import { Loader, Truck } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 interface DeleteManyMutation {
@@ -42,6 +42,7 @@ interface DataTableProps<TData, TValue> {
   deleteTitle?: string;
   searchColumn?: string;
   bulkShipmentAction?: (orderIds: string[]) => void;
+  isBulkShipmentPending?: boolean;
 }
 
 export function   DataTable<TData, TValue>({
@@ -52,6 +53,7 @@ export function   DataTable<TData, TValue>({
   deleteTitle,
   searchColumn,
   bulkShipmentAction,
+  isBulkShipmentPending = false,
 }: DataTableProps<TData, TValue>) {
   const [openModal, setOpenModal] = useState(false);
   const [rowSelection, setRowSelection] = useState({});
@@ -159,7 +161,8 @@ export function   DataTable<TData, TValue>({
           />
         </div>
 
-        {deleteManyMutation && (
+        {/* Bulk Actions */}
+        {(deleteManyMutation || bulkShipmentAction) && (
           <div
             className={cn(
               "opacity-0 transition-all pointer-events-none flex items-center gap-2",
@@ -174,15 +177,27 @@ export function   DataTable<TData, TValue>({
                   const selectedIds = rows.map((row) => row.id);
                   bulkShipmentAction(selectedIds);
                 }}
+                disabled={isBulkShipmentPending}
               >
-                <Truck />
-                Create Shipment for {`${selectedRows} order(s)`}
+                {isBulkShipmentPending ? (
+                  <>
+                    <Loader className="animate-spin size-4" />
+                    Creating Shipment...
+                  </>
+                ) : (
+                  <>
+                    <Truck />
+                    Create Shipment for {`${selectedRows} order(s)`}
+                  </>
+                )}
               </Button>
             )}
-            <Button variant="destructive" onClick={() => setOpenModal(true)}>
-              <IconTrash />
-              Delete {`${selectedRows} row(s)`}
-            </Button>
+            {deleteManyMutation && (
+              <Button variant="destructive" onClick={() => setOpenModal(true)}>
+                <IconTrash />
+                Delete {`${selectedRows} row(s)`}
+              </Button>
+            )}
           </div>
         )}
       </div>
