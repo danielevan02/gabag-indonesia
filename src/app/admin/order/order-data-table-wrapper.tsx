@@ -2,7 +2,6 @@
 
 import { DataTable } from "@/components/shared/table/data-table";
 import { columns } from "./columns";
-import { useDeleteManyMutation } from "@/hooks/use-delete-mutation";
 import { RouterOutputs } from "@/trpc/routers/_app";
 import { trpc } from "@/trpc/client";
 import { toast } from "sonner";
@@ -15,10 +14,6 @@ interface OrderDataTableWrapperProps {
 
 export default function OrderDataTableWrapper({ orders }: OrderDataTableWrapperProps) {
   const utils = trpc.useUtils();
-
-  const deleteManyEventMutation = useDeleteManyMutation({
-    type: "order"
-  });
 
   const createBulkShipment = trpc.courier.createBulkShipment.useMutation({
     onSuccess: (data) => {
@@ -45,11 +40,10 @@ export default function OrderDataTableWrapper({ orders }: OrderDataTableWrapperP
     <DataTable
       columns={columns}
       data={orders}
-      deleteManyMutation={deleteManyEventMutation}
       searchPlaceholder="Search Order"
-      deleteTitle="Delete Order"
       searchColumn="id"
       bulkShipmentAction={handleBulkShipment}
+      isBulkShipmentPending={createBulkShipment.isPending}
     />
   );
 }
