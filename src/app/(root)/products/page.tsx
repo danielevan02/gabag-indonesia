@@ -1,17 +1,18 @@
-import FilterProduct from "./components/filter-product";
-import MobileFilterProduct from "./components/mobile-filter-product";
 import { Metadata } from "next";
 import ProductList, { ProductListFallback } from "./components/product-list";
 import { Suspense } from "react";
-import Image from "next/image";
-import { trpc } from "@/trpc/server";
+import CategoryBanner, { CategoryBannerFallback } from "./components/category-banner";
+import FilterWrapper, { FilterWrapperFallback } from "./components/filter-wrapper";
 
-export const metadata: Metadata={
-  title: 'Products',
-  description: "Discover GabaG's complete product collection, including ASI cooler bags, multifunctional bags, ice gel packs, and breastfeeding accessories. Get the best deals now!"
-}
+export const metadata: Metadata = {
+  title: "Products",
+  description:
+    "Discover GabaG's complete product collection, including ASI cooler bags, multifunctional bags, ice gel packs, and breastfeeding accessories. Get the best deals now!",
+};
 
-const ProductPage = async ({searchParams}: {
+const ProductPage = async ({
+  searchParams,
+}: {
   searchParams: Promise<{
     subCategories: string;
     search: string;
@@ -20,40 +21,24 @@ const ProductPage = async ({searchParams}: {
     max: string;
     category: string;
     page: string;
-  }>
+  }>;
 }) => {
-  const {subCategories, search, max, min, sort, category, page} = await searchParams
-  const subCategoryIds = subCategories?.split(',').filter(Boolean)
-
-  const categories = await trpc.category.getById({id: category})
-
-  const subCategoryList = await trpc.subCategory.getSelect(category)
+  const { subCategories, search, max, min, sort, category, page } = await searchParams;
+  const subCategoryIds = subCategories?.split(",").filter(Boolean);
 
   return (
     <div className="mx-3 xl:mx-10 flex flex-col items-center">
-
-      <div className="flex justify-center mt-2 mb-10 w-full h-40 md:h-96">
-        <Image
-          src={categories?.mediaFile.secure_url||""}
-          width={800}
-          height={400}
-          alt={categories?.name||"category photo"}
-          className="h-full w-full lg:w-[80%] object-cover"
-          priority
-          unoptimized
-        />
-      </div>
+      <Suspense fallback={<CategoryBannerFallback />}>
+        <CategoryBanner categoryId={category} />
+      </Suspense>
 
       <div className="flex items-start w-full relative flex-col md:flex-row justify-between lg:gap-5 min-h-[500px]">
-        <FilterProduct
-          subCategories={subCategoryList}
-          initialSelectedSubCategories={subCategoryIds}
-        />
-
-        <MobileFilterProduct
-          subCategories={subCategoryList}
-          initialSelectedSubCategories={subCategoryIds}
-        />
+        <Suspense fallback={<FilterWrapperFallback />}>
+          <FilterWrapper
+            categoryId={category}
+            initialSelectedSubCategories={subCategoryIds}
+          />
+        </Suspense>
 
         <div className="flex flex-col w-full h-full">
           {search && (
@@ -62,9 +47,10 @@ const ProductPage = async ({searchParams}: {
             </p>
           )}
 
-          <Suspense fallback={<ProductListFallback/>}>
+          <Suspense fallback={<ProductListFallback />}>
             <ProductList
-              subCategoryIds={subCategoryIds && subCategoryIds.length > 0 ? subCategoryIds : categories?.subCategories.map((sub) => sub.id)}
+              subCategoryIds={subCategoryIds}
+              categoryId={category}
               search={search}
               max={max}
               min={min}
@@ -76,6 +62,6 @@ const ProductPage = async ({searchParams}: {
       </div>
     </div>
   );
-}
- 
+};
+
 export default ProductPage;

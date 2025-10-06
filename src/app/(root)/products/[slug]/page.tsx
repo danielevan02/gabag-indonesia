@@ -1,9 +1,15 @@
 import ProductDetailSection from "./components/product-detail-section";
 import { Metadata } from "next";
-import ProductCard from "@/components/shared/product-card";
 import { trpc } from "@/trpc/server";
+import { Suspense, cache } from "react";
+import RelatedProducts, { RelatedProductsFallback } from "./components/related-products";
 
 type tParams = Promise<{ slug: string }>;
+
+// Cache product fetching to avoid duplicate requests in same render
+const getProduct = cache(async (slug: string) => {
+  return await trpc.product.getBySlug({ slug });
+});
 
 export async function generateStaticParams() {
   try {
@@ -17,7 +23,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: {params: tParams}): Promise<Metadata> {
   try {
     const { slug }: {slug: string} = await params;
-    const product = await trpc.product.getBySlug({slug});
+    const product = await getProduct(slug);
 
     return {
       title: product?.name || "Product Details",
@@ -34,8 +40,7 @@ export async function generateMetadata({ params }: {params: tParams}): Promise<M
 }
 const ProductDetailsPage = async ({ params }: {params: tParams}) => {
   const { slug }: {slug: string} = await params;
-  const product = await trpc.product.getBySlug({slug});
-  const result = await trpc.product.getAll({subCategory: product.subCategory.name})
+  const product = await getProduct(slug);
 
   if (!product) {
     return <div>Product not found</div>;
@@ -45,20 +50,9 @@ const ProductDetailsPage = async ({ params }: {params: tParams}) => {
     <div className="flex flex-col px-5 w-full max-w-screen mt-10">
       <ProductDetailSection product={product} />
 
-      {result.products && result.products.length > 0 && (
-        <div className="mt-10">
-          <p className="text-lg lg:text-2xl">You Might Also Like</p>
-          <div className="flex gap-1 mt-5 md:gap-5 overflow-scroll no-scrollbar snap-x snap-mandatory py-px">
-            {result.products.map((product) => (
-              <ProductCard
-                {...product}
-                key={product.slug}
-                className="product-card-container"
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      <Suspense fallback={<RelatedProductsFallback />}>
+        <RelatedProducts subCategoryName={product.subCategory.name} />
+      </Suspense>
     </div>
   );
 };
