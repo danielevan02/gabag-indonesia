@@ -28,12 +28,12 @@ const ProductPage = async ({
 
   return (
     <div className="mx-3 xl:mx-10 flex flex-col items-center">
-      <Suspense fallback={<CategoryBannerFallback />}>
+      <Suspense key={`banner-${category}`} fallback={<CategoryBannerFallback />}>
         <CategoryBanner categoryId={category} />
       </Suspense>
 
       <div className="flex items-start w-full relative flex-col md:flex-row justify-between lg:gap-5 min-h-[500px]">
-        <Suspense fallback={<FilterWrapperFallback />}>
+        <Suspense key={`filter-${category}`} fallback={<FilterWrapperFallback />}>
           <FilterWrapper
             categoryId={category}
             initialSelectedSubCategories={subCategoryIds}
@@ -47,7 +47,7 @@ const ProductPage = async ({
             </p>
           )}
 
-          <Suspense fallback={<ProductListFallback />}>
+          <Suspense key={`products-${category}-${subCategoryIds?.join(',') || 'all'}-${search || ''}-${page || '1'}`} fallback={<ProductListFallback />}>
             <ProductList
               subCategoryIds={subCategoryIds}
               categoryId={category}
