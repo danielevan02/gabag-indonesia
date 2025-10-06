@@ -30,6 +30,7 @@ export const ImageGallery = ({
             height={70}
             width={70}
             className="size-full object-cover"
+            loading="lazy"
           />
           <div
             className={cn("absolute inset-0 rounded-md", item === mainImage && "bg-black/30")}

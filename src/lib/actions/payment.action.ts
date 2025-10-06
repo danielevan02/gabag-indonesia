@@ -11,12 +11,16 @@ type UpdatePaymentStatus = {
 export async function updatePaymentStatus({ orderId, paymentStatus }: UpdatePaymentStatus) {
   try {
     await prisma.$transaction(async (tx) => {
+      // Determine payment success/failure
+      const isPaymentSuccess = ["capture", "settlement"].includes(paymentStatus);
+      const isPaymentFailed = ["expire", "cancel", "deny", "failure"].includes(paymentStatus);
+
       const order = await tx.order.update({
         where: { id: orderId },
         data: {
           paymentStatus,
-          isPaid: ["capture", "settlement"].includes(paymentStatus),
-          paidAt: ["capture", "settlement"].includes(paymentStatus) ? new Date() : undefined,
+          isPaid: isPaymentSuccess,
+          paidAt: isPaymentSuccess ? new Date() : (isPaymentFailed ? null : undefined),
         },
         include: {
           orderItems: true,
