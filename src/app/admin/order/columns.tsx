@@ -1,28 +1,26 @@
 "use client";
 
-import ActionTable from "@/components/shared/table/action-table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import CreateShipmentButton from "./components/create-shipment-button";
 import { ShippingInfo } from "@/types";
 import { RouterOutputs } from "@/trpc/routers/_app";
-import { useDeleteMutation } from "@/hooks/use-delete-mutation";
+import { Eye } from "lucide-react";
+import Link from "next/link";
 
 type Order = RouterOutputs['order']['getAll'][number]
 
 const OrderActionCell = ({ orderId }: { orderId: string }) => {
-  const deleteSubCategoryMutation = useDeleteMutation({ type: "event" });
-
   return (
-    <ActionTable
-      type="order"
-      deleteMutation={deleteSubCategoryMutation}
-      id={orderId}
-      title="Delete Order"
-      desc="Are you sure you want to delete this order? This action cannot be undone"
-    />
+    <Button variant="outline" size="sm" asChild>
+      <Link href={`/admin/order/${orderId}`}>
+        <Eye className="size-4" />
+        See Details
+      </Link>
+    </Button>
   );
 };
 
