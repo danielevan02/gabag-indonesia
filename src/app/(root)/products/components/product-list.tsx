@@ -7,6 +7,7 @@ import ProductPagination from "./product-pagination";
 interface ProductListProps {
   search?: string;
   subCategoryIds?: string[];
+  categoryId?: string;
   sort?: string;
   max?: string;
   min?: string;
@@ -17,9 +18,18 @@ const ProductList = async ({
   search,
   max,
   min,
-  subCategoryIds: subCategoriesId,
+  subCategoryIds,
+  categoryId,
   page,
 }: ProductListProps) => {
+  // If no subCategoryIds provided, fetch from category
+  let subCategoriesId = subCategoryIds;
+
+  if ((!subCategoryIds || subCategoryIds.length === 0) && categoryId) {
+    const category = await trpc.category.getById({ id: categoryId });
+    subCategoriesId = category?.subCategories.map((sub) => sub.id);
+  }
+
   const result = await trpc.product.getAll({
     search,
     subCategoriesId,

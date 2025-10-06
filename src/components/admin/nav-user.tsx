@@ -27,12 +27,16 @@ import {
 } from "@/components/ui/sidebar"
 import { useSession } from "next-auth/react"
 import Link from "next/link"
-import { trpc } from "@/trpc/client"
+import { signOutUser } from "@/lib/actions/user.action"
 
 export function NavUser() {
   const { isMobile } = useSidebar()
   const { data } = useSession()
   const user = data?.user
+
+  const handleSignOut = async () => {
+    await signOutUser()
+  }
 
   return (
     <SidebarMenu>
@@ -79,7 +83,7 @@ export function NavUser() {
                 Profile
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={()=> trpc.auth.signOut.useMutation()}>
+            <DropdownMenuItem onClick={handleSignOut}>
               <LogOut />
               Log out
             </DropdownMenuItem>
