@@ -60,16 +60,71 @@ export const columns: ColumnDef<Voucher>[] = [
   },
   {
     accessorKey: "applicationType",
-    header: "Value",
+    header: "Application Type",
+  },
+  {
+    header: "Details",
+    cell: ({ row }) => {
+      const { applicationType, category, subCategory, event, products, variants } = row.original;
+
+      if (applicationType === "ALL_PRODUCTS") {
+        return <p className="text-muted-foreground">-</p>;
+      }
+
+      if (applicationType === "CATEGORY" && category) {
+        return <p>{category.name}</p>;
+      }
+
+      if (applicationType === "SUBCATEGORY" && subCategory) {
+        return <p>{subCategory.name}</p>;
+      }
+
+      if (applicationType === "EVENT" && event) {
+        return <p>{event.name}</p>;
+      }
+
+      if (applicationType === "SPECIFIC_PRODUCTS" && products && products.length > 0) {
+        return (
+          <div className="max-w-[200px]">
+            <p className="truncate" title={products.map(p => p.name).join(", ")}>
+              {products.map(p => p.name).join(", ")}
+            </p>
+          </div>
+        );
+      }
+
+      if (applicationType === "SPECIFIC_VARIANTS" && variants && variants.length > 0) {
+        return (
+          <div className="max-w-[200px]">
+            <p className="truncate" title={variants.map(v => v.name).join(", ")}>
+              {variants.map(v => v.name).join(", ")}
+            </p>
+          </div>
+        );
+      }
+
+      return <p className="text-muted-foreground">-</p>;
+    },
   },
   {
     header: "Used / Available",
     cell: ({ row }) => <p>{row.original.usedCount} / {row.original.totalLimit || "∞"}</p>
   },
   {
-    accessorKey: "createdAt",
-    header: "Created At",
-    cell: ({ row }) => <p>{format(row.original.createdAt, "EEEE, d MMMM yyyy")}</p>
+    header: "Stackable",
+    cell: ({ row }) => (
+      <div className="flex items-center">
+        {row.original.canCombine ? (
+          <span className="text-green-600 text-sm font-medium">✓ Yes</span>
+        ) : (
+          <span className="text-gray-500 text-sm">✗ No</span>
+        )}
+      </div>
+    ),
+  },
+  {
+    header: "Expire At",
+    cell: ({ row }) => <p>{format(row.original.expires, "EEEE, d MMMM yyyy")}</p>
   },
   {
     id: "actions",

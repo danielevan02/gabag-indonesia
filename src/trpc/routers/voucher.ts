@@ -694,6 +694,7 @@ export const voucherRouter = createTRPCRouter({
               discount: Math.round(discount),
               shippingDiscount: Math.round(eligibleShipping),
               totalDiscount: Math.round(totalDiscount),
+              canCombine: voucher.canCombine,
             },
           };
         }

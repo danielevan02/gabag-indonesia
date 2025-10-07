@@ -25,6 +25,7 @@ const makePaymentSchema = z.object({
   cartItem: z.array(z.any()), // CartItem type
   discountAmount: z.number().optional(),
   voucherCode: z.string().optional(),
+  voucherCodes: z.array(z.string()).optional(),
 });
 
 const finalizeOrderSchema = z.object({
@@ -37,6 +38,7 @@ const finalizeOrderSchema = z.object({
   courier: z.string().optional(),
   shippingInfo: z.any().optional(), // ShippingInfo type
   voucherCode: z.string().optional(),
+  voucherCodes: z.array(z.string()).optional(),
   discountAmount: z.number().optional(),
 });
 
@@ -255,7 +257,7 @@ export const orderRouter = createTRPCRouter({
     .input(makePaymentSchema)
     .mutation(async ({ input }) => {
       try {
-        const { email, name, phone, subTotal, userId, orderId, cartItem, shippingPrice, taxPrice, discountAmount, voucherCode } = input;
+        const { email, name, phone, subTotal, userId, orderId, cartItem, shippingPrice, taxPrice, discountAmount, voucherCode, voucherCodes } = input;
 
         if (!userId) throw new Error("You're not authenticated!");
         if (!email) throw new Error("You're not authenticated");
@@ -290,11 +292,12 @@ export const orderRouter = createTRPCRouter({
           },
         ];
 
-        // Add discount item only if voucher is applied
-        if (discountAmount && discountAmount > 0 && voucherCode) {
+        // Add discount item for multiple vouchers or single voucher
+        const activeVoucherCodes = voucherCodes && voucherCodes.length > 0 ? voucherCodes : (voucherCode ? [voucherCode] : []);
+        if (discountAmount && discountAmount > 0 && activeVoucherCodes.length > 0) {
           finalItemDetails.push({
             id: (Date.now() + 2).toString(),
-            name: `Voucher: ${voucherCode}`,
+            name: `Voucher: ${activeVoucherCodes.join(", ")}`,
             price: -discountAmount, // Negative price for discount
             quantity: 1,
           });
@@ -338,7 +341,7 @@ export const orderRouter = createTRPCRouter({
     .input(finalizeOrderSchema)
     .mutation(async ({ input }) => {
       try {
-        const { orderId, token, itemsPrice, shippingPrice, taxPrice, totalPrice, courier, shippingInfo, voucherCode, discountAmount } = input;
+        const { orderId, token, itemsPrice, shippingPrice, taxPrice, totalPrice, courier, shippingInfo, voucherCode, voucherCodes, discountAmount } = input;
 
         if (!token) {
           throw new TRPCError({
@@ -346,6 +349,9 @@ export const orderRouter = createTRPCRouter({
             message: "Your payment is not valid!",
           });
         }
+
+        // Use voucherCodes if provided, fallback to single voucherCode for backward compatibility
+        const activeVoucherCodes = voucherCodes && voucherCodes.length > 0 ? voucherCodes : (voucherCode ? [voucherCode] : []);
 
         await prisma.$transaction(async (tx) => {
           const updatedOrder = await tx.order.update({
@@ -360,7 +366,7 @@ export const orderRouter = createTRPCRouter({
               courier,
               paymentStatus: "pending",
               discountAmount: discountAmount ? BigInt(discountAmount) : 0,
-              voucherCodes: voucherCode ? [voucherCode] : [],
+              voucherCodes: activeVoucherCodes,
             },
             include: {
               orderItems: true,
@@ -399,32 +405,34 @@ export const orderRouter = createTRPCRouter({
             });
           }
 
-          // Create voucher redemption if voucher was used
-          if (voucherCode) {
-            const voucher = await tx.voucher.findUnique({
-              where: { code: voucherCode },
-            });
+          // Create voucher redemption for all vouchers used
+          if (activeVoucherCodes.length > 0) {
+            for (const code of activeVoucherCodes) {
+              const voucher = await tx.voucher.findUnique({
+                where: { code: code },
+              });
 
-            if (voucher) {
-              // Update voucher used count
-              await tx.voucher.update({
-                where: { code: voucherCode },
-                data: {
-                  usedCount: {
-                    increment: 1,
+              if (voucher) {
+                // Update voucher used count
+                await tx.voucher.update({
+                  where: { code: code },
+                  data: {
+                    usedCount: {
+                      increment: 1,
+                    },
                   },
-                },
-              });
+                });
 
-              // Create redemption record
-              await tx.redemption.create({
-                data: {
-                  voucherId: voucher.id,
-                  userId: userId || null,
-                  email: updatedOrder.user?.email || "",
-                  orderId: orderId,
-                },
-              });
+                // Create redemption record
+                await tx.redemption.create({
+                  data: {
+                    voucherId: voucher.id,
+                    userId: userId || null,
+                    email: updatedOrder.user?.email || "",
+                    orderId: orderId,
+                  },
+                });
+              }
             }
           }
 

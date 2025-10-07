@@ -157,7 +157,16 @@ const OrderDetails = ({ order }: { order: RouterOutputs['order']['getById'] }) =
             <div className="flex flex-col gap-2 py-3 border-y">
               <div className="flex justify-between items-center">
                 <p className="text-sm font-medium text-green-700">Voucher Applied</p>
-                <p className="text-xs text-green-600">{order.voucherCodes[0]}</p>
+                <p className="text-xs text-green-600">
+                  {order.voucherCodes.map((code, index) => (
+                    <>
+                      <span key={code}>{code}</span>
+                      {order.voucherCodes.length-1 !== index &&(
+                        <span>, </span>
+                      )}
+                    </>
+                  ))}
+                </p>
               </div>
               {order.discountAmount && Number(order.discountAmount) > 0 && (
                 <div className="flex justify-between items-center">
