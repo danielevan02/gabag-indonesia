@@ -49,12 +49,13 @@ const OrderForm: React.FC<OrderFormProps> = ({
   const userAddress = user?.address as Address;
   const [shipping, setShipping] = useState<{ price: number; courier: string }>();
   const [voucherCode, setVoucherCode] = useState("");
-  const [appliedVoucher, setAppliedVoucher] = useState<{
+  const [appliedVouchers, setAppliedVouchers] = useState<Array<{
     code: string;
     discount: number;
     shippingDiscount: number;
     totalDiscount: number;
-  } | null>(null);
+    canCombine: boolean;
+  }>>([]);
   const [isVoucherManuallyRemoved, setIsVoucherManuallyRemoved] = useState(false);
 
   const form = useForm({
@@ -116,7 +117,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
 
   // Prepare params for auto-apply voucher
   // Only auto-apply if user hasn't manually removed the voucher
-  const autoApplyParams = shipping?.price && !appliedVoucher && !isVoucherManuallyRemoved
+  const autoApplyParams = shipping?.price && appliedVouchers.length === 0 && !isVoucherManuallyRemoved
     ? {
         email: form.getValues("email") || user?.email || DEFAULT_EMAIL,
         userId: user?.id,
@@ -143,14 +144,15 @@ const OrderForm: React.FC<OrderFormProps> = ({
 
   // Auto-apply voucher when result is available
   useEffect(() => {
-    if (autoApplyResult?.found && autoApplyResult.voucher && !appliedVoucher) {
-      setAppliedVoucher({
+    if (autoApplyResult?.found && autoApplyResult.voucher && appliedVouchers.length === 0) {
+      setAppliedVouchers([{
         code: autoApplyResult.voucher.code,
         discount: autoApplyResult.voucher.discount,
         shippingDiscount: autoApplyResult.voucher.shippingDiscount,
         totalDiscount: autoApplyResult.voucher.totalDiscount,
-      });
-      setVoucherCode(autoApplyResult.voucher.code);
+        canCombine: autoApplyResult.voucher.canCombine || false,
+      }]);
+      setVoucherCode("");
       toast.success(
         `Voucher "${autoApplyResult.voucher.name || autoApplyResult.voucher.code}" has been automatically applied!`,
         { duration: 5000 }
@@ -168,6 +170,13 @@ const OrderForm: React.FC<OrderFormProps> = ({
 
     if (!shipping?.price) {
       toast.error("Please select shipping method first");
+      return;
+    }
+
+    // Check if voucher already applied
+    const alreadyApplied = appliedVouchers.find(v => v.code.toLowerCase() === code.trim().toLowerCase());
+    if (alreadyApplied) {
+      toast.error("This voucher is already applied");
       return;
     }
 
@@ -191,35 +200,52 @@ const OrderForm: React.FC<OrderFormProps> = ({
       });
 
       if (result.valid && result.discount !== undefined) {
-        setAppliedVoucher({
+        const newVoucher = {
           code: code.trim().toUpperCase(),
           discount: result.discount,
           shippingDiscount: result.shippingDiscount || 0,
           totalDiscount: result.totalDiscount,
-        });
+          canCombine: result.canCombine || false,
+        };
+
+        // If new voucher cannot combine, replace all vouchers
+        if (!result.canCombine) {
+          setAppliedVouchers([newVoucher]);
+          toast.success("Voucher applied successfully! (Previous vouchers removed)");
+        } else {
+          // If new voucher can combine, check if existing vouchers can combine too
+          const hasNonCombinableVoucher = appliedVouchers.some(v => !v.canCombine);
+          if (hasNonCombinableVoucher) {
+            toast.error("Cannot add stackable voucher to non-stackable voucher. Remove the current voucher first.");
+            return;
+          }
+          // Add to existing vouchers
+          setAppliedVouchers([...appliedVouchers, newVoucher]);
+          toast.success("Voucher applied successfully!");
+        }
+
+        setVoucherCode("");
         setIsVoucherManuallyRemoved(false); // Reset flag when manually applying
-        toast.success("Voucher applied successfully!");
       } else {
         toast.error(result.message || "Invalid voucher");
-        setAppliedVoucher(null);
       }
     } catch (error) {
       console.error("Voucher validation error:", error);
       toast.error("Failed to apply voucher");
-      setAppliedVoucher(null);
     }
   };
 
-  const handleRemoveVoucher = () => {
-    setAppliedVoucher(null);
-    setVoucherCode("");
-    setIsVoucherManuallyRemoved(true); // Prevent auto-apply after manual removal
+  const handleRemoveVoucher = (code: string) => {
+    setAppliedVouchers(appliedVouchers.filter(v => v.code !== code));
+    if (appliedVouchers.length === 1) {
+      setIsVoucherManuallyRemoved(true); // Prevent auto-apply after manual removal
+    }
     toast.success("Voucher removed");
   };
 
   // Calculate final price with voucher discount
-  const voucherDiscount = appliedVoucher?.totalDiscount || 0;
-  const finalPrice = totalPrice + (shipping?.price || 0) - voucherDiscount;
+  const totalVoucherDiscount = appliedVouchers.reduce((sum, v) => sum + v.totalDiscount, 0);
+  const finalPrice = totalPrice + (shipping?.price || 0) - totalVoucherDiscount;
 
   // Handler functions
   const handleSelectCourier = (courier: string, price: number) => {
@@ -254,8 +280,8 @@ const OrderForm: React.FC<OrderFormProps> = ({
         phone: data.phone,
         address: `${data.address}, ${data.village}, ${data.district}, ${data.city}, ${data.province}, ${data.postal_code}`,
       },
-      voucherCode: appliedVoucher?.code,
-      discountAmount: appliedVoucher?.totalDiscount,
+      voucherCodes: appliedVouchers.map(v => v.code),
+      discountAmount: totalVoucherDiscount,
     });
   };
 
@@ -378,7 +404,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
         onVoucherCodeChange={setVoucherCode}
         onApplyVoucher={handleApplyVoucher}
         onRemoveVoucher={handleRemoveVoucher}
-        appliedVoucher={appliedVoucher}
+        appliedVouchers={appliedVouchers}
       />
     </>
   );

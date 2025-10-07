@@ -28,6 +28,7 @@ interface ProcessPaymentParams {
     address: string;
   };
   voucherCode?: string;
+  voucherCodes?: string[];
   discountAmount?: number;
 }
 
@@ -52,6 +53,7 @@ export const useOrderPayment = ({ orderId }: UseOrderPaymentProps) => {
     cartItems,
     shippingInfo,
     voucherCode,
+    voucherCodes,
     discountAmount,
   }: ProcessPaymentParams) => {
     startTransition(async () => {
@@ -71,6 +73,7 @@ export const useOrderPayment = ({ orderId }: UseOrderPaymentProps) => {
           cartItem: cartItems,
           discountAmount,
           voucherCode,
+          voucherCodes,
         });
 
         if (res?.success && "token" in res && res.token) {
@@ -84,6 +87,7 @@ export const useOrderPayment = ({ orderId }: UseOrderPaymentProps) => {
             taxPrice,
             shippingInfo,
             voucherCode,
+            voucherCodes,
             discountAmount,
           });
 
