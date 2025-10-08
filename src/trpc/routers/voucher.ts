@@ -11,10 +11,9 @@ const voucherInputSchema = z.object({
   discountType: z.enum(["FIXED", "PERCENT"]),
   discountValue: z.number().min(0, "Discount value must be positive"),
   maxDiscount: z.number().optional(),
-  applicationType: z.enum(["ALL_PRODUCTS", "CATEGORY", "SUBCATEGORY", "EVENT", "SPECIFIC_PRODUCTS", "SPECIFIC_VARIANTS"]),
+  applicationType: z.enum(["ALL_PRODUCTS", "CATEGORY", "SUBCATEGORY", "SPECIFIC_PRODUCTS", "SPECIFIC_VARIANTS"]),
   categoryId: z.string().optional(),
   subCategoryId: z.string().optional(),
-  eventId: z.string().optional(),
   productIds: z.array(z.string()).optional(),
   variantIds: z.array(z.string()).optional(),
   maxShippingDiscount: z.number().optional(),
@@ -49,7 +48,6 @@ export const voucherRouter = createTRPCRouter({
       include: {
         category: { select: { name: true } },
         subCategory: { select: { name: true } },
-        event: { select: { name: true } },
         products: { select: { id: true, name: true } },
         variants: { select: { id: true, name: true } },
       },
@@ -65,7 +63,6 @@ export const voucherRouter = createTRPCRouter({
       include: {
         category: { select: { name: true } },
         subCategory: { select: { name: true } },
-        event: { select: { name: true } },
         products: { select: { id: true, name: true } },
         variants: { select: { id: true, name: true } },
       },
@@ -86,7 +83,6 @@ export const voucherRouter = createTRPCRouter({
           applicationType,
           categoryId,
           subCategoryId,
-          eventId,
           productIds,
           variantIds,
           maxShippingDiscount,
@@ -112,12 +108,10 @@ export const voucherRouter = createTRPCRouter({
               | "ALL_PRODUCTS"
               | "CATEGORY"
               | "SUBCATEGORY"
-              | "EVENT"
               | "SPECIFIC_PRODUCTS"
               | "SPECIFIC_VARIANTS",
             categoryId: categoryId || null,
             subCategoryId: subCategoryId || null,
-            eventId: eventId || null,
             maxShippingDiscount: maxShippingDiscount ? BigInt(maxShippingDiscount) : null,
             startDate,
             expires: expiryDate,
@@ -180,7 +174,6 @@ export const voucherRouter = createTRPCRouter({
           applicationType,
           categoryId,
           subCategoryId,
-          eventId,
           productIds,
           variantIds,
           maxShippingDiscount,
@@ -215,7 +208,7 @@ export const voucherRouter = createTRPCRouter({
               message: "Cannot change application type after voucher has been used",
             };
           }
-          if (categoryId !== undefined || subCategoryId !== undefined || eventId !== undefined || productIds || variantIds) {
+          if (categoryId !== undefined || subCategoryId !== undefined || productIds || variantIds) {
             return {
               success: false,
               message: "Cannot change voucher scope (category/product/variant) after it has been used",
@@ -259,13 +252,11 @@ export const voucherRouter = createTRPCRouter({
                 | "ALL_PRODUCTS"
                 | "CATEGORY"
                 | "SUBCATEGORY"
-                | "EVENT"
                 | "SPECIFIC_PRODUCTS"
                 | "SPECIFIC_VARIANTS",
             }),
             ...(categoryId !== undefined && { categoryId: categoryId || null }),
             ...(subCategoryId !== undefined && { subCategoryId: subCategoryId || null }),
-            ...(eventId !== undefined && { eventId: eventId || null }),
             ...(maxShippingDiscount !== undefined && {
               maxShippingDiscount: maxShippingDiscount ? BigInt(maxShippingDiscount) : null,
             }),
@@ -410,7 +401,6 @@ export const voucherRouter = createTRPCRouter({
           select: {
             id: true,
             subCategoryId: true,
-            eventId: true,
             subCategory: {
               select: {
                 categoryId: true,
@@ -426,7 +416,6 @@ export const voucherRouter = createTRPCRouter({
             ...item,
             categoryId: product?.subCategory?.categoryId,
             subCategoryId: product?.subCategoryId,
-            eventId: product?.eventId,
           };
         });
 
@@ -482,10 +471,6 @@ export const voucherRouter = createTRPCRouter({
         } else if (voucher.applicationType === "SUBCATEGORY" && voucher.subCategoryId) {
           eligibleAmount = enrichedItems
             .filter((item) => item.subCategoryId === voucher.subCategoryId)
-            .reduce((sum, item) => sum + item.price * item.qty, 0);
-        } else if (voucher.applicationType === "EVENT" && voucher.eventId) {
-          eligibleAmount = enrichedItems
-            .filter((item) => item.eventId === voucher.eventId)
             .reduce((sum, item) => sum + item.price * item.qty, 0);
         } else if (voucher.applicationType === "SPECIFIC_PRODUCTS") {
           const productIds = voucher.products.map((p) => p.id);
@@ -585,7 +570,6 @@ export const voucherRouter = createTRPCRouter({
           select: {
             id: true,
             subCategoryId: true,
-            eventId: true,
             subCategory: {
               select: {
                 categoryId: true,
@@ -601,7 +585,6 @@ export const voucherRouter = createTRPCRouter({
             ...item,
             categoryId: product?.subCategory?.categoryId,
             subCategoryId: product?.subCategoryId,
-            eventId: product?.eventId,
           };
         });
 
@@ -643,10 +626,6 @@ export const voucherRouter = createTRPCRouter({
           } else if (voucher.applicationType === "SUBCATEGORY" && voucher.subCategoryId) {
             eligibleAmount = enrichedItems
               .filter((item) => item.subCategoryId === voucher.subCategoryId)
-              .reduce((sum, item) => sum + item.price * item.qty, 0);
-          } else if (voucher.applicationType === "EVENT" && voucher.eventId) {
-            eligibleAmount = enrichedItems
-              .filter((item) => item.eventId === voucher.eventId)
               .reduce((sum, item) => sum + item.price * item.qty, 0);
           } else if (voucher.applicationType === "SPECIFIC_PRODUCTS") {
             const productIds = voucher.products.map((p) => p.id);

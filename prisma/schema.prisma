@@ -131,11 +131,9 @@ model Product {
   weight        Int
   width         Int
   createdAt     DateTime    @default(now()) @db.Timestamp(6)
-  eventId       String?     @db.Uuid
   subCategoryId String      @db.Uuid
   regularPrice  BigInt      @default(0)
   orderItems    OrderItem[]
-  event         Event?      @relation(fields: [eventId], references: [id])
   subCategory   SubCategory @relation(fields: [subCategoryId], references: [id])
   reviews       Review[]
   variants      Variant[]
@@ -143,6 +141,9 @@ model Product {
 
   // Many-to-Many relation dengan MediaFile
   images ProductMediaRelation[]
+
+  // Many-to-Many relation dengan Campaign (NEW - Campaign System)
+  campaignItems CampaignItem[]
 }
 
 // Junction table untuk Product <-> MediaFile relationship
@@ -186,7 +187,8 @@ model Variant {
   orderItems OrderItem[]
   product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  vouchers Voucher[]
+  vouchers      Voucher[]
+  campaignItems CampaignItem[] // Relation to campaign items
 }
 
 model Voucher {
@@ -214,12 +216,10 @@ model Voucher {
   // Relations untuk aplikasi voucher berdasarkan type
   categoryId    String? @db.Uuid
   subCategoryId String? @db.Uuid
-  eventId       String? @db.Uuid
 
   // Relations
   category    Category?    @relation(fields: [categoryId], references: [id])
   subCategory SubCategory? @relation(fields: [subCategoryId], references: [id])
-  event       Event?       @relation(fields: [eventId], references: [id])
   products    Product[] // Untuk SPECIFIC_PRODUCTS type
   variants    Variant[] 
   redemptions Redemption[]
@@ -238,21 +238,6 @@ model Redemption {
   voucher Voucher @relation(fields: [voucherId], references: [id])
 
   @@unique([email, voucherId, orderId]) // Satu voucher per order per user
-}
-
-model Event {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String
-  description String? // Deskripsi event
-  discount    Int? // Discount yang akan diterapkan ke semua produk di event ini
-  isActive    Boolean   @default(true)
-  startDate   DateTime? @db.Timestamp(6) // Tanggal mulai event (opsional)
-  endDate     DateTime? @db.Timestamp(6) // Tanggal berakhir event (opsional)
-  createdAt   DateTime  @default(now()) @db.Timestamp(6)
-  updatedAt   DateTime  @default(now()) @updatedAt
-
-  products Product[]
-  vouchers Voucher[] // Voucher yang spesifik untuk event ini
 }
 
 model Review {
@@ -336,7 +321,6 @@ enum VoucherApplicationType {
   ALL_PRODUCTS // Berlaku untuk semua produk
   CATEGORY // Berlaku untuk produk dalam kategori tertentu
   SUBCATEGORY // Berlaku untuk produk dalam subcategory tertentu
-  EVENT // Berlaku untuk produk dalam event tertentu
   SPECIFIC_PRODUCTS // Berlaku untuk produk tertentu saja
   SPECIFIC_VARIANTS // Berlaku untuk variant tertentu saja
 }
@@ -358,4 +342,88 @@ model Carousel {
   mobileImage    MediaFile @relation("CarouselMobileImage", fields: [mobileImageId], references: [id])
 
   @@map("carousels")
+}
+
+// ============================================
+// CAMPAIGN SYSTEM (New - Hybrid Discount)
+// ============================================
+
+model Campaign {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  description String?
+  type        CampaignType @default(FLASH_SALE)
+
+  // Default discount untuk semua produk di campaign
+  discountType    DiscountType @default(PERCENT)
+  defaultDiscount Int          @default(0) // Default discount value
+
+  // Auto scheduling
+  isActive  Boolean  @default(false) // Auto-managed by cron
+  startDate DateTime @db.Timestamp(6)
+  endDate   DateTime? @db.Timestamp(6) // Optional: NULL = permanent campaign
+
+  // Stock limit untuk seluruh campaign (optional)
+  totalStockLimit Int? // Total items yang bisa terjual
+  totalSoldCount  Int  @default(0) // Counter total terjual
+
+  // Priority - jika product ada di multiple campaigns
+  priority Int @default(0) // Higher number = higher priority
+
+  // Metadata
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  items CampaignItem[]
+
+  @@index([isActive, startDate, endDate])
+  @@index([priority])
+}
+
+// Junction table - Campaign Items (Product OR Variant)
+// Supports both: products without variants AND individual variants
+model CampaignItem {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  campaignId String @db.Uuid
+  productId  String @db.Uuid
+  variantId  String? @db.Uuid // NULL = whole product, NOT NULL = specific variant
+
+  // CUSTOM DISCOUNT per item (priority feature!)
+  customDiscount     Int?          // Override campaign default
+  customDiscountType DiscountType? // Override discount type
+
+  // Stock limit per item in this campaign (priority feature!)
+  stockLimit Int? // Limit untuk item ini (product atau variant)
+  soldCount  Int  @default(0) // Counter terjual
+
+  // Metadata
+  addedAt DateTime @default(now())
+
+  // Relations
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant  Variant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  // Unique constraint: satu campaign tidak bisa punya item yang sama 2x
+  // Either: (campaign + product) OR (campaign + product + variant)
+  @@unique([campaignId, productId, variantId])
+  @@index([campaignId, productId])
+  @@index([campaignId, variantId])
+}
+
+// Enums for Campaign System
+enum CampaignType {
+  FLASH_SALE   // Flash sale dengan stock terbatas
+  DAILY_DEALS  // Promo harian
+  PAYDAY_SALE  // Promo tanggal gajian
+  SEASONAL     // Promo musiman (12.12, Harbolnas, dll)
+  CLEARANCE    // Obral/clearance sale
+  NEW_ARRIVAL  // Promo produk baru
+}
+
+enum DiscountType {
+  PERCENT // Persentase (%)
+  FIXED   // Nominal tetap (Rupiah)
 }

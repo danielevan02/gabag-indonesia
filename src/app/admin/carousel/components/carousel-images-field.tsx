@@ -10,6 +10,7 @@ import Image from "next/image";
 import { Controller, get, type UseFormReturn, type ControllerRenderProps } from "react-hook-form";
 
 interface CarouselImageFieldProps {
+  label: string;
   form: UseFormReturn<any>;
   fieldName: string;
   allMediaFiles?: {
@@ -20,7 +21,7 @@ interface CarouselImageFieldProps {
   };
 }
 
-export const CarouselImageField = ({ form, fieldName, allMediaFiles }: CarouselImageFieldProps) => {
+export const CarouselImageField = ({ form, fieldName, allMediaFiles, label }: CarouselImageFieldProps) => {
   const isImageError = !!get(form.formState.errors, fieldName);
   const errorMessage = String(get(form.formState.errors, `${fieldName}.message`));
 
@@ -30,6 +31,7 @@ export const CarouselImageField = ({ form, fieldName, allMediaFiles }: CarouselI
       name={fieldName}
       render={({ field }) => (
         <CarouselImageSection
+          label={label}
           field={field}
           isImageError={isImageError}
           allMediaFiles={allMediaFiles}
@@ -51,19 +53,21 @@ interface VariantImageSectionProps {
     }[];
   };
   errorMessage?: string;
+  label: string
 }
 
 const CarouselImageSection = ({
   field,
   isImageError,
   allMediaFiles,
-  errorMessage
+  errorMessage,
+  label
 }: VariantImageSectionProps) => {
   const hasImage = field.value && field.value.length > 0;
 
   return (
     <div className="flex gap-2 flex-col mb-5">
-      <CarouselImageLabel isError={isImageError} />
+      <CarouselImageLabel label={label} isError={isImageError} />
       <CarouselImageContent
         hasImage={hasImage}
         imageId={field.value}
@@ -79,10 +83,10 @@ const CarouselImageSection = ({
 };
 
 // 3. Component untuk Label
-const CarouselImageLabel = ({ isError }: { isError: boolean }) => (
+const CarouselImageLabel = ({ isError, label }: { isError: boolean; label: string }) => (
   <>
     <Label className={isError ? "text-destructive" : undefined}>
-      Carousel Image
+      {label}
     </Label>
     <p className="text-xs text-neutral-600">
       NOTE: Select one image for this variant

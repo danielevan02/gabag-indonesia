@@ -26,10 +26,10 @@ export const VariantSection = ({ variants, selectedVariant, onVariantSelect }: V
   </>
 );
 
-export const VariantItem = ({ 
-  variant, 
-  isSelected, 
-  onSelect 
+export const VariantItem = ({
+  variant,
+  isSelected,
+  onSelect
 }: {
   variant: Variant;
   isSelected: boolean;
@@ -53,6 +53,13 @@ export const VariantItem = ({
       {variant.stock < 1 && (
         <div className="absolute inset-0 rounded-md bg-white/70 flex items-center justify-center p-3">
           <p className="text-center text-sm text-red-600">Out of Stock!</p>
+        </div>
+      )}
+      {variant.campaign && (
+        <div className="absolute top-1 right-1">
+          <span className="px-1.5 py-0.5 text-[10px] font-bold text-white bg-orange-600 rounded shadow-sm">
+            {variant.campaign.name}
+          </span>
         </div>
       )}
     </div>

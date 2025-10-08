@@ -22,7 +22,6 @@ export type VoucherFormType = z.infer<typeof voucherSchema>;
 interface VoucherFormProps {
   categories: { id: string; name: string }[];
   subCategories: { id: string; name: string; categoryId: string }[];
-  events: { id: string; name: string }[];
   products: { id: string; name: string }[];
   variants: { id: string; name: string; productId: string }[];
 }
@@ -30,7 +29,6 @@ interface VoucherFormProps {
 export default function VoucherForm({
   categories,
   subCategories,
-  events,
   products,
   variants,
 }: VoucherFormProps) {
@@ -95,7 +93,6 @@ export default function VoucherForm({
         if (data.maxDiscount) cleanedData.maxDiscount = data.maxDiscount;
         if (data.categoryId) cleanedData.categoryId = data.categoryId;
         if (data.subCategoryId) cleanedData.subCategoryId = data.subCategoryId;
-        if (data.eventId) cleanedData.eventId = data.eventId;
         if (selectedProducts.length > 0) cleanedData.productIds = selectedProducts;
         if (selectedVariants.length > 0) cleanedData.variantIds = selectedVariants;
         if (data.maxShippingDiscount) cleanedData.maxShippingDiscount = data.maxShippingDiscount;
@@ -266,7 +263,6 @@ export default function VoucherForm({
                     <SelectItem value="ALL_PRODUCTS">All Products (Subtotal)</SelectItem>
                     <SelectItem value="CATEGORY">Specific Category</SelectItem>
                     <SelectItem value="SUBCATEGORY">Specific Subcategory</SelectItem>
-                    <SelectItem value="EVENT">Specific Event</SelectItem>
                     <SelectItem value="SPECIFIC_PRODUCTS">Specific Products</SelectItem>
                     <SelectItem value="SPECIFIC_VARIANTS">Specific Variants</SelectItem>
                   </SelectContent>
@@ -320,33 +316,6 @@ export default function VoucherForm({
                       {subCategories.map((subCat) => (
                         <SelectItem key={subCat.id} value={subCat.id}>
                           {subCat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-
-          {applicationType === "EVENT" && (
-            <FormField
-              control={form.control}
-              name="eventId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Select Event</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="border-black">
-                        <SelectValue placeholder="Select event" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {events.map((event) => (
-                        <SelectItem key={event.id} value={event.id}>
-                          {event.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

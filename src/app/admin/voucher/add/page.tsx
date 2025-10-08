@@ -3,18 +3,13 @@ import prisma from "@/lib/prisma";
 
 export default async function AddVoucherPage() {
   // Fetch dropdown options
-  const [categories, subCategories, events, products, variants] = await Promise.all([
+  const [categories, subCategories, products, variants] = await Promise.all([
     prisma.category.findMany({
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
     prisma.subCategory.findMany({
       select: { id: true, name: true, categoryId: true },
-      orderBy: { name: "asc" },
-    }),
-    prisma.event.findMany({
-      where: { isActive: true },
-      select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
     prisma.product.findMany({
@@ -34,7 +29,6 @@ export default async function AddVoucherPage() {
       <VoucherForm
         categories={categories}
         subCategories={subCategories}
-        events={events}
         products={products}
         variants={variants}
       />

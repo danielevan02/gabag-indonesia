@@ -100,12 +100,14 @@ export default function EditCarouselForm({ carousel }: EditCarouselFormProps) {
         />
 
         <CarouselImageField
+          label="Desktop Image"
           form={form}
           fieldName="desktopImageId"
           allMediaFiles={allMediaFiles}
         />
 
         <CarouselImageField
+          label="Mobile Image"
           form={form}
           fieldName="mobileImageId"
           allMediaFiles={allMediaFiles}
