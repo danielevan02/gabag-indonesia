@@ -21,6 +21,110 @@ const calcPrice = (items: CartItem[]) => {
   };
 };
 
+// Helper function to validate and update cart prices based on active campaigns
+const validateCartPrices = async (cart: any) => {
+  const now = new Date();
+  let priceUpdated = false;
+
+  const updatedItems = await Promise.all(
+    (cart.items as CartItem[]).map(async (item) => {
+      // Fetch product with campaign info
+      const product = await prisma.product.findFirst({
+        where: { id: item.productId },
+        include: {
+          variants: {
+            where: item.variantId ? { id: item.variantId } : undefined,
+          },
+          campaignItems: {
+            where: {
+              campaign: {
+                startDate: { lte: now },
+                OR: [
+                  { endDate: { gte: now } },
+                  { endDate: null as any },
+                ],
+              },
+            },
+            include: {
+              campaign: {
+                select: {
+                  defaultDiscount: true,
+                  discountType: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!product) return item;
+
+      let validatedPrice = item.price;
+
+      // Calculate correct price
+      if (item.variantId) {
+        const variant = product.variants.find((v) => v.id === item.variantId);
+        if (!variant) return item;
+
+        const variantCampaignItem = product.campaignItems.find(
+          (ci) => ci.variantId === item.variantId
+        );
+
+        if (variantCampaignItem) {
+          const discount = variantCampaignItem.customDiscount || variantCampaignItem.campaign.defaultDiscount;
+          const discountType = variantCampaignItem.customDiscountType || variantCampaignItem.campaign.discountType;
+
+          if (discountType === "PERCENT") {
+            validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * (discount / 100));
+          } else {
+            validatedPrice = Number(variant.regularPrice) - discount;
+          }
+        } else {
+          const productCampaignItem = product.campaignItems.find((ci) => !ci.variantId);
+          if (productCampaignItem) {
+            const discount = productCampaignItem.customDiscount || productCampaignItem.campaign.defaultDiscount;
+            const discountType = productCampaignItem.customDiscountType || productCampaignItem.campaign.discountType;
+
+            if (discountType === "PERCENT") {
+              validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * (discount / 100));
+            } else {
+              validatedPrice = Number(variant.regularPrice) - discount;
+            }
+          } else {
+            validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * ((variant.discount || 0) / 100));
+          }
+        }
+      } else {
+        const productCampaignItem = product.campaignItems.find((ci) => !ci.variantId);
+
+        if (productCampaignItem) {
+          const discount = productCampaignItem.customDiscount || productCampaignItem.campaign.defaultDiscount;
+          const discountType = productCampaignItem.customDiscountType || productCampaignItem.campaign.discountType;
+
+          if (discountType === "PERCENT") {
+            validatedPrice = Number(product.regularPrice) - (Number(product.regularPrice) * (discount / 100));
+          } else {
+            validatedPrice = Number(product.regularPrice) - discount;
+          }
+        } else {
+          validatedPrice = Number(product.regularPrice) - (Number(product.regularPrice) * ((product.discount || 0) / 100));
+        }
+      }
+
+      if (Math.abs(validatedPrice - item.price) > 0.01) {
+        priceUpdated = true;
+      }
+
+      return {
+        ...item,
+        price: validatedPrice,
+      };
+    })
+  );
+
+  return { updatedItems, priceUpdated };
+};
+
 // Helper function to get cart
 export const getCartHelper = async (userId?: string) => {
   const { cookies } = await import("next/headers");
@@ -35,12 +139,26 @@ export const getCartHelper = async (userId?: string) => {
 
   if (!cart) return null;
 
+  // Validate and update prices based on active campaigns
+  const { updatedItems, priceUpdated } = await validateCartPrices(cart);
+
+  // Update cart in database if prices changed
+  if (priceUpdated) {
+    await prisma.cart.update({
+      where: { id: cart.id },
+      data: {
+        items: updatedItems,
+        ...calcPrice(updatedItems),
+      },
+    });
+  }
+
   return serializeType({
     ...cart,
-    items: cart.items as CartItem[],
-    itemsPrice: cart.itemsPrice.toString(),
-    totalPrice: cart.totalPrice.toString(),
-    taxPrice: cart.taxPrice.toString(),
+    items: updatedItems as CartItem[],
+    itemsPrice: priceUpdated ? calcPrice(updatedItems).itemsPrice.toString() : cart.itemsPrice.toString(),
+    totalPrice: priceUpdated ? calcPrice(updatedItems).totalPrice.toString() : cart.totalPrice.toString(),
+    taxPrice: priceUpdated ? calcPrice(updatedItems).taxPrice.toString() : cart.taxPrice.toString(),
     shippingPrice: cart.shippingPrice?.toString(),
     userId,
   });
@@ -72,6 +190,111 @@ export const cartRouter = createTRPCRouter({
         const session = await auth();
         const userId = session?.user?.id;
 
+        // Validate and recalculate price based on active campaigns
+        const now = new Date();
+        let validatedPrice = item.price;
+
+        // Fetch product with campaign info
+        const product = await prisma.product.findFirst({
+          where: { id: item.productId },
+          include: {
+            variants: {
+              where: item.variantId ? { id: item.variantId } : undefined,
+            },
+            campaignItems: {
+              where: {
+                campaign: {
+                  startDate: { lte: now },
+                  OR: [
+                    { endDate: { gte: now } },
+                    { endDate: null as any },
+                  ],
+                },
+              },
+              include: {
+                campaign: {
+                  select: {
+                    defaultDiscount: true,
+                    discountType: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (!product) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Product not found!",
+          });
+        }
+
+        // Calculate correct price
+        if (item.variantId) {
+          // Variant product
+          const variant = product.variants.find((v) => v.id === item.variantId);
+          if (!variant) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Variant not found!",
+            });
+          }
+
+          // Check if variant is in campaign
+          const variantCampaignItem = product.campaignItems.find(
+            (ci) => ci.variantId === item.variantId
+          );
+
+          if (variantCampaignItem) {
+            // Apply campaign discount
+            const discount = variantCampaignItem.customDiscount || variantCampaignItem.campaign.defaultDiscount;
+            const discountType = variantCampaignItem.customDiscountType || variantCampaignItem.campaign.discountType;
+
+            if (discountType === "PERCENT") {
+              validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * (discount / 100));
+            } else {
+              validatedPrice = Number(variant.regularPrice) - discount;
+            }
+          } else {
+            // Check if whole product is in campaign
+            const productCampaignItem = product.campaignItems.find((ci) => !ci.variantId);
+            if (productCampaignItem) {
+              const discount = productCampaignItem.customDiscount || productCampaignItem.campaign.defaultDiscount;
+              const discountType = productCampaignItem.customDiscountType || productCampaignItem.campaign.discountType;
+
+              if (discountType === "PERCENT") {
+                validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * (discount / 100));
+              } else {
+                validatedPrice = Number(variant.regularPrice) - discount;
+              }
+            } else {
+              // Use variant's own discount
+              validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * ((variant.discount || 0) / 100));
+            }
+          }
+        } else {
+          // Product without variant - check if in campaign
+          const productCampaignItem = product.campaignItems.find((ci) => !ci.variantId);
+
+          if (productCampaignItem) {
+            const discount = productCampaignItem.customDiscount || productCampaignItem.campaign.defaultDiscount;
+            const discountType = productCampaignItem.customDiscountType || productCampaignItem.campaign.discountType;
+
+            if (discountType === "PERCENT") {
+              validatedPrice = Number(product.regularPrice) - (Number(product.regularPrice) * (discount / 100));
+            } else {
+              validatedPrice = Number(product.regularPrice) - discount;
+            }
+          } else {
+            // Use product's own discount
+            validatedPrice = Number(product.regularPrice) - (Number(product.regularPrice) * ((product.discount || 0) / 100));
+          }
+        }
+
+        // Update item with validated price
+        const validatedItem = { ...item, price: validatedPrice };
+
         // Get sessionCartId from cookies inside getCartHelper
         const cart = await getCartHelper(userId);
 
@@ -90,21 +313,21 @@ export const cartRouter = createTRPCRouter({
             });
           }
 
-          message = `${item.name} is added to cart`;
+          message = `${validatedItem.name} is added to cart`;
           await prisma.cart.create({
             data: {
               sessionCartId,
               userId,
-              items: [item],
-              ...calcPrice([item]),
+              items: [validatedItem],
+              ...calcPrice([validatedItem]),
             },
           });
         } else {
           // Check if item already exists in cart
           const existItemInCart = cart.items.find((x) =>
-            item.variantId
-              ? x.productId === item.productId && x.variantId === item.variantId
-              : x.productId === item.productId && x.variantId == null
+            validatedItem.variantId
+              ? x.productId === validatedItem.productId && x.variantId === validatedItem.variantId
+              : x.productId === validatedItem.productId && x.variantId == null
           );
 
           if (existItemInCart) {
@@ -127,7 +350,7 @@ export const cartRouter = createTRPCRouter({
             }
 
             // Validate stock
-            if (stock && existItemInCart.qty + item.qty > stock) {
+            if (stock && existItemInCart.qty + validatedItem.qty > stock) {
               throw new TRPCError({
                 code: "BAD_REQUEST",
                 message: "Not enough stock!",
@@ -135,10 +358,12 @@ export const cartRouter = createTRPCRouter({
             }
 
             message = `${existItemInCart.name} quantity is updated`;
-            existItemInCart.qty += item.qty;
+            existItemInCart.qty += validatedItem.qty;
+            // Update price to latest campaign price
+            existItemInCart.price = validatedItem.price;
           } else {
-            message = `${item.name} is added to cart`;
-            cart.items.push(item);
+            message = `${validatedItem.name} is added to cart`;
+            cart.items.push(validatedItem);
           }
 
           // Update cart

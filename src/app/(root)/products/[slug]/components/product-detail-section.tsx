@@ -100,7 +100,14 @@ const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
         <h2 className="uppercase text-foreground/40 text-sm font-semibold">
           {product?.subCategory?.name}
         </h2>
-        <h1 className="text-xl font-medium mb-3 lg:mb-5">{product?.name}</h1>
+        <div className="flex items-center gap-2 mb-3 lg:mb-5">
+          <h1 className="text-xl font-medium">{product?.name}</h1>
+          {(variant?.campaign || product?.campaign) && (
+            <span className="px-2 py-0.5 text-xs font-semibold text-white bg-orange-600 rounded">
+              {variant?.campaign?.name || product.campaign?.name}
+            </span>
+          )}
+        </div>
 
         <PriceTag
           regularPrice={product.regularPrice}
@@ -108,6 +115,7 @@ const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
           discount={variant?.discount || product.discount || 0}
           variant={variant}
           hasVariant={product.hasVariant!}
+          campaign={product.campaign || undefined}
         />
 
         {/* Variants Section */}

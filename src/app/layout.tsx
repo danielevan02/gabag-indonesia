@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 const outift = Outfit({
   subsets: ['latin'],
-  weight: ['200', '400', '500', '600', '700'],
+  weight: ['200', '400', '500', '600', '700', '900'],
   display: 'swap',
   preload: true,
 })

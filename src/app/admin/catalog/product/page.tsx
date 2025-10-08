@@ -4,7 +4,7 @@ import { trpc } from "@/trpc/server";
 import ProductDataTableWrapper from "./components/product-data-table-wrapper";
 
 export default async function AdminProductPage() {
-  const { products } = await trpc.product.getAll({});
+  const productData = await trpc.product.getAll({});
 
   return (
     <div className="form-page">
@@ -16,7 +16,7 @@ export default async function AdminProductPage() {
       </div>
 
       <div className='overflow-hidden flex flex-col flex-1'>
-        <ProductDataTableWrapper products={products} />
+        <ProductDataTableWrapper products={productData.products} />
       </div>
     </div>
   );

@@ -137,7 +137,7 @@
 }
 
 .nav-container {
-  @apply sticky flex flex-col items-center justify-between w-full top-0 left-0 bg-background z-50
+  @apply sticky flex flex-col items-center justify-between w-screen max-w-full top-0 left-0 bg-background z-50
 }
 
 .image-list-container {
@@ -170,4 +170,8 @@
 
 .product-card-container {
   @apply min-w-56 max-w-56 md:min-w-80 md:max-w-80 lg:min-w-96 lg:max-w-96 snap-start
+}
+
+.count-down {
+  @apply flex flex-col items-center uppercase text-3xl font-extrabold min-w-16
 }

@@ -1,7 +1,7 @@
 import { trpc } from "@/trpc/client";
 import { toast } from "sonner";
 
-type DeleteType = "product" | "category" | "subCategory" | "event" | "voucher" | "order" | "carousel";
+type DeleteType = "product" | "category" | "subCategory" | "voucher" | "order" | "carousel" | "campaign";
 
 interface UseDeleteMutationProps {
   type: DeleteType;
@@ -66,22 +66,6 @@ export const useDeleteMutation = ({ type, onSuccess }: UseDeleteMutationProps) =
       },
     }),
 
-    event: trpc.event.delete.useMutation({
-      onSuccess: (data) => {
-        if (data.success) {
-          toast.success(data.message);
-          utils.event.getAll.invalidate();
-          onSuccess?.();
-        } else {
-          toast.error(data.message);
-        }
-      },
-      onError: (error) => {
-        console.error(error);
-        toast.error("Failed to delete event");
-      },
-    }),
-
     voucher: trpc.voucher.delete.useMutation({
       onSuccess: (data) => {
         if (data.success) {
@@ -128,7 +112,23 @@ export const useDeleteMutation = ({ type, onSuccess }: UseDeleteMutationProps) =
         console.error(error);
         toast.error("Failed to delete carousel");
       },
-    })
+    }),
+
+    campaign: trpc.campaign.delete.useMutation({
+      onSuccess: (data) => {
+        if (data.success) {
+          toast.success(data.message);
+          utils.campaign.getAll.invalidate();
+          onSuccess?.();
+        } else {
+          toast.error(data.message);
+        }
+      },
+      onError: (error) => {
+        console.error(error);
+        toast.error("Failed to delete campaign");
+      },
+    }),
   };
 
   return mutations[type];
@@ -200,26 +200,11 @@ export const useDeleteManyMutation = ({ type, onSuccess }: UseDeleteManyMutation
       },
     }),
 
-    event: trpc.event.deleteMany.useMutation({
-      onSuccess: (data) => {
-        if (data.success) {
-          toast.success(data.message);
-          utils.event.getAll.invalidate();
-          onSuccess?.();
-        } else {
-          toast.error(data.message);
-        }
-      },
-      onError: (error) => {
-        console.error(error);
-        toast.error("Failed to delete events");
-      },
-    }),
     order: trpc.order.deleteMany.useMutation({
       onSuccess: (data) => {
         if (data.success) {
           toast.success(data.message);
-          utils.event.getAll.invalidate();
+          utils.order.getAll.invalidate();
           onSuccess?.();
         } else {
           toast.error(data.message);
@@ -234,7 +219,7 @@ export const useDeleteManyMutation = ({ type, onSuccess }: UseDeleteManyMutation
       onSuccess: (data) => {
         if (data.success) {
           toast.success(data.message);
-          utils.event.getAll.invalidate();
+          utils.carousel.getAll.invalidate();
           onSuccess?.();
         } else {
           toast.error(data.message);
@@ -244,7 +229,23 @@ export const useDeleteManyMutation = ({ type, onSuccess }: UseDeleteManyMutation
         console.error(error);
         toast.error("Failed to delete carousels");
       },
-    })
+    }),
+
+    campaign: trpc.campaign.delete.useMutation({
+      onSuccess: (data) => {
+        if (data.success) {
+          toast.success(data.message);
+          utils.campaign.getAll.invalidate();
+          onSuccess?.();
+        } else {
+          toast.error(data.message);
+        }
+      },
+      onError: (error) => {
+        console.error(error);
+        toast.error("Failed to delete campaigns");
+      },
+    }),
   };
 
   return mutations[type];

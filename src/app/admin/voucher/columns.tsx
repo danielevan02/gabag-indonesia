@@ -63,47 +63,19 @@ export const columns: ColumnDef<Voucher>[] = [
     header: "Application Type",
   },
   {
-    header: "Details",
+    header: "Scope",
     cell: ({ row }) => {
-      const { applicationType, category, subCategory, event, products, variants } = row.original;
+      const { applicationType } = row.original;
 
-      if (applicationType === "ALL_PRODUCTS") {
-        return <p className="text-muted-foreground">-</p>;
-      }
+      const scopeLabels: Record<string, string> = {
+        "ALL_PRODUCTS": "All Products",
+        "CATEGORY": "Category-based",
+        "SUBCATEGORY": "Subcategory-based",
+        "SPECIFIC_PRODUCTS": "Specific Products",
+        "SPECIFIC_VARIANTS": "Specific Variants",
+      };
 
-      if (applicationType === "CATEGORY" && category) {
-        return <p>{category.name}</p>;
-      }
-
-      if (applicationType === "SUBCATEGORY" && subCategory) {
-        return <p>{subCategory.name}</p>;
-      }
-
-      if (applicationType === "EVENT" && event) {
-        return <p>{event.name}</p>;
-      }
-
-      if (applicationType === "SPECIFIC_PRODUCTS" && products && products.length > 0) {
-        return (
-          <div className="max-w-[200px]">
-            <p className="truncate" title={products.map(p => p.name).join(", ")}>
-              {products.map(p => p.name).join(", ")}
-            </p>
-          </div>
-        );
-      }
-
-      if (applicationType === "SPECIFIC_VARIANTS" && variants && variants.length > 0) {
-        return (
-          <div className="max-w-[200px]">
-            <p className="truncate" title={variants.map(v => v.name).join(", ")}>
-              {variants.map(v => v.name).join(", ")}
-            </p>
-          </div>
-        );
-      }
-
-      return <p className="text-muted-foreground">-</p>;
+      return <p>{scopeLabels[applicationType] || applicationType}</p>;
     },
   },
   {

@@ -6,14 +6,62 @@ interface PriceTagProps {
   discount?: number;
   variant?: Variant;
   hasVariant: boolean;
+  campaign?: {
+    name: string;
+    type: string;
+    discount: number;
+    discountType: "PERCENT" | "FIXED";
+  };
 }
 
-export const PriceTag = ({ price, regularPrice, discount, variant, hasVariant }: PriceTagProps) => {
+export const PriceTag = ({ price, regularPrice, discount, variant, hasVariant, campaign }: PriceTagProps) => {
   const displayPrice = variant ? variant.price : price;
   const displayRegularPrice = variant
     ? variant.regularPrice
     : regularPrice === 0 ? null : regularPrice;
-  const hasDiscount = discount != null && discount > 0;
+
+  // Calculate discount percentage to display
+  let displayDiscount = 0;
+
+  if (variant) {
+    // Variant is selected
+    if (variant.campaign) {
+      // Variant has campaign
+      const campaign = variant.campaign;
+
+      if (campaign.discountType === "PERCENT") {
+        // Campaign discount is PERCENT - use directly
+        displayDiscount = campaign.discount;
+      } else {
+        // Campaign discount is FIXED - calculate percentage
+        if (variant.regularPrice > 0) {
+          displayDiscount = Math.round((campaign.discount / variant.regularPrice) * 100);
+        }
+      }
+    } else if (variant.discount) {
+      // No campaign, use variant's own discount
+      displayDiscount = variant.discount;
+    }
+  } else {
+    // No variant selected - check for product campaign first
+    if (campaign) {
+      // Product has campaign
+      if (campaign.discountType === "PERCENT") {
+        // Campaign discount is PERCENT - use directly
+        displayDiscount = campaign.discount;
+      } else {
+        // Campaign discount is FIXED - calculate percentage
+        if (regularPrice && regularPrice > 0) {
+          displayDiscount = Math.round((campaign.discount / regularPrice) * 100);
+        }
+      }
+    } else {
+      // No campaign, use product discount
+      displayDiscount = discount || 0;
+    }
+  }
+
+  const hasDiscount = displayDiscount > 0;
 
   if (!hasDiscount) {
     return (
@@ -37,7 +85,7 @@ export const PriceTag = ({ price, regularPrice, discount, variant, hasVariant }:
         </p>
       )}
 
-      <p className="text-green-700 font-medium text-sm md:text-base">{discount}% off</p>
+      <p className="text-green-700 font-medium text-sm md:text-base">{displayDiscount}% off</p>
     </div>
   );
 };
