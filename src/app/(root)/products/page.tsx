@@ -10,6 +10,10 @@ export const metadata: Metadata = {
     "Discover GabaG's complete product collection, including ASI cooler bags, multifunctional bags, ice gel packs, and breastfeeding accessories. Get the best deals now!",
 };
 
+// Revalidate every 1 minute to sync with campaign updates
+// This ensures campaign prices update quickly when campaigns activate
+export const revalidate = 60;
+
 const ProductPage = async ({
   searchParams,
 }: {

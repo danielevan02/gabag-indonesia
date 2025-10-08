@@ -6,6 +6,10 @@ import RelatedProducts, { RelatedProductsFallback } from "./components/related-p
 
 type tParams = Promise<{ slug: string }>;
 
+// Revalidate every 1 minute to sync with campaign updates
+// This ensures campaign prices update quickly when campaigns activate
+export const revalidate = 60;
+
 // Cache product fetching to avoid duplicate requests in same render
 const getProduct = cache(async (slug: string) => {
   return await trpc.product.getBySlug({ slug });

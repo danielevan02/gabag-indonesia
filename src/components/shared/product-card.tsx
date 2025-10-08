@@ -14,9 +14,12 @@ interface ProductCardProps {
   subCategory: {
     name: string;
   };
-  event?: {
+  campaign?: {
     name: string;
-  };
+    type: string;
+    discount: number;
+    discountType: "PERCENT" | "FIXED";
+  } | null;
   variants?: {
     price: number;
     regularPrice: number
@@ -32,6 +35,12 @@ interface PriceTagProps {
     regularPrice: number;
   }[];
   discount?: number;
+  campaign?: {
+    name: string;
+    type: string;
+    discount: number;
+    discountType: "PERCENT" | "FIXED";
+  } | null;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -44,7 +53,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   price,
   slug,
   subCategory,
-  event,
+  campaign,
   className,
 }) => {
   return (
@@ -56,7 +65,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         className
       )}
     >
-      <EventBadge event={event} />
+      {campaign && <CampaignBadge campaign={campaign} />}
 
       {/* Image Container */}
       <div className="product-card-image-container">
@@ -85,6 +94,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           hasVariant={hasVariant}
           variants={variants}
           discount={discount}
+          campaign={campaign}
         />
       </div>
     </Link>
@@ -105,26 +115,111 @@ const formatPrice = (price: number): string => {
 };
 
 // Component for displaying discount badge
-const DiscountBadge: React.FC<{ discount?: number }> = ({ discount }) => {
-  if (!discount || discount === 0) {
+const DiscountBadge: React.FC<{
+  discount?: number;
+  campaign?: {
+    discount: number;
+    discountType: "PERCENT" | "FIXED";
+  } | null;
+  regularPrice: number;
+  hasVariant: boolean;
+  variants?: {
+    price: number;
+    regularPrice: number;
+  }[];
+}> = ({ discount, campaign, regularPrice, hasVariant, variants }) => {
+  let displayDiscount = 0;
+
+  if (hasVariant && variants && variants.length > 0) {
+    // Product has variants - find the biggest discount
+    const discounts: number[] = [];
+
+    // 1. Product discount (if exists)
+    if (discount && discount > 0) {
+      discounts.push(discount);
+    }
+
+    // 2. All variant discounts
+    variants.forEach((variant) => {
+      if (variant.regularPrice > 0 && variant.price >= 0) {
+        const variantDiscountPercent = Math.round(
+          ((variant.regularPrice - variant.price) / variant.regularPrice) * 100
+        );
+        if (variantDiscountPercent > 0 && isFinite(variantDiscountPercent)) {
+          discounts.push(variantDiscountPercent);
+        }
+      }
+    });
+
+    // 3. Campaign discount (if exists)
+    if (campaign && campaign.discount > 0) {
+      let campaignDiscountPercent = 0;
+      if (campaign.discountType === "PERCENT") {
+        campaignDiscountPercent = campaign.discount;
+      } else {
+        // FIXED: calculate percentage from fixed amount
+        if (regularPrice > 0) {
+          campaignDiscountPercent = Math.round((campaign.discount / regularPrice) * 100);
+        }
+      }
+      if (campaignDiscountPercent > 0 && isFinite(campaignDiscountPercent)) {
+        discounts.push(campaignDiscountPercent);
+      }
+    }
+
+    // Get the biggest discount
+    displayDiscount = discounts.length > 0 ? Math.max(...discounts) : 0;
+  } else {
+    // Product without variants - simple logic
+    if (campaign && campaign.discount > 0) {
+      // Campaign discount
+      if (campaign.discountType === "PERCENT") {
+        displayDiscount = campaign.discount;
+      } else {
+        if (regularPrice > 0) {
+          displayDiscount = Math.round((campaign.discount / regularPrice) * 100);
+        }
+      }
+    } else if (discount && discount > 0) {
+      // Product discount
+      displayDiscount = discount;
+    }
+  }
+
+  if (!displayDiscount || displayDiscount === 0) {
     return <div className="h-6" />;
   }
 
   return (
     <div className="bg-red-600 text-white py-px text-xs font-bold relative min-w-9 w-min my-1 flex justify-center">
-      {discount}%
+      {displayDiscount}%
     </div>
   );
 };
 
-// Component for displaying event badge
-const EventBadge = ({ event }: { event?: { name: string } }) => {
-  if (!event?.name) return null;
-
+// Component for displaying campaign badge
+const CampaignBadge = ({ campaign }: { campaign: { name: string; type: string; discount: number; discountType: "PERCENT" | "FIXED" } }) => {
+  const getCampaignColor = (type: string) => {
+    switch (type) {
+      case "FLASH_SALE":
+        return "bg-orange-600";
+      case "PAYDAY_SALE":
+        return "bg-green-600";
+      case "SEASONAL":
+        return "bg-purple-600";
+      default:
+        return "bg-red-600";
+    }
+  };
   return (
-    <p className="absolute bg-red-700 top-3 px-1 py-1 capitalize right-0 z-10 text-white text-sm font-bold">
-      {event.name}
-    </p>
+    <div className="absolute top-3 right-0 z-10 flex flex-col items-end gap-1">
+      <p className={cn(
+        "px-2 py-1 text-white text-xs font-bold uppercase",
+        getCampaignColor(campaign.type)
+      )}>
+        {campaign.name}
+      </p>
+    </div>
   );
 };
 
@@ -188,10 +283,17 @@ const PriceTag: React.FC<PriceTagProps> = ({
   hasVariant,
   variants,
   discount,
+  campaign,
 }) => {
   return (
     <div>
-      <DiscountBadge discount={discount} />
+      <DiscountBadge
+        discount={discount}
+        campaign={campaign}
+        regularPrice={regularPrice}
+        hasVariant={hasVariant}
+        variants={variants}
+      />
       {hasVariant && variants ? (
         <VariantPricing variants={variants} />
       ) : (

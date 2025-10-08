@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/trpc/server";
 
 export const BreastPumpSection = async () => {
-  const { products } = await trpc.product.getAll({ subCategory: "Breast Pump" });
+  const productData = await trpc.product.getAll({ subCategory: "Breast Pump" });
   return (
     <section>
       <div className="flex flex-col w-full md:w-[460px] mx-auto mb-5 mt-10 gap-2">
@@ -24,7 +24,7 @@ export const BreastPumpSection = async () => {
       </div>
 
       <div className="flex gap-1 mt-5 md:gap-5 overflow-scroll no-scrollbar py-px snap-x snap-mandatory">
-        {products.map((product) => (
+        {productData.products.map((product) => (
           <ProductCard key={product.slug} {...product} className="product-card-container" />
         ))}
       </div>

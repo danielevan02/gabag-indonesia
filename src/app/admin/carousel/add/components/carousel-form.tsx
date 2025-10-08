@@ -104,9 +104,9 @@ export default function CarouselForm() {
           </div>
         </div>
 
-        <CarouselImageField form={form} fieldName="desktopImageId" allMediaFiles={allMediaFiles} />
+        <CarouselImageField label="Desktop Image" form={form} fieldName="desktopImageId" allMediaFiles={allMediaFiles} />
 
-        <CarouselImageField form={form} fieldName="mobileImageId" allMediaFiles={allMediaFiles} />
+        <CarouselImageField label="Mobile Image" form={form} fieldName="mobileImageId" allMediaFiles={allMediaFiles} />
 
         <div className="grid grid-cols-2 gap-4">
           <FormInput

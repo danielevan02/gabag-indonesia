@@ -166,11 +166,6 @@ export const navLink = {
         icon: BookImage,
       },
       {
-        title: "Events",
-        url: "/admin/event",
-        icon: Calendar
-      },
-      {
         title: "Voucher",
         url: "/admin/voucher",
         icon: TicketPercent
@@ -184,6 +179,11 @@ export const navLink = {
         title: "Carousel",
         url: "/admin/carousel",
         icon: Images
+      },
+      {
+        title: "Campaign",
+        url: "/admin/campaign",
+        icon: Calendar
       }
     ],
   }

@@ -110,6 +110,7 @@ export const productRouter = createTRPCRouter({
       }),
     )
     .query(async ({ input }) => {
+      const now = new Date();
       const limit = input.limit || 12;
       const skip = ((input.page || 1) - 1) * limit;
       const where = buildProductFilters(input);
@@ -140,12 +141,34 @@ export const productRouter = createTRPCRouter({
                 name: true,
               },
             },
-            event: {
-              select: {
-                name: true,
+            variants: true,
+            campaignItems: {
+              where: {
+                campaign: {
+                  startDate: { lte: now },
+                  OR: [
+                    { endDate: { gte: now } },
+                    { endDate: null as any },
+                  ],
+                },
+              },
+              include: {
+                campaign: {
+                  select: {
+                    id: true,
+                    name: true,
+                    type: true,
+                    discountType: true,
+                    defaultDiscount: true,
+                  },
+                },
+                variant: {
+                  select: {
+                    id: true,
+                  },
+                },
               },
             },
-            variants: true
           },
           orderBy: {
             createdAt: 'desc'
@@ -159,15 +182,67 @@ export const productRouter = createTRPCRouter({
       const convertedData = serializeType(data);
 
       return {
-        products: convertedData.map((product) => ({
-          ...product,
-          images: product.images[0].mediaFile.secure_url,
-          price: product.regularPrice - product.regularPrice * ((product.discount??0) / 100),
-          variants: product.variants.map((variant) => ({
-            ...variant,
-            price: variant.regularPrice - variant.regularPrice * ((variant.discount ?? 0) / 100),
-          })),
-        })),
+        products: convertedData.map((product) => {
+          // Check if product (not variant-specific) is in campaign
+          const productCampaignItem = product.campaignItems.find((item: any) => !item.variantId);
+
+          // If no product-level campaign, check if any variant is in campaign
+          const variantCampaignItem = !productCampaignItem ? product.campaignItems.find((item: any) => item.variantId) : null;
+
+          // Use product campaign if exists, otherwise use variant campaign for display
+          const campaignItemForDisplay = productCampaignItem || variantCampaignItem;
+
+          const productCampaign = campaignItemForDisplay ? {
+            name: campaignItemForDisplay.campaign.name,
+            type: campaignItemForDisplay.campaign.type,
+            discount: campaignItemForDisplay.customDiscount || campaignItemForDisplay.campaign.defaultDiscount,
+            discountType: campaignItemForDisplay.customDiscountType || campaignItemForDisplay.campaign.discountType,
+          } : null;
+
+          // Calculate product price (with campaign if applicable)
+          // Only apply campaign discount to product price if it's a product-level campaign (not variant-specific)
+          let productPrice = calculateDiscountedPrice(product.regularPrice, product.discount);
+          if (productCampaignItem) {
+            if (productCampaign!.discountType === "PERCENT") {
+              productPrice = product.regularPrice - (product.regularPrice * (productCampaign!.discount / 100));
+            } else {
+              productPrice = product.regularPrice - productCampaign!.discount;
+            }
+          }
+
+          // Map variants with campaign info
+          const variantsWithCampaign = product.variants.map((variant: any) => {
+            // Find if this variant is in campaign
+            const variantCampaignItem = product.campaignItems.find((item: any) => item.variantId === variant.id);
+
+            let price = calculateDiscountedPrice(variant.regularPrice, variant.discount);
+
+            if (variantCampaignItem) {
+              // Apply campaign discount
+              const campaignDiscount = variantCampaignItem.customDiscount || variantCampaignItem.campaign.defaultDiscount;
+              const campaignDiscountType = variantCampaignItem.customDiscountType || variantCampaignItem.campaign.discountType;
+
+              if (campaignDiscountType === "PERCENT") {
+                price = variant.regularPrice - (variant.regularPrice * (campaignDiscount / 100));
+              } else {
+                price = variant.regularPrice - campaignDiscount;
+              }
+            }
+
+            return {
+              ...variant,
+              price,
+            };
+          });
+
+          return {
+            ...product,
+            images: product.images[0].mediaFile.secure_url,
+            price: productPrice,
+            variants: variantsWithCampaign,
+            campaign: productCampaign,
+          };
+        }),
         totalCount,
         currentPage: input.page || 1,
         totalPages: Math.ceil(totalCount / limit)
@@ -228,6 +303,8 @@ export const productRouter = createTRPCRouter({
 
   // Get product by slug
   getBySlug: baseProcedure.input(z.object({ slug: z.string() })).query(async ({ input }) => {
+    const now = new Date();
+
     const data = await prisma.product.findFirst({
       where: { slug: input.slug },
       include: {
@@ -259,6 +336,33 @@ export const productRouter = createTRPCRouter({
             },
           },
         },
+        campaignItems: {
+          where: {
+            campaign: {
+              startDate: { lte: now },
+              OR: [
+                { endDate: { gte: now } },
+                { endDate: null as any },
+              ],
+            },
+          },
+          include: {
+            campaign: {
+              select: {
+                id: true,
+                name: true,
+                type: true,
+                discountType: true,
+                defaultDiscount: true,
+              },
+            },
+            variant: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -270,14 +374,74 @@ export const productRouter = createTRPCRouter({
     }
 
     const convertedData = serializeType(data);
+
+    // Check if product (not variant-specific) is in campaign
+    const productCampaignItem = convertedData.campaignItems.find((item: any) => !item.variantId);
+
+    // If no product-level campaign, check if any variant is in campaign
+    const variantCampaignItem = !productCampaignItem ? convertedData.campaignItems.find((item: any) => item.variantId) : null;
+
+    // Use product campaign if exists, otherwise use variant campaign for display
+    const campaignItemForDisplay = productCampaignItem || variantCampaignItem;
+
+    const productCampaign = campaignItemForDisplay ? {
+      name: campaignItemForDisplay.campaign.name,
+      type: campaignItemForDisplay.campaign.type,
+      discount: campaignItemForDisplay.customDiscount || campaignItemForDisplay.campaign.defaultDiscount,
+      discountType: campaignItemForDisplay.customDiscountType || campaignItemForDisplay.campaign.discountType,
+    } : null;
+
+    // Map variants with campaign info
+    const variantsWithCampaign = convertedData.variants.map((variant: any) => {
+      // Find if this variant is in campaign
+      const variantCampaignItem = convertedData.campaignItems.find((item: any) => item.variantId === variant.id);
+
+      let price = calculateDiscountedPrice(variant.regularPrice, variant.discount);
+      let campaign = null;
+
+      if (variantCampaignItem) {
+        // Apply campaign discount
+        const campaignDiscount = variantCampaignItem.customDiscount || variantCampaignItem.campaign.defaultDiscount;
+        const campaignDiscountType = variantCampaignItem.customDiscountType || variantCampaignItem.campaign.discountType;
+
+        if (campaignDiscountType === "PERCENT") {
+          price = variant.regularPrice - (variant.regularPrice * (campaignDiscount / 100));
+        } else {
+          price = variant.regularPrice - campaignDiscount;
+        }
+
+        campaign = {
+          name: variantCampaignItem.campaign.name,
+          type: variantCampaignItem.campaign.type,
+          discount: campaignDiscount,
+          discountType: campaignDiscountType,
+        };
+      }
+
+      return {
+        ...variant,
+        price,
+        campaign,
+      };
+    });
+
+    // Calculate product price (with campaign if applicable)
+    // Only apply campaign discount to product price if it's a product-level campaign (not variant-specific)
+    let productPrice = calculateDiscountedPrice(convertedData.regularPrice, convertedData.discount);
+    if (productCampaignItem) {
+      if (productCampaign!.discountType === "PERCENT") {
+        productPrice = convertedData.regularPrice - (convertedData.regularPrice * (productCampaign!.discount / 100));
+      } else {
+        productPrice = convertedData.regularPrice - productCampaign!.discount;
+      }
+    }
+
     return {
       ...convertedData,
-      images: convertedData.images.map((image) => image.mediaFile.secure_url),
-      variants: convertedData.variants.map((variant) => ({
-        ...variant,
-        price: calculateDiscountedPrice(variant.regularPrice, variant.discount),
-      })),
-      price: calculateDiscountedPrice(convertedData.regularPrice, convertedData.discount),
+      images: convertedData.images.map((image: any) => image.mediaFile.secure_url),
+      variants: variantsWithCampaign,
+      price: productPrice,
+      campaign: productCampaign,
     };
   }),
 
@@ -313,59 +477,6 @@ export const productRouter = createTRPCRouter({
     }));
   }),
 
-  // Get flash sale products
-  getFlashSale: baseProcedure.query(async () => {
-    const data = await prisma.product.findMany({
-      where: {
-        eventId: "544caa89-a63d-49b3-87c1-39d805daa0f3",
-      },
-      select: {
-        regularPrice: true,
-        discount: true,
-        name: true,
-        slug: true,
-        hasVariant: true,
-        images: {
-          take: 1,
-          select: {
-            mediaFile: {
-              select: {
-                secure_url: true,
-              },
-            },
-          },
-        },
-        subCategory: {
-          select: {
-            name: true,
-          },
-        },
-        event: {
-          select: {
-            name: true,
-          },
-        },
-        variants: {
-          select: {
-            discount: true,
-            regularPrice: true
-          }
-        }
-      },
-    });
-
-    const serializeData = serializeType(data);
-    
-    return serializeData.map((product) => ({
-      ...product,
-      images: product.images[0].mediaFile.secure_url,
-      price: calculateDiscountedPrice(product.regularPrice, product.discount),
-      variants: product.variants.map((variant) => ({
-        ...variant,
-        price: calculateDiscountedPrice(variant.regularPrice, variant.discount),
-      })),
-    }));
-  }),
   // Get product by ID with all subcategories (Admin only)
   getByIdWithSubCategories: adminProcedure
     .input(z.object({ id: z.string() }))

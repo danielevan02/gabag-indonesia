@@ -109,12 +109,6 @@ export const productSchema = z.object({
   width: z.coerce.number().min(1, "Please input the width"),
 });
 
-export const eventSchema = z.object({
-  name: z.string().min(1, "Please enter the name of event"),
-  discount: z.coerce.number().min(0).max(100).optional(),
-  products: z.array(z.string()).optional(),
-});
-
 export const mediaFileSchema = z.object({
   thumbnail_url: z.string().url("Must be a valid URL"),
   public_id: z.string().min(1, "Public ID is required"),
@@ -197,12 +191,11 @@ export const voucherSchema = z.object({
   maxDiscount: z.coerce.number().optional(), // For PERCENT type
 
   // Application scope
-  applicationType: z.enum(["ALL_PRODUCTS", "CATEGORY", "SUBCATEGORY", "EVENT", "SPECIFIC_PRODUCTS", "SPECIFIC_VARIANTS"], {
+  applicationType: z.enum(["ALL_PRODUCTS", "CATEGORY", "SUBCATEGORY", "SPECIFIC_PRODUCTS", "SPECIFIC_VARIANTS"], {
     required_error: "Please select application type",
   }),
   categoryId: z.string().optional(),
   subCategoryId: z.string().optional(),
-  eventId: z.string().optional(),
   productIds: z.array(z.string()).optional(),
   variantIds: z.array(z.string()).optional(),
 
@@ -263,19 +256,6 @@ export const voucherSchema = z.object({
   )
   .refine(
     (data) => {
-      // If EVENT is selected, eventId must be provided
-      if (data.applicationType === "EVENT") {
-        return !!data.eventId;
-      }
-      return true;
-    },
-    {
-      message: "Please select an event",
-      path: ["eventId"],
-    }
-  )
-  .refine(
-    (data) => {
       // If SPECIFIC_PRODUCTS is selected, productIds must be provided
       if (data.applicationType === "SPECIFIC_PRODUCTS") {
         return data.productIds && data.productIds.length > 0;
@@ -300,3 +280,39 @@ export const voucherSchema = z.object({
       path: ["variantIds"],
     }
   );
+
+export const campaignSchema = z.object({
+  name: z.string().min(1, "Campaign name is required"),
+  description: z.string().optional(),
+  type: z.enum(["FLASH_SALE", "DAILY_DEALS", "PAYDAY_SALE", "SEASONAL", "CLEARANCE", "NEW_ARRIVAL"]),
+  discountType: z.enum(["PERCENT", "FIXED"]),
+  defaultDiscount: z.coerce.number().min(0, "Discount must be positive"),
+  startDate: z.date({ required_error: "Start date is required" }),
+  endDate: z.date().optional(), // Optional: for permanent campaigns
+  totalStockLimit: z.coerce.number().optional(),
+  priority: z.coerce.number().default(0),
+  items: z.array(z.object({
+    productId: z.string(),
+    variantId: z.string().optional(),
+    customDiscount: z.coerce.number().optional(),
+    customDiscountType: z.enum(["PERCENT", "FIXED"]).optional(),
+    stockLimit: z.coerce.number().optional(),
+  })).min(1, "At least one item is required"),
+}).refine((data) => {
+  // Only validate if endDate is provided
+  if (data.endDate) {
+    return data.endDate > data.startDate;
+  }
+  return true; // Valid if no endDate (permanent campaign)
+}, {
+  message: "End date must be after start date",
+  path: ["endDate"],
+}).refine((data) => {
+  if (data.discountType === "PERCENT") {
+    return data.defaultDiscount <= 100;
+  }
+  return true;
+}, {
+  message: "Percentage discount must be between 0-100",
+  path: ["defaultDiscount"],
+});

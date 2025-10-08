@@ -265,7 +265,130 @@ export const orderRouter = createTRPCRouter({
         if (!phone) throw new Error("Please complete your identity (phone)");
         if (!name) throw new Error("Please complete your identity (name)");
 
-        const item_details = cartItem.map((item: CartItem) => ({
+        // Validate and recalculate prices based on active campaigns
+        const now = new Date();
+        const validatedCartItems: CartItem[] = [];
+        let priceChanged = false;
+
+        for (const item of cartItem) {
+          // Fetch product with campaign info
+          const product = await prisma.product.findFirst({
+            where: { id: item.productId },
+            include: {
+              variants: {
+                where: item.variantId ? { id: item.variantId } : undefined,
+              },
+              campaignItems: {
+                where: {
+                  campaign: {
+                    startDate: { lte: now },
+                    OR: [
+                      { endDate: { gte: now } },
+                      { endDate: null as any },
+                    ],
+                  },
+                },
+                include: {
+                  campaign: {
+                    select: {
+                      defaultDiscount: true,
+                      discountType: true,
+                    },
+                  },
+                },
+              },
+            },
+          });
+
+          if (!product) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: `Product ${item.name} not found!`,
+            });
+          }
+
+          let validatedPrice = item.price;
+
+          // Calculate correct price based on campaign
+          if (item.variantId) {
+            const variant = product.variants.find((v) => v.id === item.variantId);
+            if (!variant) {
+              throw new TRPCError({
+                code: "NOT_FOUND",
+                message: `Variant for ${item.name} not found!`,
+              });
+            }
+
+            // Check variant campaign
+            const variantCampaignItem = product.campaignItems.find(
+              (ci) => ci.variantId === item.variantId
+            );
+
+            if (variantCampaignItem) {
+              const discount = variantCampaignItem.customDiscount || variantCampaignItem.campaign.defaultDiscount;
+              const discountType = variantCampaignItem.customDiscountType || variantCampaignItem.campaign.discountType;
+
+              if (discountType === "PERCENT") {
+                validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * (discount / 100));
+              } else {
+                validatedPrice = Number(variant.regularPrice) - discount;
+              }
+            } else {
+              // Check whole product campaign
+              const productCampaignItem = product.campaignItems.find((ci) => !ci.variantId);
+              if (productCampaignItem) {
+                const discount = productCampaignItem.customDiscount || productCampaignItem.campaign.defaultDiscount;
+                const discountType = productCampaignItem.customDiscountType || productCampaignItem.campaign.discountType;
+
+                if (discountType === "PERCENT") {
+                  validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * (discount / 100));
+                } else {
+                  validatedPrice = Number(variant.regularPrice) - discount;
+                }
+              } else {
+                // Use variant's own discount
+                validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * ((variant.discount || 0) / 100));
+              }
+            }
+          } else {
+            // Product without variant
+            const productCampaignItem = product.campaignItems.find((ci) => !ci.variantId);
+
+            if (productCampaignItem) {
+              const discount = productCampaignItem.customDiscount || productCampaignItem.campaign.defaultDiscount;
+              const discountType = productCampaignItem.customDiscountType || productCampaignItem.campaign.discountType;
+
+              if (discountType === "PERCENT") {
+                validatedPrice = Number(product.regularPrice) - (Number(product.regularPrice) * (discount / 100));
+              } else {
+                validatedPrice = Number(product.regularPrice) - discount;
+              }
+            } else {
+              // Use product's own discount
+              validatedPrice = Number(product.regularPrice) - (Number(product.regularPrice) * ((product.discount || 0) / 100));
+            }
+          }
+
+          // Check if price changed
+          if (Math.abs(validatedPrice - item.price) > 0.01) {
+            priceChanged = true;
+          }
+
+          validatedCartItems.push({
+            ...item,
+            price: validatedPrice,
+          });
+        }
+
+        // If price changed due to expired campaign, throw error to inform user
+        if (priceChanged) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Some campaign prices have changed. Please refresh your cart and try again.",
+          });
+        }
+
+        const item_details = validatedCartItems.map((item: CartItem) => ({
           id: item.variantId ? item.variantId : item.productId,
           name: item.name.slice(0, 40),
           price: item.price,
