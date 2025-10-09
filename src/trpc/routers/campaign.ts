@@ -195,18 +195,30 @@ export const campaignRouter = createTRPCRouter({
         let finalPrice: number;
 
         if (variantCampaign) {
-          // This variant has campaign discount - use campaign discount
-          if (variantCampaign.discountType === "PERCENT") {
-            finalPrice = v.regularPrice - (v.regularPrice * (variantCampaign.discount / 100));
+          // This variant has campaign discount
+          // If campaign discount is 0 or null, fallback to variant's own discount
+          if (variantCampaign.discount > 0) {
+            if (variantCampaign.discountType === "PERCENT") {
+              finalPrice = v.regularPrice - (v.regularPrice * (variantCampaign.discount / 100));
+            } else {
+              finalPrice = v.regularPrice - variantCampaign.discount;
+            }
           } else {
-            finalPrice = v.regularPrice - variantCampaign.discount;
+            // Campaign has no discount, use variant's own discount
+            finalPrice = v.regularPrice - (v.regularPrice * ((v.discount || 0) / 100));
           }
         } else if (isWholeProductCampaign) {
           // Whole product is in campaign - apply campaign discount to all variants
-          if (campaignDiscountType === "PERCENT") {
-            finalPrice = v.regularPrice - (v.regularPrice * (campaignDiscount / 100));
+          // If campaign discount is 0 or null, fallback to variant's own discount
+          if (campaignDiscount > 0) {
+            if (campaignDiscountType === "PERCENT") {
+              finalPrice = v.regularPrice - (v.regularPrice * (campaignDiscount / 100));
+            } else {
+              finalPrice = v.regularPrice - campaignDiscount;
+            }
           } else {
-            finalPrice = v.regularPrice - campaignDiscount;
+            // Campaign has no discount, use variant's own discount
+            finalPrice = v.regularPrice - (v.regularPrice * ((v.discount || 0) / 100));
           }
         } else {
           // This variant is NOT in campaign and product is not in campaign - use variant's own discount or regular price
@@ -225,11 +237,17 @@ export const campaignRouter = createTRPCRouter({
         // For products with variants, use the lowest variant price
         displayPrice = Math.min(...variantsWithCampaignPrice.map((v: { price: number; regularPrice: number }) => v.price));
       } else {
-        // For products without variants, calculate from product price with campaign discount
-        if (campaignDiscountType === "PERCENT") {
-          displayPrice = product.regularPrice - (product.regularPrice * (campaignDiscount / 100));
+        // For products without variants, calculate from product price
+        // If campaign discount is 0 or null, fallback to product's own discount
+        if (campaignDiscount > 0) {
+          if (campaignDiscountType === "PERCENT") {
+            displayPrice = product.regularPrice - (product.regularPrice * (campaignDiscount / 100));
+          } else {
+            displayPrice = product.regularPrice - campaignDiscount;
+          }
         } else {
-          displayPrice = product.regularPrice - campaignDiscount;
+          // Campaign has no discount, use product's own discount
+          displayPrice = product.regularPrice - (product.regularPrice * ((product.discount || 0) / 100));
         }
       }
 
