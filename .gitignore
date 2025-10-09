@@ -48,3 +48,9 @@ next-env.d.ts
 !./public/videos/*.js
 !./public/videos/*.ts
 public/_next-video
+
+# backup-db
+database-backup.json
+
+# claude
+.claude

@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:export": "tsx scripts/export-data.ts",
+    "db:import": "tsx scripts/import-data.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
@@ -85,6 +87,7 @@
     "eslint-config-next": "15.2.3",
     "prisma": "6.5.0",
     "tailwindcss": "^4",
+    "tsx": "^4.20.6",
     "tw-animate-css": "^1.3.8",
     "typescript": "^5",
     "ws": "^8.18.3"
