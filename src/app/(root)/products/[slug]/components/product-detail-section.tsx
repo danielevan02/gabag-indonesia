@@ -16,7 +16,7 @@ import { PriceTag } from "./price-tag";
 import { RouterOutputs } from "@/trpc/routers/_app";
 import { trpc } from "@/trpc/client";
 
-type Product = RouterOutputs['product']['getBySlug'];
+type Product = RouterOutputs["product"]["getBySlug"];
 
 interface ProductDetailSectionProps {
   product: Product;
@@ -27,7 +27,7 @@ const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
   const router = useRouter();
   const { setOpenModal } = useCartStore();
   const trpcUtils = trpc.useUtils();
-  const {mutateAsync, isPending: isLoading} = trpc.cart.addToCart.useMutation({
+  const { mutateAsync, isPending: isLoading } = trpc.cart.addToCart.useMutation({
     onSuccess: async (res) => {
       // Force refetch cart data to get latest state
       await trpcUtils.cart.getMyCart.refetch();
@@ -37,22 +37,25 @@ const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
         closeButton: true,
         duration: 1000,
       });
-    }
-  })
+    },
+  });
   const [imageModal, setImageModal] = useState("");
   const [variant, setVariant] = useState<Variant>();
-  
+
   // Computed values
   const { lowestPrice, imagesList, sold, stock } = useProductData(product);
   const [mainImage, setMainImage] = useState(imagesList[0]);
-  
+
   const quantityControls = useQuantityControls(product, variant, isLoading);
 
-  const handleVariantSelect = useCallback((selectedVariant: Variant) => {
-    setVariant(selectedVariant);
-    setMainImage(selectedVariant.mediaFile.secure_url);
-    quantityControls.resetQuantity();
-  }, [quantityControls]);
+  const handleVariantSelect = useCallback(
+    (selectedVariant: Variant) => {
+      setVariant(selectedVariant);
+      setMainImage(selectedVariant.mediaFile.secure_url);
+      quantityControls.resetQuantity();
+    },
+    [quantityControls]
+  );
 
   const handleAddToCart = useCallback(async () => {
     if (product.hasVariant && !variant) {
@@ -60,7 +63,8 @@ const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
     }
     try {
       await mutateAsync({
-        image: variant?.mediaFile.secure_url || product.images?.[0] || "/images/placeholder-product.png",
+        image:
+          variant?.mediaFile.secure_url || product.images?.[0] || "/images/placeholder-product.png",
         name: variant ? `${product.name} - ${variant.name}` : product.name!,
         price: variant?.price || product.price!,
         productId: product.id!,
@@ -72,16 +76,14 @@ const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
         length: product.length,
         width: product.width,
       });
-
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product, variant, quantityControls.quantity, setOpenModal, router]);
 
-  const isAddToCartDisabled = 
-    isLoading || 
-    (product.hasVariant ? !variant || variant.stock < 1 : product.stock! < 1);
+  const isAddToCartDisabled =
+    isLoading || (product.hasVariant ? !variant || variant.stock < 1 : product.stock! < 1);
 
   return (
     <div className="relative flex flex-col md:flex-row md:gap-5 justify-center items-start w-full">
@@ -100,15 +102,14 @@ const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
         <h2 className="uppercase text-foreground/40 text-sm font-semibold">
           {product?.subCategory?.name}
         </h2>
-        <div className="flex items-center gap-2 mb-3 lg:mb-5">
-          <h1 className="text-xl font-medium">{product?.name}</h1>
+        <h1 className="text-xl font-medium mb-3 lg:mb-5">
+          {product?.name} {" "}
           {(variant?.campaign || product?.campaign) && (
-            <span className="px-2 py-0.5 text-xs font-semibold text-white bg-orange-600 rounded">
+            <div className="px-2 py-0.5 text-xs font-semibold text-white bg-orange-600 rounded w-fit inline-block">
               {variant?.campaign?.name || product.campaign?.name}
-            </span>
+            </div>
           )}
-        </div>
-
+        </h1>
         <PriceTag
           regularPrice={product.regularPrice}
           price={product.price === 0 ? lowestPrice : product.price!}

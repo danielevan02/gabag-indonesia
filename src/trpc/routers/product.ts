@@ -192,23 +192,36 @@ export const productRouter = createTRPCRouter({
           // Use product campaign if exists, otherwise use variant campaign for display
           const campaignItemForDisplay = productCampaignItem || variantCampaignItem;
 
+          const campaignDiscount = campaignItemForDisplay
+            ? (campaignItemForDisplay.customDiscount || campaignItemForDisplay.campaign.defaultDiscount)
+            : 0;
+          const campaignDiscountType = campaignItemForDisplay
+            ? (campaignItemForDisplay.customDiscountType || campaignItemForDisplay.campaign.discountType)
+            : "PERCENT";
+
+          // If campaign discount is 0, use product's own discount for display
+          const displayDiscount = campaignDiscount > 0 ? campaignDiscount : (product.discount || 0);
+          const displayDiscountType = campaignDiscount > 0 ? campaignDiscountType : "PERCENT";
+
           const productCampaign = campaignItemForDisplay ? {
             name: campaignItemForDisplay.campaign.name,
             type: campaignItemForDisplay.campaign.type,
-            discount: campaignItemForDisplay.customDiscount || campaignItemForDisplay.campaign.defaultDiscount,
-            discountType: campaignItemForDisplay.customDiscountType || campaignItemForDisplay.campaign.discountType,
+            discount: displayDiscount,
+            discountType: displayDiscountType,
           } : null;
 
           // Calculate product price (with campaign if applicable)
           // Only apply campaign discount to product price if it's a product-level campaign (not variant-specific)
           let productPrice = calculateDiscountedPrice(product.regularPrice, product.discount);
-          if (productCampaignItem) {
-            if (productCampaign!.discountType === "PERCENT") {
-              productPrice = product.regularPrice - (product.regularPrice * (productCampaign!.discount / 100));
+          if (productCampaignItem && campaignDiscount > 0) {
+            // Only apply campaign discount if it's greater than 0
+            if (campaignDiscountType === "PERCENT") {
+              productPrice = product.regularPrice - (product.regularPrice * (campaignDiscount / 100));
             } else {
-              productPrice = product.regularPrice - productCampaign!.discount;
+              productPrice = product.regularPrice - campaignDiscount;
             }
           }
+          // If campaign discount is 0, productPrice stays as product's own discounted price
 
           // Map variants with campaign info
           const variantsWithCampaign = product.variants.map((variant: any) => {
@@ -222,11 +235,15 @@ export const productRouter = createTRPCRouter({
               const campaignDiscount = variantCampaignItem.customDiscount || variantCampaignItem.campaign.defaultDiscount;
               const campaignDiscountType = variantCampaignItem.customDiscountType || variantCampaignItem.campaign.discountType;
 
-              if (campaignDiscountType === "PERCENT") {
-                price = variant.regularPrice - (variant.regularPrice * (campaignDiscount / 100));
-              } else {
-                price = variant.regularPrice - campaignDiscount;
+              // Only apply campaign discount if it's greater than 0
+              if (campaignDiscount > 0) {
+                if (campaignDiscountType === "PERCENT") {
+                  price = variant.regularPrice - (variant.regularPrice * (campaignDiscount / 100));
+                } else {
+                  price = variant.regularPrice - campaignDiscount;
+                }
               }
+              // If campaign discount is 0, price stays as variant's own discounted price
             }
 
             return {
@@ -384,7 +401,7 @@ export const productRouter = createTRPCRouter({
     // Use product campaign if exists, otherwise use variant campaign for display
     const campaignItemForDisplay = productCampaignItem || variantCampaignItem;
 
-    const productCampaign = campaignItemForDisplay ? {
+    let productCampaign = campaignItemForDisplay ? {
       name: campaignItemForDisplay.campaign.name,
       type: campaignItemForDisplay.campaign.type,
       discount: campaignItemForDisplay.customDiscount || campaignItemForDisplay.campaign.defaultDiscount,
@@ -404,18 +421,30 @@ export const productRouter = createTRPCRouter({
         const campaignDiscount = variantCampaignItem.customDiscount || variantCampaignItem.campaign.defaultDiscount;
         const campaignDiscountType = variantCampaignItem.customDiscountType || variantCampaignItem.campaign.discountType;
 
-        if (campaignDiscountType === "PERCENT") {
-          price = variant.regularPrice - (variant.regularPrice * (campaignDiscount / 100));
-        } else {
-          price = variant.regularPrice - campaignDiscount;
-        }
+        // Only apply campaign discount if it's greater than 0
+        // Otherwise, use variant's own discount
+        if (campaignDiscount > 0) {
+          if (campaignDiscountType === "PERCENT") {
+            price = variant.regularPrice - (variant.regularPrice * (campaignDiscount / 100));
+          } else {
+            price = variant.regularPrice - campaignDiscount;
+          }
 
-        campaign = {
-          name: variantCampaignItem.campaign.name,
-          type: variantCampaignItem.campaign.type,
-          discount: campaignDiscount,
-          discountType: campaignDiscountType,
-        };
+          campaign = {
+            name: variantCampaignItem.campaign.name,
+            type: variantCampaignItem.campaign.type,
+            discount: campaignDiscount,
+            discountType: campaignDiscountType,
+          };
+        } else {
+          // Campaign discount is 0, show variant's own discount in campaign badge
+          campaign = {
+            name: variantCampaignItem.campaign.name,
+            type: variantCampaignItem.campaign.type,
+            discount: variant.discount || 0,
+            discountType: "PERCENT" as const,
+          };
+        }
       }
 
       return {
@@ -429,10 +458,21 @@ export const productRouter = createTRPCRouter({
     // Only apply campaign discount to product price if it's a product-level campaign (not variant-specific)
     let productPrice = calculateDiscountedPrice(convertedData.regularPrice, convertedData.discount);
     if (productCampaignItem) {
-      if (productCampaign!.discountType === "PERCENT") {
-        productPrice = convertedData.regularPrice - (convertedData.regularPrice * (productCampaign!.discount / 100));
+      if (productCampaign!.discount > 0) {
+        // Apply campaign discount
+        if (productCampaign!.discountType === "PERCENT") {
+          productPrice = convertedData.regularPrice - (convertedData.regularPrice * (productCampaign!.discount / 100));
+        } else {
+          productPrice = convertedData.regularPrice - productCampaign!.discount;
+        }
       } else {
-        productPrice = convertedData.regularPrice - productCampaign!.discount;
+        // Campaign discount is 0, update productCampaign to show product's own discount
+        productCampaign = {
+          name: productCampaign!.name,
+          type: productCampaign!.type,
+          discount: convertedData.discount || 0,
+          discountType: "PERCENT" as const,
+        };
       }
     }
 

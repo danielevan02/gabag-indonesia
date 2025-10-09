@@ -74,10 +74,16 @@ const validateCartPrices = async (cart: any) => {
           const discount = variantCampaignItem.customDiscount || variantCampaignItem.campaign.defaultDiscount;
           const discountType = variantCampaignItem.customDiscountType || variantCampaignItem.campaign.discountType;
 
-          if (discountType === "PERCENT") {
-            validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * (discount / 100));
+          // Only apply campaign discount if it's greater than 0
+          if (discount > 0) {
+            if (discountType === "PERCENT") {
+              validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * (discount / 100));
+            } else {
+              validatedPrice = Number(variant.regularPrice) - discount;
+            }
           } else {
-            validatedPrice = Number(variant.regularPrice) - discount;
+            // Campaign discount is 0, use variant's own discount
+            validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * ((variant.discount || 0) / 100));
           }
         } else {
           const productCampaignItem = product.campaignItems.find((ci) => !ci.variantId);
@@ -85,10 +91,16 @@ const validateCartPrices = async (cart: any) => {
             const discount = productCampaignItem.customDiscount || productCampaignItem.campaign.defaultDiscount;
             const discountType = productCampaignItem.customDiscountType || productCampaignItem.campaign.discountType;
 
-            if (discountType === "PERCENT") {
-              validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * (discount / 100));
+            // Only apply campaign discount if it's greater than 0
+            if (discount > 0) {
+              if (discountType === "PERCENT") {
+                validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * (discount / 100));
+              } else {
+                validatedPrice = Number(variant.regularPrice) - discount;
+              }
             } else {
-              validatedPrice = Number(variant.regularPrice) - discount;
+              // Campaign discount is 0, use variant's own discount
+              validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * ((variant.discount || 0) / 100));
             }
           } else {
             validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * ((variant.discount || 0) / 100));
@@ -101,10 +113,16 @@ const validateCartPrices = async (cart: any) => {
           const discount = productCampaignItem.customDiscount || productCampaignItem.campaign.defaultDiscount;
           const discountType = productCampaignItem.customDiscountType || productCampaignItem.campaign.discountType;
 
-          if (discountType === "PERCENT") {
-            validatedPrice = Number(product.regularPrice) - (Number(product.regularPrice) * (discount / 100));
+          // Only apply campaign discount if it's greater than 0
+          if (discount > 0) {
+            if (discountType === "PERCENT") {
+              validatedPrice = Number(product.regularPrice) - (Number(product.regularPrice) * (discount / 100));
+            } else {
+              validatedPrice = Number(product.regularPrice) - discount;
+            }
           } else {
-            validatedPrice = Number(product.regularPrice) - discount;
+            // Campaign discount is 0, use product's own discount
+            validatedPrice = Number(product.regularPrice) - (Number(product.regularPrice) * ((product.discount || 0) / 100));
           }
         } else {
           validatedPrice = Number(product.regularPrice) - (Number(product.regularPrice) * ((product.discount || 0) / 100));
