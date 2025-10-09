@@ -4,7 +4,7 @@ import { trpc } from "@/trpc/server";
 import ProductDataTableWrapper from "./components/product-data-table-wrapper";
 
 export default async function AdminProductPage() {
-  const productData = await trpc.product.getAll({});
+  const productData = await trpc.product.getAll({ limit: 100 }); // Show more products in admin
 
   return (
     <div className="form-page">
