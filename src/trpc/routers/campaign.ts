@@ -3,6 +3,7 @@ import { adminProcedure, baseProcedure, createTRPCRouter } from "../init";
 import { serializeType } from "@/lib/utils";
 import { TRPCError } from "@trpc/server";
 import z from "zod";
+import { campaignInputSchema } from "@/lib/schema";
 
 // Type for products returned in getDisplay (matches ProductCard props)
 type CampaignDisplayProduct = {
@@ -27,49 +28,6 @@ type CampaignDisplayProduct = {
     regularPrice: number;
   }[];
 };
-
-const campaignInputSchema = z.object({
-  name: z.string().min(1, "Campaign name is required"),
-  description: z.string().optional(),
-  type: z.enum([
-    "FLASH_SALE",
-    "DAILY_DEALS",
-    "PAYDAY_SALE",
-    "SEASONAL",
-    "CLEARANCE",
-    "NEW_ARRIVAL"
-  ]),
-  discountType: z.enum(["PERCENT", "FIXED"]),
-  defaultDiscount: z.coerce.number().min(0, "Discount must be positive"),
-  startDate: z.coerce.date(),
-  endDate: z.coerce.date().optional(), // Optional: for permanent campaigns
-  totalStockLimit: z.coerce.number().optional(),
-  priority: z.coerce.number().default(0),
-  items: z.array(z.object({
-    productId: z.string(),
-    variantId: z.string().optional(), // NULL = whole product, NOT NULL = specific variant
-    customDiscount: z.coerce.number().optional(),
-    customDiscountType: z.enum(["PERCENT", "FIXED"]).optional(),
-    stockLimit: z.coerce.number().optional(),
-  })).min(1, "At least one item is required"),
-}).refine((data) => {
-  // Only validate if endDate is provided
-  if (data.endDate) {
-    return data.endDate > data.startDate;
-  }
-  return true; // Valid if no endDate (permanent campaign)
-}, {
-  message: "End date must be after start date",
-  path: ["endDate"],
-}).refine((data) => {
-  if (data.discountType === "PERCENT") {
-    return data.defaultDiscount <= 100;
-  }
-  return true;
-}, {
-  message: "Percentage discount must be between 0-100",
-  path: ["defaultDiscount"],
-});
 
 const handleMutationError = (error: unknown, operation: string) => {
   console.error(`${operation} error:`, error);
