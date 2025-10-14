@@ -8,9 +8,19 @@ type Product = RouterOutputs['product']['getAll']['products'][number];
 
 interface ProductDataTableWrapperProps {
   products: Product[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
 }
 
-export default function ProductDataTableWrapper({ products }: ProductDataTableWrapperProps) {
+export default function ProductDataTableWrapper({
+  products,
+  totalCount,
+  currentPage,
+  totalPages,
+  pageSize
+}: ProductDataTableWrapperProps) {
 
   return (
     <DataTable
@@ -18,6 +28,10 @@ export default function ProductDataTableWrapper({ products }: ProductDataTableWr
       data={products}
       searchPlaceholder="Search Products"
       deleteTitle="Delete Product"
+      totalCount={totalCount}
+      currentPage={currentPage}
+      totalPages={totalPages}
+      pageSize={pageSize}
     />
   );
 }

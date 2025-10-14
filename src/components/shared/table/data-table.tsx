@@ -43,6 +43,11 @@ interface DataTableProps<TData, TValue> {
   searchColumn?: string;
   bulkShipmentAction?: (orderIds: string[]) => void;
   isBulkShipmentPending?: boolean;
+  // Server-side pagination props (optional)
+  totalCount?: number;
+  currentPage?: number;
+  totalPages?: number;
+  pageSize?: number;
 }
 
 export function   DataTable<TData, TValue>({
@@ -54,15 +59,22 @@ export function   DataTable<TData, TValue>({
   searchColumn,
   bulkShipmentAction,
   isBulkShipmentPending = false,
+  totalCount,
+  currentPage,
+  totalPages,
+  pageSize,
 }: DataTableProps<TData, TValue>) {
   const [openModal, setOpenModal] = useState(false);
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
   const path = usePathname()
 
+  // Check if using server-side pagination
+  const isServerSide = totalCount !== undefined && currentPage !== undefined;
+
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 15,
+    pageSize: pageSize || 15,
   });
 
   const table = useReactTable({
@@ -71,10 +83,15 @@ export function   DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    // Only use client-side pagination if not server-side
+    getPaginationRowModel: isServerSide ? undefined : getPaginationRowModel(),
     onPaginationChange: setPagination,
     onRowSelectionChange: setRowSelection,
     onGlobalFilterChange: setGlobalFilter,
+    // For server-side pagination, we need to control the row count manually
+    manualPagination: isServerSide,
+    pageCount: isServerSide ? totalPages : undefined,
+    rowCount: isServerSide ? totalCount : undefined,
     state: {
       pagination,
       rowSelection,
@@ -243,7 +260,13 @@ export function   DataTable<TData, TValue>({
       </div>
 
       <div className="flex items-center justify-center mt-5">
-        <TablePagination table={table} />
+        <TablePagination
+          table={table}
+          totalCount={totalCount}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+        />
       </div>
 
       {deleteManyMutation && (
