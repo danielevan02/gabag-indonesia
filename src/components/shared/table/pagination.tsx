@@ -40,7 +40,8 @@ const TablePagination = <TData,>({
   const handlePageChange = (newPage: number) => {
     if (!isServerSide) {
       // Client-side pagination
-      if (newPage === currentPage + 1) {
+      const clientCurrentPage = table.getState().pagination.pageIndex + 1;
+      if (newPage === clientCurrentPage + 1) {
         table.nextPage();
       } else {
         table.previousPage();
