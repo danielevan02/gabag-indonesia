@@ -160,12 +160,18 @@ export const productRouter = createTRPCRouter({
                     type: true,
                     discountType: true,
                     defaultDiscount: true,
+                    priority: true,
                   },
                 },
                 variant: {
                   select: {
                     id: true,
                   },
+                },
+              },
+              orderBy: {
+                campaign: {
+                  priority: 'desc',
                 },
               },
             },
@@ -184,10 +190,10 @@ export const productRouter = createTRPCRouter({
       return {
         products: convertedData.map((product) => {
           // Check if product (not variant-specific) is in campaign
-          const productCampaignItem = product.campaignItems.find((item: any) => !item.variantId);
+          const productCampaignItem = product.campaignItems.find((item) => !item.variantId);
 
           // If no product-level campaign, check if any variant is in campaign
-          const variantCampaignItem = !productCampaignItem ? product.campaignItems.find((item: any) => item.variantId) : null;
+          const variantCampaignItem = !productCampaignItem ? product.campaignItems.find((item) => item.variantId) : null;
 
           // Use product campaign if exists, otherwise use variant campaign for display
           const campaignItemForDisplay = productCampaignItem || variantCampaignItem;
@@ -371,12 +377,18 @@ export const productRouter = createTRPCRouter({
                 type: true,
                 discountType: true,
                 defaultDiscount: true,
+                priority: true,
               },
             },
             variant: {
               select: {
                 id: true,
               },
+            },
+          },
+          orderBy: {
+            campaign: {
+              priority: 'desc',
             },
           },
         },
