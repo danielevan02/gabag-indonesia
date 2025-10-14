@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { serializeType } from "@/lib/utils";
 import { productSchema } from "@/lib/schema";
 import { TRPCError } from "@trpc/server";
+import * as XLSX from "xlsx";
 
 // Constants
 const DEFAULT_NEW_ARRIVALS_LIMIT = 2;
@@ -726,6 +727,209 @@ export const productRouter = createTRPCRouter({
         return handleMutationSuccess("Products Deleted");
       } catch (error) {
         return handleMutationError(error, "Delete Products");
+      }
+    }),
+
+  // Sync stock from Excel file (Admin only)
+  syncStock: adminProcedure
+    .input(
+      z.object({
+        fileData: z.string(), // Base64 encoded file
+        fileName: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        // Decode base64 file data
+        const buffer = Buffer.from(input.fileData, "base64");
+
+        // Parse Excel file
+        const workbook = XLSX.read(buffer, { type: "buffer" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+
+        // Convert to JSON
+        const data: any[] = XLSX.utils.sheet_to_json(worksheet, {
+          raw: false,
+          defval: null
+        });
+
+        if (!data || data.length === 0) {
+          return {
+            success: false,
+            message: "Excel file is empty",
+            summary: null,
+            updates: [],
+            errors: [],
+          };
+        }
+
+        // Find column names (case-insensitive)
+        const firstRow = data[0];
+        const columnNames = Object.keys(firstRow);
+
+        const barcodeColumn = columnNames.find(
+          (col) => col.toLowerCase().includes("barcode") || col.toLowerCase().includes("sku")
+        );
+
+        const stockColumn = columnNames.find(
+          (col) => col.toLowerCase().includes("stock") || col.toLowerCase() === "qty"
+        );
+
+        if (!barcodeColumn || !stockColumn) {
+          return {
+            success: false,
+            message: `Missing required columns. Found: ${columnNames.join(", ")}. Need: Barcode/SKU and Stock`,
+            summary: null,
+            updates: [],
+            errors: [],
+          };
+        }
+
+        console.log(`📊 Processing ${data.length} rows from Excel`);
+        console.log(`📌 Using columns: ${barcodeColumn} (SKU), ${stockColumn} (Stock)`);
+
+        const successUpdates: Array<{
+          sku: string;
+          name: string;
+          oldStock: number;
+          newStock: number;
+          type: "product" | "variant";
+        }> = [];
+
+        const errors: Array<{
+          sku: string;
+          stock: number | string;
+          reason: string;
+        }> = [];
+
+        let skippedCount = 0;
+
+        // Process each row
+        for (const row of data) {
+          const sku = row[barcodeColumn]?.toString().trim();
+          const stockValue = row[stockColumn];
+
+          // Skip if SKU or stock is missing
+          if (!sku || stockValue === null || stockValue === undefined || stockValue === "") {
+            skippedCount++;
+            continue;
+          }
+
+          // Parse stock as number
+          const stock = parseInt(stockValue.toString(), 10);
+          if (isNaN(stock) || stock < 0) {
+            errors.push({
+              sku,
+              stock: stockValue,
+              reason: "Invalid stock value (must be a positive number)",
+            });
+            continue;
+          }
+
+          // Try to find and update product (without variant)
+          const product = await prisma.product.findFirst({
+            where: {
+              sku: sku,
+              hasVariant: false,
+            },
+            select: {
+              id: true,
+              name: true,
+              stock: true,
+            },
+          });
+
+          if (product) {
+            // Update product stock
+            await prisma.product.update({
+              where: { id: product.id },
+              data: { stock },
+            });
+
+            successUpdates.push({
+              sku,
+              name: product.name,
+              oldStock: product.stock,
+              newStock: stock,
+              type: "product",
+            });
+
+            console.log(`✅ Updated product: ${sku} (${product.name}) - Stock: ${product.stock} → ${stock}`);
+            continue;
+          }
+
+          // Try to find and update variant
+          const variant = await prisma.variant.findFirst({
+            where: {
+              sku: sku,
+            },
+            select: {
+              id: true,
+              name: true,
+              stock: true,
+              product: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          });
+
+          if (variant) {
+            // Update variant stock
+            await prisma.variant.update({
+              where: { id: variant.id },
+              data: { stock },
+            });
+
+            successUpdates.push({
+              sku,
+              name: `${variant.product.name} - ${variant.name}`,
+              oldStock: variant.stock,
+              newStock: stock,
+              type: "variant",
+            });
+
+            console.log(`✅ Updated variant: ${sku} (${variant.product.name} - ${variant.name}) - Stock: ${variant.stock} → ${stock}`);
+            continue;
+          }
+
+          // SKU not found
+          errors.push({
+            sku,
+            stock,
+            reason: "SKU not found in database",
+          });
+          console.log(`❌ SKU not found: ${sku} (Stock: ${stock})`);
+        }
+
+        console.log("\n📋 Sync Summary:");
+        console.log(`✅ Success: ${successUpdates.length}`);
+        console.log(`❌ Errors: ${errors.length}`);
+        console.log(`⏭️  Skipped: ${skippedCount}`);
+
+        return {
+          success: true,
+          message: "Stock synchronization completed",
+          summary: {
+            total: data.length,
+            updated: successUpdates.length,
+            errors: errors.length,
+            skipped: skippedCount,
+          },
+          updates: successUpdates,
+          errors: errors,
+        };
+      } catch (error) {
+        console.error("Stock sync error:", error);
+        return {
+          success: false,
+          message: error instanceof Error ? error.message : "Failed to sync stock",
+          summary: null,
+          updates: [],
+          errors: [],
+        };
       }
     }),
 });
