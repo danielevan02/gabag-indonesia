@@ -16,6 +16,7 @@ type SyncResult = {
     updated: number;
     errors: number;
     skipped: number;
+    unchanged: number;
   } | null;
   updates: Array<{
     sku: string;
@@ -35,9 +36,12 @@ export default function SyncStockPage() {
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<SyncResult | null>(null);
   const [progress, setProgress] = useState<number>(0);
+  const [currentRow, setCurrentRow] = useState<number>(0);
+  const [totalRows, setTotalRows] = useState<number>(0);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-  const { mutateAsync: syncStock, isPending } = trpc.product.syncStock.useMutation();
+  const { mutateAsync: parseFile } = trpc.product.parseStockFile.useMutation();
+  const { mutateAsync: syncBatch } = trpc.product.syncStockBatch.useMutation();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -62,6 +66,8 @@ export default function SyncStockPage() {
     try {
       setIsProcessing(true);
       setProgress(0);
+      setCurrentRow(0);
+      setTotalRows(0);
       setResult(null);
 
       // Convert file to base64
@@ -70,45 +76,112 @@ export default function SyncStockPage() {
         const base64 = e.target?.result as string;
         const base64Data = base64.split(",")[1]; // Remove data:... prefix
 
-        // Simulate progress (reading file)
-        setProgress(10);
-
-        // Start progress simulation
-        const progressInterval = setInterval(() => {
-          setProgress((prev) => {
-            if (prev >= 90) {
-              clearInterval(progressInterval);
-              return 90;
-            }
-            return prev + 5;
-          });
-        }, 200);
-
         try {
-          const result = await syncStock({
+          // Step 1: Parse file to get total rows
+          setProgress(5);
+          const parseResult = await parseFile({
             fileData: base64Data,
             fileName: file.name,
           });
 
-          clearInterval(progressInterval);
+          if (!parseResult.success) {
+            toast.error(parseResult.message);
+            setIsProcessing(false);
+            return;
+          }
+
+          const { rowData, totalRows: total } = parseResult;
+          setTotalRows(total);
+          setProgress(10);
+
+          // Step 2: Process in batches with real progress tracking
+          const BATCH_SIZE = 50; // Process 50 rows at a time
+          const allUpdates: Array<{
+            sku: string;
+            name: string;
+            oldStock: number;
+            newStock: number;
+            type: "product" | "variant";
+          }> = [];
+          const allErrors: Array<{
+            sku: string;
+            stock: number | string;
+            reason: string;
+          }> = [];
+          let totalUpdated = 0;
+          let totalErrored = 0;
+          let totalSkipped = 0;
+          let totalUnchanged = 0;
+
+          for (let i = 0; i < rowData.length; i += BATCH_SIZE) {
+            const batch = rowData.slice(i, Math.min(i + BATCH_SIZE, rowData.length));
+
+            // Update current row being processed
+            setCurrentRow(i + batch.length);
+
+            // Call batch sync
+            const batchResult = await syncBatch({ rows: batch });
+
+            if (batchResult.success) {
+              totalUpdated += batchResult.updated;
+              totalErrored += batchResult.errors;
+              totalSkipped += batchResult.skipped;
+              totalUnchanged += batchResult.unchanged;
+
+              // Collect updates and errors
+              allUpdates.push(...batchResult.updates.map(u => ({
+                sku: u.sku,
+                name: u.name,
+                oldStock: u.oldStock,
+                newStock: u.newStock,
+                type: u.type,
+              })));
+
+              allErrors.push(...batchResult.errorDetails.map(e => ({
+                sku: e.sku,
+                stock: e.stock,
+                reason: e.reason,
+              })));
+            }
+
+            // Update progress: 10% for parsing, 90% for processing
+            const processProgress = ((i + batch.length) / rowData.length) * 90;
+            setProgress(10 + Math.round(processProgress));
+          }
+
+          // Step 3: Complete
           setProgress(100);
 
-          setResult(result);
+          const finalResult: SyncResult = {
+            success: true,
+            message: "Stock synchronization completed",
+            summary: {
+              total,
+              updated: totalUpdated,
+              errors: totalErrored,
+              skipped: totalSkipped,
+              unchanged: totalUnchanged,
+            },
+            updates: allUpdates,
+            errors: allErrors,
+          };
 
-          if (result.success) {
-            toast.success(result.message, {
-              description: `Updated: ${result.summary?.updated}, Errors: ${result.summary?.errors}, Skipped: ${result.summary?.skipped}`,
-            });
-          } else {
-            toast.error(result.message);
-          }
+          setResult(finalResult);
+
+          toast.success(finalResult.message, {
+            description: `Updated: ${totalUpdated}, Unchanged: ${totalUnchanged}, Errors: ${totalErrored}, Skipped: ${totalSkipped}`,
+          });
+
         } catch (error) {
-          clearInterval(progressInterval);
           console.error("Sync error:", error);
           toast.error("Failed to sync stock. Please try again.");
         } finally {
           setIsProcessing(false);
-          setTimeout(() => setProgress(0), 1000);
+          setTimeout(() => {
+            setProgress(0);
+            setCurrentRow(0);
+            setTotalRows(0);
+          }, 2000);
         }
       };
 
@@ -153,7 +226,7 @@ export default function SyncStockPage() {
                   onChange={handleFileChange}
                   className="hidden"
                   id="file-upload"
-                  disabled={isPending}
+                  disabled={isProcessing}
                 />
                 <label
                   htmlFor="file-upload"
@@ -183,7 +256,11 @@ export default function SyncStockPage() {
             {isProcessing && (
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Processing...</span>
+                  <span className="text-muted-foreground">
+                    {totalRows > 0
+                      ? `Processing rows ${currentRow} / ${totalRows}...`
+                      : "Processing..."}
+                  </span>
                   <span className="font-medium">{progress}%</span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
@@ -197,7 +274,7 @@ export default function SyncStockPage() {
 
             <Button
               onClick={handleSync}
-              disabled={!file || isPending || isProcessing}
+              disabled={!file || isProcessing}
               className="w-full"
               size="lg"
             >
@@ -216,7 +293,7 @@ export default function SyncStockPage() {
                   <CardTitle>Synchronization Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div className="p-4 bg-muted rounded-lg">
                       <p className="text-sm text-muted-foreground">Total Rows</p>
                       <p className="text-2xl font-bold">{result.summary.total}</p>
@@ -225,6 +302,12 @@ export default function SyncStockPage() {
                       <p className="text-sm text-green-600 dark:text-green-400">Updated</p>
                       <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {result.summary.updated}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                      <p className="text-sm text-blue-600 dark:text-blue-400">Unchanged</p>
+                      <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {result.summary.unchanged}
                       </p>
                     </div>
                     <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg">
