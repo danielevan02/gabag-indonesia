@@ -20,11 +20,11 @@ const Header = async () => {
     <div className="nav-container">
       <Link href="/" className="py-2">
         <Image
-          src="/images/black-logo.svg"
+          src="/images/gabag-logo.png"
           alt="logo-gabag"
           width={200}
           height={100}
-          className="w-32 lg:w-52 max-h-96"
+          className="w-32 max-h-96"
           priority
         />
       </Link>
@@ -47,7 +47,7 @@ const Header = async () => {
           <CartModal userId={user?.id} />
 
           <TooltipWrapper text="Order List">
-            <Link href="/orders" className="hover:bg-muted rounded-md p-2">
+            <Link href="/orders" className="hover:bg-accent rounded-md p-2">
               <ClipboardList className="size-6"/>
             </Link>
           </TooltipWrapper>
@@ -56,7 +56,7 @@ const Header = async () => {
             <TooltipWrapper text="Admin Panel">
               <Link
                 href="/admin/dashboard"
-                className="cursor-pointer hover:bg-muted rounded-md p-2"
+                className="cursor-pointer hover:bg-accent rounded-md p-2"
               >
                 <ShieldUser className="size-6" />
               </Link>

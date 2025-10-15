@@ -12,7 +12,7 @@ export function NavHeader() {
     <SidebarMenu>
       <SidebarMenuItem>
         <div className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground flex items-center gap-2">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-destructive text-sidebar-primary-foreground">
             <Image
               src="/images/logo.png"
               alt="Gabag's Logo"

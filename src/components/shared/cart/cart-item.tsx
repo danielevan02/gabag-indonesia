@@ -89,7 +89,7 @@ const CartItem = ({ item, cartItemsLength, index, startTransition }: CartItemPro
             />
           </div>
           <button
-            className="absolute top-0 -left-1 w-5 aspect-square bg-foreground rounded-full p-1 hover:scale-110 cursor-pointer transition"
+            className="absolute top-0 -left-1 w-5 aspect-square bg-primary rounded-full p-1 hover:scale-110 cursor-pointer transition"
             onClick={handleDeleteQty}
           >
             <X className="h-full w-full text-white dark:text-black" />
