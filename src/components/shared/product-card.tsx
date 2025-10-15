@@ -191,7 +191,7 @@ const DiscountBadge: React.FC<{
   }
 
   return (
-    <div className="bg-red-600 text-white py-px text-xs font-bold relative min-w-9 w-min my-1 flex justify-center">
+    <div className="bg-destructive text-white py-px text-xs font-bold relative min-w-9 w-min my-1 flex justify-center">
       {displayDiscount}%
     </div>
   );
@@ -204,11 +204,11 @@ const CampaignBadge = ({ campaign }: { campaign: { name: string; type: string; d
       case "FLASH_SALE":
         return "bg-orange-600";
       case "PAYDAY_SALE":
-        return "bg-green-600";
+        return "bg-primary";
       case "SEASONAL":
-        return "bg-purple-600";
+        return "bg-[#bcb6db]";
       default:
-        return "bg-red-600";
+        return "bg-destructive";
     }
   };
   return (

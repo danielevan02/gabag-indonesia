@@ -47,7 +47,7 @@ const MobileDrawer = () => {
               <TooltipWrapper text="Admin Panel">
                 <Link
                   href="/admin/dashboard"
-                  className="cursor-pointer hover:bg-muted rounded-md p-2"
+                  className="cursor-pointer hover:bg-accent rounded-md p-2"
                 >
                   <ShieldUser className="w-6 h-6" />
                 </Link>

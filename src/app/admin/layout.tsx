@@ -35,7 +35,7 @@ export default async function RootLayout({
                 <div className="hidden md:flex items-center gap-3 justify-center flex-1 py-2">
                   <h1 className="text-2xl md:text-lg tracking-widest uppercase">Admin Panel</h1>
                   <Image
-                    src="/images/black-logo.svg"
+                    src="/images/gabag-logo.png"
                     alt="Gabag's Logo"
                     width={130}
                     height={90}
