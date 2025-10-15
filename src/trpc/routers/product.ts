@@ -730,7 +730,260 @@ export const productRouter = createTRPCRouter({
       }
     }),
 
-  // Sync stock from Excel file (Admin only)
+  // Parse Excel file and return row count (Admin only)
+  parseStockFile: adminProcedure
+    .input(
+      z.object({
+        fileData: z.string(), // Base64 encoded file
+        fileName: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        // Decode base64 file data
+        const buffer = Buffer.from(input.fileData, "base64");
+
+        // Parse Excel file
+        const workbook = XLSX.read(buffer, { type: "buffer" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+
+        // Convert to JSON
+        const data: any[] = XLSX.utils.sheet_to_json(worksheet, {
+          raw: false,
+          defval: null
+        });
+
+        if (!data || data.length === 0) {
+          return {
+            success: false,
+            message: "Excel file is empty",
+            totalRows: 0,
+            rowData: [],
+          };
+        }
+
+        // Find column names (case-insensitive)
+        const firstRow = data[0];
+        const columnNames = Object.keys(firstRow);
+
+        const barcodeColumn = columnNames.find(
+          (col) => col.toLowerCase().includes("barcode") || col.toLowerCase().includes("sku")
+        );
+
+        const stockColumn = columnNames.find(
+          (col) => col.toLowerCase().includes("stock") || col.toLowerCase() === "qty"
+        );
+
+        if (!barcodeColumn || !stockColumn) {
+          return {
+            success: false,
+            message: `Missing required columns. Found: ${columnNames.join(", ")}. Need: Barcode/SKU and Stock`,
+            totalRows: 0,
+            rowData: [],
+          };
+        }
+
+        // Extract row data for batch processing
+        const rowData = data.map((row, index) => ({
+          index,
+          sku: row[barcodeColumn]?.toString().trim() || "",
+          stock: row[stockColumn]?.toString() || "",
+        }));
+
+        return {
+          success: true,
+          message: "File parsed successfully",
+          totalRows: data.length,
+          rowData,
+        };
+      } catch (error) {
+        console.error("Parse file error:", error);
+        return {
+          success: false,
+          message: error instanceof Error ? error.message : "Failed to parse file",
+          totalRows: 0,
+          rowData: [],
+        };
+      }
+    }),
+
+  // Sync stock batch (Admin only)
+  syncStockBatch: adminProcedure
+    .input(
+      z.object({
+        rows: z.array(
+          z.object({
+            index: z.number(),
+            sku: z.string(),
+            stock: z.string(),
+          })
+        ),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const successUpdates: Array<{
+          index: number;
+          sku: string;
+          name: string;
+          oldStock: number;
+          newStock: number;
+          type: "product" | "variant";
+        }> = [];
+
+        const errors: Array<{
+          index: number;
+          sku: string;
+          stock: number | string;
+          reason: string;
+        }> = [];
+
+        let skippedCount = 0;
+        let unchangedCount = 0;
+
+        // Process each row
+        for (const row of input.rows) {
+          const { index, sku, stock: stockValue } = row;
+
+          // Skip if SKU or stock is missing
+          if (!sku || stockValue === null || stockValue === undefined || stockValue === "") {
+            skippedCount++;
+            continue;
+          }
+
+          // Parse stock as number
+          const stock = parseInt(stockValue.toString(), 10);
+          if (isNaN(stock) || stock < 0) {
+            errors.push({
+              index,
+              sku,
+              stock: stockValue,
+              reason: "Invalid stock value (must be a positive number)",
+            });
+            continue;
+          }
+
+          // Try to find and update product (without variant)
+          const product = await prisma.product.findFirst({
+            where: {
+              sku: sku,
+              hasVariant: false,
+            },
+            select: {
+              id: true,
+              name: true,
+              stock: true,
+            },
+          });
+
+          if (product) {
+            // Skip update if stock is unchanged
+            if (product.stock === stock) {
+              unchangedCount++;
+              console.log(`⏭️  [${index + 1}] Unchanged product: ${sku} (${product.name}) - Stock: ${stock} (no change)`);
+              continue;
+            }
+
+            // Update product stock
+            await prisma.product.update({
+              where: { id: product.id },
+              data: { stock },
+            });
+
+            successUpdates.push({
+              index,
+              sku,
+              name: product.name,
+              oldStock: product.stock,
+              newStock: stock,
+              type: "product",
+            });
+
+            console.log(`✅ [${index + 1}] Updated product: ${sku} (${product.name}) - Stock: ${product.stock} → ${stock}`);
+            continue;
+          }
+
+          // Try to find and update variant
+          const variant = await prisma.variant.findFirst({
+            where: {
+              sku: sku,
+            },
+            select: {
+              id: true,
+              name: true,
+              stock: true,
+              product: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          });
+
+          if (variant) {
+            // Skip update if stock is unchanged
+            if (variant.stock === stock) {
+              unchangedCount++;
+              console.log(`⏭️  [${index + 1}] Unchanged variant: ${sku} (${variant.product.name} - ${variant.name}) - Stock: ${stock} (no change)`);
+              continue;
+            }
+
+            // Update variant stock
+            await prisma.variant.update({
+              where: { id: variant.id },
+              data: { stock },
+            });
+
+            successUpdates.push({
+              index,
+              sku,
+              name: `${variant.product.name} - ${variant.name}`,
+              oldStock: variant.stock,
+              newStock: stock,
+              type: "variant",
+            });
+
+            console.log(`✅ [${index + 1}] Updated variant: ${sku} (${variant.product.name} - ${variant.name}) - Stock: ${variant.stock} → ${stock}`);
+            continue;
+          }
+
+          // SKU not found
+          errors.push({
+            index,
+            sku,
+            stock,
+            reason: "SKU not found in database",
+          });
+          console.log(`❌ [${index + 1}] SKU not found: ${sku} (Stock: ${stock})`);
+        }
+
+        return {
+          success: true,
+          message: "Batch processed",
+          updated: successUpdates.length,
+          errors: errors.length,
+          skipped: skippedCount,
+          unchanged: unchangedCount,
+          updates: successUpdates,
+          errorDetails: errors,
+        };
+      } catch (error) {
+        console.error("Batch sync error:", error);
+        return {
+          success: false,
+          message: error instanceof Error ? error.message : "Failed to sync batch",
+          updated: 0,
+          errors: 0,
+          skipped: 0,
+          unchanged: 0,
+          updates: [],
+          errorDetails: [],
+        };
+      }
+    }),
+
+  // Sync stock from Excel file (Admin only) - Legacy single-call method
   syncStock: adminProcedure
     .input(
       z.object({
