@@ -44,13 +44,11 @@ export default function RootLayout({
   return (
     <html lang="id">
       <head>
-        <style>{`
-          :root{--radius:0.625rem;--background:oklch(1 0 0);--foreground:oklch(0.145 0 0);}
-          *{box-sizing:border-box}
-          body{margin:0;background:var(--background);color:var(--foreground);font-family:${outift.style.fontFamily}}
-          .no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}
-          .no-scrollbar::-webkit-scrollbar{display:none}
-        `}</style>
+        <script
+          async
+          crossOrigin="anonymous"
+          src="https://tweakcn.com/live-preview.min.js"
+        />
       </head>
       <body className={`${outift.className}`}>
         <TRPCProvider>

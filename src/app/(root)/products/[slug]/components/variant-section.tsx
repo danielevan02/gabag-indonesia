@@ -46,8 +46,8 @@ export const VariantItem = ({
         width={100}
         height={100}
         className={cn(
-          "size-full object-cover rounded-md hover:border-2 hover:border-black/50 transition-all",
-          isSelected && "border-2 border-black/50"
+          "size-full object-cover rounded-md hover:border-2 hover:border-primary transition-all",
+          isSelected && "border-2 border-primary"
         )}
       />
       {variant.stock < 1 && (

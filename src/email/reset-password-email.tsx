@@ -31,7 +31,7 @@ export default function ResetPasswordEmail({ resetLink }: ResetPasswordEmailProp
           <Section style={coverSection}>
             <Section style={imageSection}>
               <Img
-                src={`${baseUrl}/images/white-logo.png`}
+                src={`${baseUrl}/images/gabag-logo.png`}
                 width="300"
                 height="100"
                 alt="Gabag's Logo"
@@ -107,7 +107,7 @@ const buttonStyle: CSSProperties = {
   marginTop: "10px",
   marginBottom: "10px",
   borderRadius: "20px",
-  backgroundColor: "black",
+  backgroundColor: "#315095",
   padding: "12px",
   textAlign: "center",
   fontWeight: 600,
@@ -133,7 +133,7 @@ const text = {
 };
 
 const imageSection = {
-  backgroundColor: "black",
+  backgroundColor: "#ffedd4",
   display: "flex",
   padding: "20px 0",
   alignItems: "center",
