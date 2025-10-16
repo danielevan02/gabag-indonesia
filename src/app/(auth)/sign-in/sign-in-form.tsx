@@ -12,12 +12,14 @@ import { Loader } from "lucide-react";
 import { trpc } from "@/trpc/client";
 import { Form } from "@/components/ui/form";
 import { FormInput } from "@/components/shared/input/form-input";
+import { useSession } from "next-auth/react";
 
 type LoginType = z.infer<typeof signInSchema>;
 
 const SignInForm = () => {
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
+  const { update } = useSession();
   const form = useForm<LoginType>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -31,6 +33,8 @@ const SignInForm = () => {
       if (res.success) {
         // Refresh cart data after successful login to get merged cart
         await trpcUtils.cart.getMyCart.refetch();
+        // Update session to trigger re-render in AuthSection
+        await update();
         toast.success(res.message);
         router.push("/");
       } else {

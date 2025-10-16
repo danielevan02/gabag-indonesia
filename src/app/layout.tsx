@@ -4,6 +4,7 @@ import "./globals.css";
 import { APP_DESCRIPTION, APP_NAME, BASE_URL } from "@/lib/constants";
 import { TRPCProvider } from "@/trpc/client";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/components/providers/session-provider";
 
 const outift = Outfit({
   subsets: ['latin'],
@@ -51,12 +52,14 @@ export default function RootLayout({
         />
       </head>
       <body className={`${outift.className}`}>
-        <TRPCProvider>
-          <main>
-            {children}
-            <Toaster position="top-center"/>
-          </main>
-        </TRPCProvider>
+        <AuthProvider>
+          <TRPCProvider>
+            <main>
+              {children}
+              <Toaster position="top-center"/>
+            </main>
+          </TRPCProvider>
+        </AuthProvider>
       </body>
     </html>
   );
