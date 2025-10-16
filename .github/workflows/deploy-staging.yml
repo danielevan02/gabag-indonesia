@@ -1,0 +1,42 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - main  # Auto-deploy ketika push ke main branch
+
+jobs:
+  deploy:
+    name: Deploy to VPS Staging
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /var/www/gabag-indonesia
+
+            echo "🔄 Pulling latest code from GitHub..."
+            git pull origin main
+
+            echo "📦 Installing dependencies..."
+            pnpm install --frozen-lockfile
+
+            echo "🗄️  Running database migrations..."
+            pnpm prisma generate
+
+            echo "🏗️  Building Next.js application..."
+            pnpm build
+
+            echo "♻️  Restarting PM2 application..."
+            pm2 restart gabag-indonesia
+
+            echo "✅ Staging deployment completed successfully!"
+            pm2 status
