@@ -10,7 +10,6 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { SessionProvider } from "next-auth/react"
 import { NavHeader } from "./nav-header"
 import { navLink } from "@/lib/constants"
 
@@ -25,9 +24,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={navLink.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <SessionProvider>
-          <NavUser/>
-        </SessionProvider>
+        <NavUser/>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

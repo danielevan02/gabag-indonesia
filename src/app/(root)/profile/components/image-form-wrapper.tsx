@@ -1,6 +1,5 @@
 "use client";
 
-import { SessionProvider } from "next-auth/react";
 import ImageForm from "./image-form";
 import { getCurrentUser } from "@/lib/actions/user.action";
 
@@ -9,11 +8,7 @@ interface ImageFormWrapperProps {
 }
 
 const ImageFormWrapper = ({ user }: ImageFormWrapperProps) => {
-  return (
-    <SessionProvider>
-      <ImageForm user={user} />
-    </SessionProvider>
-  );
+  return <ImageForm user={user} />;
 };
 
 export default ImageFormWrapper;

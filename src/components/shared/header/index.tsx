@@ -3,14 +3,12 @@ import NavLinks from "./nav-links";
 import Link from "next/link";
 import SearchBar from "./search-bar";
 import { auth } from "../../../auth";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import MobileDrawer from "./mobile-drawer";
-import { SessionProvider } from "next-auth/react";
-import { Button } from "@/components/ui/button";
 import CartModal from "../cart/cart-modal";
 import { TooltipWrapper } from "../tooltip-wrapper";
-import { ClipboardList, ShieldUser } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import Image from "next/image";
+import { AuthSection } from "./auth-section";
 
 const Header = async () => {
   const session = await auth();
@@ -31,9 +29,7 @@ const Header = async () => {
 
       <div className="flex w-full justify-between px-5 lg:px-10 pb-2">
         {/* MENU BUTTON VISIBLE FOR MOBILE SCREEN */}
-        <SessionProvider session={session}>
-          <MobileDrawer />
-        </SessionProvider>
+        <MobileDrawer />
 
         <div className="w-1/3">
           <SearchBar />
@@ -51,41 +47,8 @@ const Header = async () => {
               <ClipboardList className="size-6"/>
             </Link>
           </TooltipWrapper>
-          
-          {session?.user?.role === "admin" && (
-            <TooltipWrapper text="Admin Panel">
-              <Link
-                href="/admin/dashboard"
-                className="cursor-pointer hover:bg-accent rounded-md p-2"
-              >
-                <ShieldUser className="size-6" />
-              </Link>
-            </TooltipWrapper>
-          )}
 
-          {!session ? (
-            <div className="flex gap-2">
-              <Button asChild className="tracking-widest">
-                <Link href={"/sign-in"}>Login</Link>
-              </Button>
-              <Button variant="outline" asChild className="tracking-widest">
-                <Link href={"/sign-up"}>Sign Up</Link>
-              </Button>
-            </div>
-          ) : (
-            <Link href="/profile">
-              <Avatar className="w-10 h-10">
-                <AvatarImage
-                  src={user?.image || ""}
-                  alt={user?.name || "User"}
-                  className="object-cover"
-                />
-                <AvatarFallback className="bg-orange-600 text-white">
-                  {user?.name?.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-            </Link>
-          )}
+          <AuthSection />
         </div>
 
         {/* MOBILE CART BUTTON */}
