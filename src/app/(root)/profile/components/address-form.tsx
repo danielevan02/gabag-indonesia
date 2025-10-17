@@ -41,7 +41,6 @@ const AddressForm = ({ address, id }: { address?: Address; id: string }) => {
   });
 
   const onSubmit = async (data: AddressFormType) => {
-    console.log(data)
     await updateAddress({ ...data, id });
   };
 
