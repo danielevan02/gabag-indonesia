@@ -33,7 +33,7 @@ const MobileDrawer = () => {
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger className="lg:hidden">
+      <DrawerTrigger className="lg:hidden px-2">
         <AlignJustify />
       </DrawerTrigger>
       <DrawerContent className="px-10">
@@ -42,7 +42,7 @@ const MobileDrawer = () => {
           <div className="flex items-center gap-2">
             <Link href="/orders" className="focus:ring-blue-400 focus:outline-none focus:ring-2 transition-all rounded-md p-2">
               <ClipboardList className="size-6" />
-            </Link>
+            </Link>   
             {user?.role === "admin" && (
               <TooltipWrapper text="Admin Panel">
                 <Link

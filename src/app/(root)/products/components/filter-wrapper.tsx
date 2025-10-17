@@ -4,11 +4,12 @@ import MobileFilterProduct from "./mobile-filter-product";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface FilterWrapperProps {
-  categoryId: string;
+  categoryId?: string; // Optional: undefined = all categories
   initialSelectedSubCategories?: string[];
 }
 
 const FilterWrapper = async ({ categoryId, initialSelectedSubCategories }: FilterWrapperProps) => {
+  // If categoryId is undefined, getSelect will return all subcategories from all categories
   const subCategoryList = await trpc.subCategory.getSelect(categoryId);
 
   return (

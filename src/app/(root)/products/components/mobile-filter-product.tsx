@@ -18,9 +18,29 @@ const MobileFilterProduct = ({
   subCategories,
   initialSelectedSubCategories,
 }: {
-  subCategories?: { id: string; name: string }[];
+  subCategories?: {
+    id: string;
+    name: string;
+    category?: {
+      id: string;
+      name: string;
+    };
+  }[];
   initialSelectedSubCategories?: string[];
 }) => {
+  // Group subcategories by category
+  type SubCategory = NonNullable<typeof subCategories>[number];
+  const groupedSubCategories = (subCategories || []).reduce((acc, sub) => {
+    const categoryName = sub.category?.name || 'Other';
+    if (!acc[categoryName]) {
+      acc[categoryName] = [];
+    }
+    acc[categoryName].push(sub);
+    return acc;
+  }, {} as Record<string, SubCategory[]>);
+
+  const hasMultipleCategories = Object.keys(groupedSubCategories).length > 1;
+
   // const [selectedSort, setSelectedSort] = useState<string | null>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialSelectedSubCategories || []);
   const [selectedPrice, setSelectedPrice] = useState<{ min: number; max: number } | null>(null);
@@ -96,19 +116,44 @@ const MobileFilterProduct = ({
             <AccordionItem value="item-1">
               <AccordionTrigger className="font-normal">Category</AccordionTrigger>
               <AccordionContent className="flex flex-col gap-3">
-                {subCategories &&
-                  subCategories.map((subCategory) => (
-                    <div key={subCategory.id} className="flex gap-2 items-center">
-                      <Checkbox
-                        value={subCategory.name}
-                        onCheckedChange={() => handleCategory(subCategory.id)}
-                        checked={selectedCategories.includes(subCategory.id)}
-                      />
-                      <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                        {subCategory.name}
-                      </p>
-                    </div>
-                  ))}
+                {subCategories && (
+                  hasMultipleCategories ? (
+                    // Show grouped by category when searching across all categories
+                    Object.entries(groupedSubCategories).map(([categoryName, subs]) => (
+                      <div key={categoryName} className="mb-3">
+                        <p className="text-xs font-semibold uppercase text-primary mb-2">{categoryName}</p>
+                        <div className="flex flex-col gap-2 pl-2">
+                          {subs.map((subCategory) => (
+                            <div key={subCategory.id} className="flex gap-2 items-center">
+                              <Checkbox
+                                value={subCategory.name}
+                                onCheckedChange={() => handleCategory(subCategory.id)}
+                                checked={selectedCategories.includes(subCategory.id)}
+                              />
+                              <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                                {subCategory.name}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    // Simple list when filtering single category
+                    subCategories.map((subCategory) => (
+                      <div key={subCategory.id} className="flex gap-2 items-center">
+                        <Checkbox
+                          value={subCategory.name}
+                          onCheckedChange={() => handleCategory(subCategory.id)}
+                          checked={selectedCategories.includes(subCategory.id)}
+                        />
+                        <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                          {subCategory.name}
+                        </p>
+                      </div>
+                    ))
+                  )
+                )}
               </AccordionContent>
             </AccordionItem>
             {/* <AccordionItem value="item-2">

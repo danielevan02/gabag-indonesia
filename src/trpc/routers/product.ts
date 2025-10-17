@@ -275,54 +275,173 @@ export const productRouter = createTRPCRouter({
 
   // Search products
   search: baseProcedure.input(z.object({ keyword: z.string() })).query(async ({ input }) => {
-    const data = await prisma.product.findMany({
-      where: {
-        name: {
-          contains: input.keyword,
-          mode: "insensitive",
-        },
+    const now = new Date();
+
+    // Sanitize and validate input
+    const sanitizedKeyword = input.keyword.trim();
+
+    // Return empty result if keyword is empty or too short
+    if (sanitizedKeyword.length === 0) {
+      return {
+        products: [],
+        totalCount: 0,
+      };
+    }
+
+    const searchWhere = {
+      name: {
+        contains: sanitizedKeyword,
+        mode: "insensitive" as const,
       },
-      include: {
-        images: {
-          take: 1,
-          select: {
-            mediaFile: {
-              select: {
-                secure_url: true
+    };
+
+    // Get total count and products in parallel for better performance
+    const [totalCount, data] = await Promise.all([
+      prisma.product.count({ where: searchWhere }),
+      prisma.product.findMany({
+        where: searchWhere,
+        take: 10, // Limit to 10 results for dropdown
+        include: {
+          images: {
+            take: 1,
+            select: {
+              mediaFile: {
+                select: {
+                  secure_url: true
+                }
               }
             }
-          }
-        }, 
-        variants: {
-          select: {
-            regularPrice: true,
-            discount: true
-          }
-        }
-      }
-    });
+          },
+          variants: {
+            select: {
+              id: true,
+              regularPrice: true,
+              discount: true
+            }
+          },
+          subCategory: {
+            select: {
+              name: true,
+            },
+          },
+          campaignItems: {
+            where: {
+              campaign: {
+                startDate: { lte: now },
+                OR: [
+                  { endDate: { gte: now } },
+                  { endDate: null as any },
+                ],
+              },
+            },
+            include: {
+              campaign: {
+                select: {
+                  id: true,
+                  name: true,
+                  type: true,
+                  discountType: true,
+                  defaultDiscount: true,
+                  priority: true,
+                },
+              },
+              variant: {
+                select: {
+                  id: true,
+                },
+              },
+            },
+            orderBy: {
+              campaign: {
+                priority: 'desc',
+              },
+            },
+          },
+        },
+      }),
+    ]);
 
     const convertedData = serializeType(data);
-    return convertedData.map((product) => {
+    const products = convertedData.map((product) => {
+      // Skip products without images
+      if (!product.images || product.images.length === 0) {
+        return null;
+      }
+      // Check if product (not variant-specific) is in campaign
+      const productCampaignItem = product.campaignItems.find((item) => !item.variantId);
+
+      // If no product-level campaign, check if any variant is in campaign
+      const variantCampaignItem = !productCampaignItem ? product.campaignItems.find((item) => item.variantId) : null;
+
+      // Use product campaign if exists, otherwise use variant campaign for display
+      const campaignItemForDisplay = productCampaignItem || variantCampaignItem;
+
+      const campaignDiscount = campaignItemForDisplay
+        ? (campaignItemForDisplay.customDiscount || campaignItemForDisplay.campaign.defaultDiscount)
+        : 0;
+      const campaignDiscountType = campaignItemForDisplay
+        ? (campaignItemForDisplay.customDiscountType || campaignItemForDisplay.campaign.discountType)
+        : "PERCENT";
+
+      const productCampaign = campaignItemForDisplay ? {
+        name: campaignItemForDisplay.campaign.name,
+        type: campaignItemForDisplay.campaign.type,
+        discount: campaignDiscount,
+        discountType: campaignDiscountType,
+      } : null;
+
       let price: number;
 
       if(product.variants.length !== 0){
-        // If product has variants, get the cheapest variant price
-        const variantPrices = product.variants.map(variant =>
-          calculateDiscountedPrice(variant.regularPrice, variant.discount)
-        );
-        price = Math.min(...variantPrices);
+        // If product has variants, calculate each variant price with campaign
+        const variantPrices = product.variants.map(variant => {
+          const variantCampaignItem = product.campaignItems.find((item: any) => item.variantId === variant.id);
+
+          let variantPrice = calculateDiscountedPrice(variant.regularPrice, variant.discount);
+
+          if (variantCampaignItem) {
+            const campaignDiscount = variantCampaignItem.customDiscount || variantCampaignItem.campaign.defaultDiscount;
+            const campaignDiscountType = variantCampaignItem.customDiscountType || variantCampaignItem.campaign.discountType;
+
+            if (campaignDiscount > 0) {
+              if (campaignDiscountType === "PERCENT") {
+                variantPrice = variant.regularPrice - (variant.regularPrice * (campaignDiscount / 100));
+              } else {
+                variantPrice = variant.regularPrice - campaignDiscount;
+              }
+            }
+          }
+
+          return variantPrice;
+        });
+        // Ensure we have valid prices before calculating min
+        price = variantPrices.length > 0 ? Math.min(...variantPrices) : product.regularPrice;
       } else {
-        // If no variants, use product price
+        // If no variants, calculate product price with campaign
         price = calculateDiscountedPrice(product.regularPrice, product.discount);
+
+        if (productCampaignItem && campaignDiscount > 0) {
+          if (campaignDiscountType === "PERCENT") {
+            price = product.regularPrice - (product.regularPrice * (campaignDiscount / 100));
+          } else {
+            price = product.regularPrice - campaignDiscount;
+          }
+        }
       }
 
       return {
         ...product,
         images: product.images[0].mediaFile.secure_url,
         price,
+        campaign: productCampaign,
       }
-    });
+    })
+    .filter((product): product is NonNullable<typeof product> => product !== null); // Remove null entries
+
+    return {
+      products,
+      totalCount,
+    };
   }),
 
   // Get product by slug
