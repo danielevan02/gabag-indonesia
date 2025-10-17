@@ -274,15 +274,11 @@ export const authRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       try {
         const { id, ...addressData } = input;
-        console.log("Input data:", input);
-        console.log("Address data to save:", addressData);
 
-        const result = await prisma.user.update({
+        await prisma.user.update({
           where: { id },
           data: { address: addressData },
         });
-
-        console.log("Update result:", result);
         return handleAuthSuccess("Address successfully updated");
       } catch (error) {
         console.error("Database error:", error);

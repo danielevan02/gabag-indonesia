@@ -10,6 +10,7 @@ import { ShippingInfo } from "@/types";
 import { RouterOutputs } from "@/trpc/routers/_app";
 import { Eye } from "lucide-react";
 import Link from "next/link";
+import { ShippingStatusBadge } from "@/components/shared/shipping-status-badge";
 
 type Order = RouterOutputs['order']['getAll'][number]
 
@@ -117,6 +118,26 @@ export const columns: ColumnDef<Order>[] = [
   {
     header: "Recipient's Name",
     cell: ({ row }) => <p>{row.original.user.name}</p>,
+  },
+  {
+    accessorKey: "shippingStatus",
+    header: "Shipping Status",
+    cell: ({ row }) => {
+      const shippingInfo = row.original.shippingInfo as any;
+      const hasTracking = !!row.original.trackingOrder;
+
+      if (!hasTracking) {
+        return <p className="italic text-foreground/40">Not Shipped</p>;
+      }
+
+      return (
+        <ShippingStatusBadge
+          status={null}
+          shippingInfo={shippingInfo}
+          showIcon={true}
+        />
+      );
+    },
   },
   {
     accessorKey: "deliveredAt",

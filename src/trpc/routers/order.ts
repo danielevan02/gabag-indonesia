@@ -8,6 +8,11 @@ import { auth } from "../../auth";
 import { createTransaction } from "@/lib/midtrans/transaction";
 import { getCartHelper } from "./cart";
 
+// Helper function to round price consistently (same as cart.ts)
+const roundPrice = (price: number): number => {
+  return Math.round(price);
+};
+
 // Order schemas
 const createOrderSchema = z.object({
   notes: z.string().optional(),
@@ -293,7 +298,13 @@ export const orderRouter = createTRPCRouter({
                     select: {
                       defaultDiscount: true,
                       discountType: true,
+                      priority: true,
                     },
+                  },
+                },
+                orderBy: {
+                  campaign: {
+                    priority: 'desc', // Highest priority first
                   },
                 },
               },
@@ -309,7 +320,7 @@ export const orderRouter = createTRPCRouter({
 
           let validatedPrice = item.price;
 
-          // Calculate correct price based on campaign
+          // Calculate correct price based on highest priority campaign
           if (item.variantId) {
             const variant = product.variants.find((v) => v.id === item.variantId);
             if (!variant) {
@@ -319,7 +330,8 @@ export const orderRouter = createTRPCRouter({
               });
             }
 
-            // Check variant campaign
+            // Check variant campaign (already sorted by priority desc)
+            // .find() returns first match = highest priority campaign
             const variantCampaignItem = product.campaignItems.find(
               (ci) => ci.variantId === item.variantId
             );
@@ -328,49 +340,69 @@ export const orderRouter = createTRPCRouter({
               const discount = variantCampaignItem.customDiscount || variantCampaignItem.campaign.defaultDiscount;
               const discountType = variantCampaignItem.customDiscountType || variantCampaignItem.campaign.discountType;
 
-              if (discountType === "PERCENT") {
-                validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * (discount / 100));
+              // Only apply campaign discount if it's greater than 0
+              if (discount > 0) {
+                if (discountType === "PERCENT") {
+                  validatedPrice = roundPrice(Number(variant.regularPrice) - (Number(variant.regularPrice) * (discount / 100)));
+                } else {
+                  validatedPrice = roundPrice(Number(variant.regularPrice) - discount);
+                }
               } else {
-                validatedPrice = Number(variant.regularPrice) - discount;
+                // Campaign discount is 0, use variant's own discount
+                validatedPrice = roundPrice(Number(variant.regularPrice) - (Number(variant.regularPrice) * ((variant.discount || 0) / 100)));
               }
             } else {
-              // Check whole product campaign
+              // Check whole product campaign (already sorted by priority desc)
+              // .find() returns first match = highest priority
               const productCampaignItem = product.campaignItems.find((ci) => !ci.variantId);
               if (productCampaignItem) {
                 const discount = productCampaignItem.customDiscount || productCampaignItem.campaign.defaultDiscount;
                 const discountType = productCampaignItem.customDiscountType || productCampaignItem.campaign.discountType;
 
-                if (discountType === "PERCENT") {
-                  validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * (discount / 100));
+                // Only apply campaign discount if it's greater than 0
+                if (discount > 0) {
+                  if (discountType === "PERCENT") {
+                    validatedPrice = roundPrice(Number(variant.regularPrice) - (Number(variant.regularPrice) * (discount / 100)));
+                  } else {
+                    validatedPrice = roundPrice(Number(variant.regularPrice) - discount);
+                  }
                 } else {
-                  validatedPrice = Number(variant.regularPrice) - discount;
+                  // Campaign discount is 0, use variant's own discount
+                  validatedPrice = roundPrice(Number(variant.regularPrice) - (Number(variant.regularPrice) * ((variant.discount || 0) / 100)));
                 }
               } else {
                 // Use variant's own discount
-                validatedPrice = Number(variant.regularPrice) - (Number(variant.regularPrice) * ((variant.discount || 0) / 100));
+                validatedPrice = roundPrice(Number(variant.regularPrice) - (Number(variant.regularPrice) * ((variant.discount || 0) / 100)));
               }
             }
           } else {
-            // Product without variant
+            // Product without variant (already sorted by priority desc)
+            // .find() returns first match = highest priority campaign
             const productCampaignItem = product.campaignItems.find((ci) => !ci.variantId);
 
             if (productCampaignItem) {
               const discount = productCampaignItem.customDiscount || productCampaignItem.campaign.defaultDiscount;
               const discountType = productCampaignItem.customDiscountType || productCampaignItem.campaign.discountType;
 
-              if (discountType === "PERCENT") {
-                validatedPrice = Number(product.regularPrice) - (Number(product.regularPrice) * (discount / 100));
+              // Only apply campaign discount if it's greater than 0
+              if (discount > 0) {
+                if (discountType === "PERCENT") {
+                  validatedPrice = roundPrice(Number(product.regularPrice) - (Number(product.regularPrice) * (discount / 100)));
+                } else {
+                  validatedPrice = roundPrice(Number(product.regularPrice) - discount);
+                }
               } else {
-                validatedPrice = Number(product.regularPrice) - discount;
+                // Campaign discount is 0, use product's own discount
+                validatedPrice = roundPrice(Number(product.regularPrice) - (Number(product.regularPrice) * ((product.discount || 0) / 100)));
               }
             } else {
               // Use product's own discount
-              validatedPrice = Number(product.regularPrice) - (Number(product.regularPrice) * ((product.discount || 0) / 100));
+              validatedPrice = roundPrice(Number(product.regularPrice) - (Number(product.regularPrice) * ((product.discount || 0) / 100)));
             }
           }
 
-          // Check if price changed
-          if (Math.abs(validatedPrice - item.price) > 0.01) {
+          // Check if price changed (both prices already rounded)
+          if (Math.abs(validatedPrice - item.price) > 1) {
             priceChanged = true;
           }
 
@@ -380,11 +412,11 @@ export const orderRouter = createTRPCRouter({
           });
         }
 
-        // If price changed due to expired campaign, throw error to inform user
+        // If price changed due to expired/changed campaign, inform user
         if (priceChanged) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: "Some campaign prices have changed. Please refresh your cart and try again.",
+            message: "Harga produk telah berubah karena perubahan campaign. Silakan refresh halaman untuk melihat harga terbaru.",
           });
         }
 

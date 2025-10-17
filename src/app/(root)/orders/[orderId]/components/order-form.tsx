@@ -261,6 +261,17 @@ const OrderForm: React.FC<OrderFormProps> = ({
       return toast.error("Invalid shipping area");
     }
 
+    // Re-fetch cart to ensure prices are up-to-date before payment
+    toast.loading("Validating cart prices...", { id: "cart-validation" });
+    try {
+      await utils.cart.getMyCart.invalidate();
+      await new Promise(resolve => setTimeout(resolve, 500)); // Small delay for cache update
+      toast.dismiss("cart-validation");
+    } catch (error) {
+      toast.dismiss("cart-validation");
+      console.error("Cart validation error:", error);
+    }
+
     await processPayment({
       email: data.email || user?.email || DEFAULT_EMAIL,
       name: data.name || user?.name || DEFAULT_NAME,
