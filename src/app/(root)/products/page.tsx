@@ -30,31 +30,41 @@ const ProductPage = async ({
   const { subCategories, search, max, min, sort, category, page } = await searchParams;
   const subCategoryIds = subCategories?.split(",").filter(Boolean);
 
+  // When searching, ignore category filter to show all categories
+  // Otherwise, use the category from URL
+  const effectiveCategoryId = search ? undefined : category;
+
   return (
     <div className="mx-3 xl:mx-10 flex flex-col items-center">
-      <Suspense key={`banner-${category}`} fallback={<CategoryBannerFallback />}>
-        <CategoryBanner categoryId={category} />
-      </Suspense>
+      {/* Only show category banner when not searching */}
+      {!search && (
+        <Suspense key={`banner-${category}`} fallback={<CategoryBannerFallback />}>
+          <CategoryBanner categoryId={category} />
+        </Suspense>
+      )}
 
       <div className="flex items-start w-full relative flex-col md:flex-row justify-between lg:gap-5 min-h-[500px]">
-        <Suspense key={`filter-${category}`} fallback={<FilterWrapperFallback />}>
+        <Suspense key={`filter-${effectiveCategoryId || 'all'}-${search || ''}`} fallback={<FilterWrapperFallback />}>
           <FilterWrapper
-            categoryId={category}
+            categoryId={effectiveCategoryId}
             initialSelectedSubCategories={subCategoryIds}
           />
         </Suspense>
 
         <div className="flex flex-col w-full h-full">
           {search && (
-            <p className="mb-3">
-              Showing results for <span className="font-bold">&quot;{search}&quot;</span>
-            </p>
+            <div className="mb-3">
+              <p className="text-lg">
+                Showing results for <span className="font-bold">&quot;{search}&quot;</span>
+              </p>
+              <p className="text-sm text-gray-500">Searching across all categories</p>
+            </div>
           )}
 
-          <Suspense key={`products-${category}-${subCategoryIds?.join(',') || 'all'}-${search || ''}-${page || '1'}`} fallback={<ProductListFallback />}>
+          <Suspense key={`products-${effectiveCategoryId || 'all'}-${subCategoryIds?.join(',') || 'all'}-${search || ''}-${page || '1'}`} fallback={<ProductListFallback />}>
             <ProductList
               subCategoryIds={subCategoryIds}
-              categoryId={category}
+              categoryId={effectiveCategoryId}
               search={search}
               max={max}
               min={min}
