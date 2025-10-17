@@ -31,7 +31,17 @@ export const subCategoryRouter = createTRPCRouter({
       select: {
         id: true,
         name: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
+      orderBy: [
+        { category: { name: 'asc' } },
+        { name: 'asc' },
+      ],
     });
   }),
   // Get sub categories by category ID

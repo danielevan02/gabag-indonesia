@@ -18,11 +18,27 @@ export interface FilterProductProps {
   subCategories: {
     id: string;
     name: string;
+    category?: {
+      id: string;
+      name: string;
+    };
   }[];
   initialSelectedSubCategories?: string[];
 }
 
 const FilterProduct: React.FC<FilterProductProps> = ({ subCategories, initialSelectedSubCategories }) => {
+  // Group subcategories by category
+  type SubCategory = typeof subCategories[number];
+  const groupedSubCategories = subCategories.reduce((acc, sub) => {
+    const categoryName = sub.category?.name || 'Other';
+    if (!acc[categoryName]) {
+      acc[categoryName] = [];
+    }
+    acc[categoryName].push(sub);
+    return acc;
+  }, {} as Record<string, SubCategory[]>);
+
+  const hasMultipleCategories = Object.keys(groupedSubCategories).length > 1;
   const [showDialog, setShowDialog] = useState(true);
   // const [selectedSort, setSelectedSort] = useState<string | null>(null);
   const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>(initialSelectedSubCategories || []);
@@ -121,18 +137,42 @@ const FilterProduct: React.FC<FilterProductProps> = ({ subCategories, initialSel
           <AccordionItem value="item-1">
             <AccordionTrigger className="font-light">Categories</AccordionTrigger>
             <AccordionContent className="flex flex-col gap-3">
-              {subCategories.map((subCategory) => (
-                <div key={subCategory.id} className="flex gap-2 items-center">
-                  <Checkbox
-                    value={subCategory.name}
-                    onCheckedChange={() => handleSubCategory(subCategory.id)}
-                    checked={selectedSubCategories.includes(subCategory.id)}
-                  />
-                  <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                    {subCategory.name}
-                  </p>
-                </div>
-              ))}
+              {hasMultipleCategories ? (
+                // Show grouped by category when searching across all categories
+                Object.entries(groupedSubCategories).map(([categoryName, subs]) => (
+                  <div key={categoryName} className="mb-3">
+                    <p className="text-xs font-semibold uppercase text-primary mb-2">{categoryName}</p>
+                    <div className="flex flex-col gap-2 pl-2">
+                      {subs.map((subCategory) => (
+                        <div key={subCategory.id} className="flex gap-2 items-center">
+                          <Checkbox
+                            value={subCategory.name}
+                            onCheckedChange={() => handleSubCategory(subCategory.id)}
+                            checked={selectedSubCategories.includes(subCategory.id)}
+                          />
+                          <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                            {subCategory.name}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                // Simple list when filtering single category
+                subCategories.map((subCategory) => (
+                  <div key={subCategory.id} className="flex gap-2 items-center">
+                    <Checkbox
+                      value={subCategory.name}
+                      onCheckedChange={() => handleSubCategory(subCategory.id)}
+                      checked={selectedSubCategories.includes(subCategory.id)}
+                    />
+                    <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                      {subCategory.name}
+                    </p>
+                  </div>
+                ))
+              )}
             </AccordionContent>
           </AccordionItem>
           {/* <AccordionItem value="item-2">

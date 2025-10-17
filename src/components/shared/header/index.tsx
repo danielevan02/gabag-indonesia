@@ -31,11 +31,11 @@ const Header = async () => {
         {/* MENU BUTTON VISIBLE FOR MOBILE SCREEN */}
         <MobileDrawer />
 
-        <div className="w-1/3">
+        <div className="flex-1">
           <SearchBar />
         </div>
 
-        <div className="w-1/3 flex justify-center items-center">
+        <div className="flex-1 hidden lg:flex justify-center items-center">
           <NavLinks device="desktop" />
         </div>
 

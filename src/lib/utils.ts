@@ -75,7 +75,8 @@ export function serializeType<T>(data: T): SerializeValue<T> {
 export const updateQueryParams = (
   newParams: Record<string, string | undefined>,
   currentParams: URLSearchParams,
-  router: AppRouterInstance
+  router: AppRouterInstance,
+  options?: { absolute?: boolean; method?: 'push' | 'replace' }
 ) => {
   const updatedParams = new URLSearchParams(currentParams.toString());
   Object.entries(newParams).forEach(([key, value]) => {
@@ -87,5 +88,13 @@ export const updateQueryParams = (
   });
 
   const queryString = updatedParams.toString();
-  router.replace(queryString ? `?${queryString}` : "/products");
+  const method = options?.method || 'replace';
+
+  // If absolute option is true, always navigate to /products
+  // Otherwise, use relative navigation (for filters on products page)
+  if (options?.absolute) {
+    router[method](queryString ? `/products?${queryString}` : "/products");
+  } else {
+    router[method](queryString ? `?${queryString}` : "/products");
+  }
 };
