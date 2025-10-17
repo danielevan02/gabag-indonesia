@@ -7,6 +7,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Package, CreditCard, Truck, User, MapPin } from "lucide-react";
+import { ShippingStatusBadge } from "@/components/shared/shipping-status-badge";
+import { ShippingTimeline } from "@/components/shared/shipping-timeline";
 
 interface OrderDetailPageProps {
   params: Promise<{ orderId: string }>;
@@ -73,10 +75,16 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             </div>
             <Separator />
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Delivery Status:</span>
-              <Badge variant={order.isDelivered ? "default" : "secondary"}>
-                {order.isDelivered ? "Delivered" : "Not Delivered"}
-              </Badge>
+              <span className="text-muted-foreground">Shipping Status:</span>
+              {order.trackingOrder ? (
+                <ShippingStatusBadge
+                  status={null}
+                  shippingInfo={shippingInfo as any}
+                  showIcon={true}
+                />
+              ) : (
+                <Badge variant="outline">Not Shipped</Badge>
+              )}
             </div>
             <Separator />
             <div className="flex justify-between">
@@ -235,6 +243,11 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             <p className="text-muted-foreground">{order.notes}</p>
           </CardContent>
         </Card>
+      )}
+
+      {/* Shipping Timeline */}
+      {order.trackingOrder && shippingInfo && (
+        <ShippingTimeline shippingInfo={shippingInfo as any} />
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { ShippingStatusBadge } from "@/components/shared/shipping-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -54,11 +55,21 @@ const OrderTable = async () => {
                   {order.trackingOrder ? (
                     order.trackingOrder
                   ) : (
-                    <p className="italic text-muted-foreground">Not Delivered</p>
+                    <p className="italic text-muted-foreground">Not Shipped</p>
                   )}
                 </TableCell>
                 <TableCell>
-                  <Badge>{order.isDelivered ? "delivered" : "not delivered"}</Badge>
+                  {order.trackingOrder ? (
+                    <ShippingStatusBadge
+                      status={null}
+                      shippingInfo={order.shippingInfo as any}
+                      showIcon={true}
+                    />
+                  ) : (
+                    <Badge variant="outline" className="bg-gray-50 text-gray-500">
+                      Not Shipped
+                    </Badge>
+                  )}
                 </TableCell>
                 <TableCell>{orderDate}</TableCell>
                 <TableCell className="text-end">

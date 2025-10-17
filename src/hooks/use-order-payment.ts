@@ -105,7 +105,21 @@ export const useOrderPayment = ({ orderId }: UseOrderPaymentProps) => {
         }
       } catch (error) {
         console.error("Payment processing error:", error);
-        toast.error("Payment failed. Please try again.");
+
+        // Check if error is about price change
+        if (error instanceof Error && error.message.includes("perubahan campaign")) {
+          // Auto-reload page to get updated prices
+          toast.error(error.message + " Halaman akan di-refresh...", {
+            duration: 3000,
+          });
+
+          // Reload after 2 seconds
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        } else {
+          toast.error("Payment failed. Please try again.");
+        }
       }
     });
   };

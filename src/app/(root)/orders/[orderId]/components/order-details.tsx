@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { ShippingStatusBadge } from "@/components/shared/shipping-status-badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ShippingInfo } from "@/types";
@@ -71,8 +72,16 @@ const OrderDetails = ({ order }: { order: RouterOutputs['order']['getById'] }) =
             <Textarea disabled className="text-sm" value={order.notes || "There is no notes"} />
           </div>
           <div className="col-span-1">
-            <h3 className="mb-3 font-semibold">Delivery Status</h3>
-            <p className="text-sm">{order.isDelivered ? "On Delivery" : "Not Delivered"}</p>
+            <h3 className="mb-3 font-semibold">Shipping Status</h3>
+            {order.trackingOrder ? (
+              <ShippingStatusBadge
+                status={null}
+                shippingInfo={shippingInfo as any}
+                showIcon={true}
+              />
+            ) : (
+              <p className="text-sm italic text-muted-foreground">Not Shipped</p>
+            )}
           </div>
           <div className="col-span-1">
             <h3 className="mb-3 font-semibold">Paid At</h3>
