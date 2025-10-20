@@ -260,9 +260,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
     if (!area?.id) {
       return toast.error("Invalid shipping area");
     }
-
-    // Re-fetch cart to ensure prices are up-to-date before payment
-    toast.loading("Validating cart prices...", { id: "cart-validation" });
+    
     try {
       await utils.cart.getMyCart.invalidate();
       await new Promise(resolve => setTimeout(resolve, 500)); // Small delay for cache update

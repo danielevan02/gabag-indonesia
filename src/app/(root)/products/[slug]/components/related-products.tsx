@@ -14,7 +14,7 @@ const RelatedProducts = async ({ subCategoryName }: RelatedProductsProps) => {
   }
 
   return (
-    <div className="mt-10">
+    <div>
       <p className="text-lg lg:text-2xl">You Might Also Like</p>
       <div className="flex gap-1 mt-5 md:gap-5 overflow-scroll no-scrollbar snap-x snap-mandatory py-px">
         {result.products.map((product) => (

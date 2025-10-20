@@ -26,9 +26,12 @@ const CartModal = ({ userId }: CartModalProps) => {
   const [notes, setNotes] = useState("");
 
   // Use tRPC query to get cart data
+  const utils = trpc.useUtils();
   const { data: cart, isLoading: cartLoading } = trpc.cart.getMyCart.useQuery();
   const { mutateAsync: createOrder } = trpc.order.create.useMutation({
     onSuccess: (res) => {
+      // Invalidate cart query to refetch and update UI
+      utils.cart.getMyCart.invalidate();
       router.push(`/orders/${res.orderId}`);
     },
   });
