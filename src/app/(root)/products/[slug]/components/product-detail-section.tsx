@@ -15,6 +15,7 @@ import { QuantityControl } from "./quantity-control";
 import { PriceTag } from "./price-tag";
 import { RouterOutputs } from "@/trpc/routers/_app";
 import { trpc } from "@/trpc/client";
+import { StarRatingDisplay } from "@/components/shared/review/star-rating-display";
 
 type Product = RouterOutputs["product"]["getBySlug"];
 
@@ -102,7 +103,7 @@ const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
         <h2 className="uppercase text-foreground/40 text-sm font-semibold">
           {product?.subCategory?.name}
         </h2>
-        <h1 className="text-xl font-medium mb-3 lg:mb-5">
+        <h1 className="text-xl font-medium mb-1 lg:mb-2">
           {product?.name} {" "}
           {(variant?.campaign || product?.campaign) && (
             <div className="px-2 py-0.5 text-xs font-semibold text-white bg-orange-600 rounded w-fit inline-block">
@@ -110,6 +111,18 @@ const ProductDetailSection = ({ product }: ProductDetailSectionProps) => {
             </div>
           )}
         </h1>
+
+        {/* Star Rating Display */}
+        {product?.reviewStats && product.reviewStats.totalReviews > 0 && (
+          <div className="mb-3 lg:mb-5">
+            <StarRatingDisplay
+              rating={product.reviewStats.averageRating}
+              totalReviews={product.reviewStats.totalReviews}
+              size="md"
+            />
+          </div>
+        )}
+
         <PriceTag
           regularPrice={product.regularPrice}
           price={product.price === 0 ? lowestPrice : product.price!}

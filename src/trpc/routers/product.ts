@@ -524,6 +524,17 @@ export const productRouter = createTRPCRouter({
 
     const convertedData = serializeType(data);
 
+    // Get review statistics for this product
+    const reviewStats = await prisma.review.aggregate({
+      where: { productId: data.id },
+      _avg: {
+        rating: true,
+      },
+      _count: {
+        id: true,
+      },
+    });
+
     // Check if product (not variant-specific) is in campaign
     const productCampaignItem = convertedData.campaignItems.find((item: any) => !item.variantId);
 
@@ -614,6 +625,10 @@ export const productRouter = createTRPCRouter({
       variants: variantsWithCampaign,
       price: productPrice,
       campaign: productCampaign,
+      reviewStats: {
+        averageRating: reviewStats._avg.rating || 0,
+        totalReviews: reviewStats._count.id,
+      },
     };
   }),
 
