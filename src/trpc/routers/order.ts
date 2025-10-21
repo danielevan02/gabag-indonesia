@@ -94,6 +94,8 @@ export const orderRouter = createTRPCRouter({
                 name: true,
                 image: true,
                 variantId: true,
+                price: true,
+                qty: true,
               },
             },
             user: {
@@ -127,6 +129,8 @@ export const orderRouter = createTRPCRouter({
                 name: true,
                 image: true,
                 variantId: true,
+                price: true,
+                qty: true,
               },
             },
           },

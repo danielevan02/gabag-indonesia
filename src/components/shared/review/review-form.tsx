@@ -40,6 +40,7 @@ export function ReviewForm({
       trpcUtils.review.getByProduct.invalidate({ productId });
       trpcUtils.review.getOrdersForReview.invalidate();
       trpcUtils.review.canReview.invalidate({ orderId, productId });
+      trpcUtils.review.countUnreviewed.invalidate(); // Update notification badge
       onSuccess?.();
     },
     onError: (error) => {
@@ -85,7 +86,7 @@ export function ReviewForm({
           </div>
         )}
         <div className="flex-1">
-          <h3 className="font-semibold text-lg mb-1">Review Produk</h3>
+          <h3 className="font-semibold text-lg mb-1">Give this product a review!</h3>
           <p className="text-sm text-gray-600 line-clamp-2">{productName}</p>
         </div>
       </div>
@@ -114,7 +115,7 @@ export function ReviewForm({
           ))}
           {rating > 0 && (
             <span className="ml-2 text-sm text-gray-600 self-center">
-              {rating} dari 5
+              {rating} out of 5
             </span>
           )}
         </div>
@@ -122,7 +123,7 @@ export function ReviewForm({
 
       {/* Comment */}
       <div className="space-y-2">
-        <Label htmlFor="comment">Ulasan Anda</Label>
+        <Label htmlFor="comment">Your comment</Label>
         <Textarea
           id="comment"
           placeholder="Ceritakan pengalaman Anda dengan produk ini..."

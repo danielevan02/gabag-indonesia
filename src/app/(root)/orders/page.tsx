@@ -1,13 +1,14 @@
 import { Suspense } from "react";
-import OrderTable, { OrderTableFallback } from "./components/order-table";
+import OrderList, { OrderListFallback } from "./components/order-list";
 
 const OrderPage = () => {
   return (
-    <div className="w-full max-w-screen">
-      <div className="px-2 md:px-10 mt-5 min-h-[690px]">
-        <h1 className="text-lg font-semibold text-center mb-5">Order History</h1>
-        <Suspense fallback={<OrderTableFallback />}>
-          <OrderTable />
+    <div className="w-full max-w-screen min-h-screen bg-background">
+      <h1 className="text-xl md:text-3xl w-full text-center font-semibold mt-5">Order List</h1>
+      <p className="text-muted-foreground w-full text-center">Track and manage your purchase</p>
+      <div className="max-w-5xl mx-auto px-4 md:px-6 py-8">
+        <Suspense fallback={<OrderListFallback />}>
+          <OrderList />
         </Suspense>
       </div>
     </div>

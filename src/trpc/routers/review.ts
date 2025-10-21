@@ -338,4 +338,62 @@ export const reviewRouter = createTRPCRouter({
 
       return { canReview: true };
     }),
+
+  // Count unreviewable products for a user
+  countUnreviewed: protectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(async ({ input }) => {
+      const { userId } = input;
+
+      // Get all paid orders for the user (we'll check delivery status below)
+      const orders = await prisma.order.findMany({
+        where: {
+          userId,
+          paymentStatus: {
+            in: ["capture", "settlement"],
+          },
+        },
+        include: {
+          orderItems: {
+            select: {
+              productId: true,
+            },
+          },
+          reviews: {
+            select: {
+              productId: true,
+            },
+          },
+        },
+      });
+
+      // Count total unreviewable products
+      let unreviewedCount = 0;
+
+      for (const order of orders) {
+        // Check actual delivery status from shippingInfo (prioritize this over isDelivered flag)
+        // If shippingInfo exists, use its currentStatus, otherwise fall back to isDelivered
+        const shippingInfo = order.shippingInfo as any;
+        const actuallyDelivered = shippingInfo?.currentStatus
+          ? shippingInfo.currentStatus === "delivered"
+          : order.isDelivered;
+
+        // Skip if not actually delivered
+        if (!actuallyDelivered) {
+          continue;
+        }
+
+        // Get reviewed product IDs for this order
+        const reviewedProductIds = new Set(order.reviews.map((r) => r.productId));
+
+        // Count products that haven't been reviewed
+        const unreviewedInOrder = order.orderItems.filter(
+          (item) => !reviewedProductIds.has(item.productId)
+        );
+
+        unreviewedCount += unreviewedInOrder.length;
+      }
+
+      return { count: unreviewedCount };
+    }),
 });
