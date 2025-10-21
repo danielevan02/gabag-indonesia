@@ -30,6 +30,7 @@ jobs:
             pnpm install --frozen-lockfile
 
             echo "🗄️  Running database migrations..."
+            pnpm prisma migrate deploy
             pnpm prisma generate
 
             echo "🏗️  Building Next.js application..."

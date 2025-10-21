@@ -90,6 +90,10 @@ export const orderRouter = createTRPCRouter({
             orderItems: {
               select: {
                 id: true,
+                productId: true,
+                name: true,
+                image: true,
+                variantId: true,
               },
             },
             user: {
@@ -119,6 +123,10 @@ export const orderRouter = createTRPCRouter({
             orderItems: {
               select: {
                 id: true,
+                productId: true,
+                name: true,
+                image: true,
+                variantId: true,
               },
             },
           },
