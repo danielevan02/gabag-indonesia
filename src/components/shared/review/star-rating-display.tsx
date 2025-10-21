@@ -57,7 +57,7 @@ export function StarRatingDisplay({
       {/* Rating Number and Review Count */}
       {showReviewCount && (
         <span className={`text-muted-foreground ${textSize}`}>
-          {rating.toFixed(1)} ({totalReviews} review{totalReviews !== 1 ? "s" : ""})
+          {rating.toFixed(1)} ({totalReviews})
         </span>
       )}
     </div>
