@@ -255,6 +255,8 @@ model Review {
   order              Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@unique([orderId, productId])
+  @@index([productId, createdAt], map: "idx_review_product_created")
+  @@index([userId], map: "idx_review_user")
 }
 
 model Cart {
@@ -298,6 +300,11 @@ model Order {
   orderItems       OrderItem[]
   vouchers         Voucher[]   @relation("OrderToVoucher")
   reviews          Review[]
+
+  // Performance optimization indexes
+  @@index([userId, isDelivered, paymentStatus], map: "idx_order_user_delivery_payment")
+  @@index([userId, createdAt], map: "idx_order_user_created")
+  @@index([isDelivered, paymentStatus], map: "idx_order_delivery_payment")
 }
 
 model OrderItem {

@@ -182,13 +182,12 @@ export const courierRouter = createTRPCRouter({
         const data: OrderResponse = await res.json();
 
         // Update order with shipment info
-        const deliveryDate = new Date(data.delivery.datetime);
         await prisma.order.update({
           where: { id: orderId },
           data: {
             trackingOrder: data.courier.waybill_id,
-            deliveredAt: deliveryDate,
-            isDelivered: true,
+            // Don't set deliveredAt and isDelivered here
+            // They will be set by Biteship webhook when status becomes "delivered"
           },
         });
 
@@ -375,13 +374,12 @@ export const courierRouter = createTRPCRouter({
             const data: OrderResponse = await res.json();
 
             // Update order with shipment info
-            const deliveryDate = new Date(data.delivery.datetime);
             await prisma.order.update({
               where: { id: order.id },
               data: {
                 trackingOrder: data.courier.waybill_id,
-                deliveredAt: deliveryDate,
-                isDelivered: true,
+                // Don't set deliveredAt and isDelivered here
+                // They will be set by Biteship webhook when status becomes "delivered"
               },
             });
 

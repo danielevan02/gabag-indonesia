@@ -229,3 +229,8 @@
 .count-down {
   @apply flex flex-col items-center uppercase text-3xl font-extrabold min-w-16
 }
+
+/* Toast/Sonner Customization */
+[data-sonner-toast] [data-description] {
+  color: hsl(var(--muted-foreground)) !important;
+}
