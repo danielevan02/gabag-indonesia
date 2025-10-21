@@ -8,7 +8,7 @@ export const BackButton = () => {
   const router = useRouter()
   return (
     <Button className="rounded-full" variant="outline" onClick={()=>router.back()}>
-      <ArrowLeft /> Back to product list
+      <ArrowLeft /> <span className="lg:hidden">Back to product list</span>
     </Button>
   );
 };
