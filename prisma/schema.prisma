@@ -25,6 +25,7 @@ model User {
   orders        Order[]
   sessions      Session[]
   redemptions   Redemption[]
+  reviews       Review[]
 }
 
 model Account {
@@ -241,12 +242,21 @@ model Redemption {
 }
 
 model Review {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  rating    Int
-  comment   String
-  createdAt DateTime @default(now()) @db.Timestamp(6)
-  productId String   @db.Uuid
-  product   Product  @relation(fields: [productId], references: [id])
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rating             Int
+  comment            String
+  isVerifiedPurchase Boolean  @default(false)
+  createdAt          DateTime @default(now()) @db.Timestamp(6)
+  productId          String   @db.Uuid
+  userId             String   @db.Uuid
+  orderId            String
+  product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order              Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, productId])
+  @@index([productId, createdAt], map: "idx_review_product_created")
+  @@index([userId], map: "idx_review_user")
 }
 
 model Cart {
@@ -289,6 +299,12 @@ model Order {
   user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderItems       OrderItem[]
   vouchers         Voucher[]   @relation("OrderToVoucher")
+  reviews          Review[]
+
+  // Performance optimization indexes
+  @@index([userId, isDelivered, paymentStatus], map: "idx_order_user_delivery_payment")
+  @@index([userId, createdAt], map: "idx_order_user_created")
+  @@index([isDelivered, paymentStatus], map: "idx_order_delivery_payment")
 }
 
 model OrderItem {

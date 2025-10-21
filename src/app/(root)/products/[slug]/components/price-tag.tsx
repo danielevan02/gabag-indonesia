@@ -73,7 +73,7 @@ export const PriceTag = ({ price, regularPrice, discount, variant, hasVariant, c
   }
 
   return (
-    <div className="flex flex-row md:flex-col lg:flex-row gap-2 md:gap-0 lg:gap-3 mb-5 items-center md:items-start lg:items-center">
+    <div className="flex flex-row gap-2 lg:gap-3 mb-5 items-center">
       <p className="flex gap-2 font-semibold tracking-wider">
         {!variant && hasVariant && <span className="font-normal text-sm">from </span>}
         <span className="text-2xl">Rp {displayPrice.toLocaleString()}</span>

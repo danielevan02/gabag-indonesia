@@ -14,6 +14,7 @@ import {
 import { trpc } from "@/trpc/server";
 import { format } from "date-fns";
 import Link from "next/link";
+import { OrderItemsWithReview } from "./order-items-with-review";
 
 const OrderTable = async () => {
   const session = await auth();
@@ -32,6 +33,7 @@ const OrderTable = async () => {
           <TableHead>Waybill Number</TableHead>
           <TableHead>Delivery Status</TableHead>
           <TableHead>Order Date</TableHead>
+          <TableHead>Review</TableHead>
           <TableHead className="text-end">Details</TableHead>
         </TableRow>
       </TableHeader>
@@ -72,6 +74,15 @@ const OrderTable = async () => {
                   )}
                 </TableCell>
                 <TableCell>{orderDate}</TableCell>
+                <TableCell>
+                  <OrderItemsWithReview
+                    orderId={order.id}
+                    orderItems={order.orderItems}
+                    isDelivered={order.isDelivered}
+                    isPaid={["capture", "settlement"].includes(order.paymentStatus || "")}
+                    userId={session?.user?.id || ""}
+                  />
+                </TableCell>
                 <TableCell className="text-end">
                   <Link prefetch href={`/orders/${order.id}`} className="underline">
                     {order.paymentStatus !== "pending" ? "See Details" : "Pay Now"}
@@ -82,7 +93,7 @@ const OrderTable = async () => {
           })
         ) : (
           <TableRow>
-            <TableCell colSpan={10} className="text-center py-8 italic text-muted-foreground">
+            <TableCell colSpan={11} className="text-center py-8 italic text-muted-foreground">
               There is no transaction.
             </TableCell>
           </TableRow>
@@ -106,6 +117,7 @@ export const OrderTableFallback = () => {
           <TableHead>Waybill Number</TableHead>
           <TableHead>Delivery Status</TableHead>
           <TableHead>Order Date</TableHead>
+          <TableHead>Review</TableHead>
           <TableHead className="text-end">Details</TableHead>
         </TableRow>
       </TableHeader>
@@ -121,6 +133,7 @@ export const OrderTableFallback = () => {
             <TableCell><Skeleton className="h-4 w-24" /></TableCell>
             <TableCell><Skeleton className="h-6 w-24" /></TableCell>
             <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+            <TableCell><Skeleton className="h-8 w-16" /></TableCell>
             <TableCell className="text-end"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
           </TableRow>
         ))}

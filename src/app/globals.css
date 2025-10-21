@@ -187,7 +187,7 @@
 }
 
 .image-section-container {
-  @apply relative md:sticky flex flex-col-reverse md:flex-row size-full lg:max-w-3xl md:max-h-[500px] lg:max-h-[440px] xl:max-h-[600px] xl:min-h-[600px] gap-2 md:left-0 md:top-56 lg:top-36 xl:top-48 overflow-hidden
+  @apply relative lg:sticky flex flex-col-reverse lg:flex-row size-full lg:max-w-2xl lg:max-h-[440px] xl:max-h-[600px] xl:min-h-[600px] gap-2 lg:left-0 lg:top-36 xl:top-48 overflow-hidden
 }
 
 .nav-container {
@@ -195,7 +195,7 @@
 }
 
 .image-list-container {
-  @apply flex flex-row md:flex-col md:min-w-fit gap-3 max-h-full overflow-scroll snap-x md:snap-y snap-mandatory
+  @apply flex flex-row lg:flex-col lg:min-w-fit gap-3 max-h-full overflow-scroll snap-x lg:snap-y snap-mandatory
 }
 
 .image-list-item {
@@ -203,7 +203,7 @@
 }
 
 .main-image {
-  @apply size-full max-h-[400px] min-h-[400px] md:max-h-full md:min-h-full object-cover rounded-md
+  @apply size-full max-h-[400px] min-h-[400px] lg:max-h-full lg:min-h-full object-cover rounded-md
 }
 
 .gallery-image-container {
@@ -228,4 +228,9 @@
 
 .count-down {
   @apply flex flex-col items-center uppercase text-3xl font-extrabold min-w-16
+}
+
+/* Toast/Sonner Customization */
+[data-sonner-toast] [data-description] {
+  color: hsl(var(--muted-foreground)) !important;
 }

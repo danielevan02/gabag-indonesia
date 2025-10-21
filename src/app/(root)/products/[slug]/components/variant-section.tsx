@@ -12,7 +12,7 @@ interface VariantSectionProps {
 
 export const VariantSection = ({ variants, selectedVariant, onVariantSelect }: VariantSectionProps) => (
   <>
-    <span className="text-sm">Variants:</span>
+    <span className="text-sm font-semibold">Select Variants</span>
     <div className="grid grid-cols-4 gap-2 mt-3">
       {variants?.map((variant) => (
         <VariantItem 

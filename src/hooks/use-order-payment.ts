@@ -35,9 +35,15 @@ interface ProcessPaymentParams {
 export const useOrderPayment = ({ orderId }: UseOrderPaymentProps) => {
   const router = useRouter();
   const [isLoading, startTransition] = useTransition();
+  const utils = trpc.useUtils();
 
   const makePaymentMutation = trpc.order.makePayment.useMutation();
-  const finalizeOrderMutation = trpc.order.finalize.useMutation();
+  const finalizeOrderMutation = trpc.order.finalize.useMutation({
+    onSuccess: () => {
+      // Invalidate cart query to update UI immediately
+      utils.cart.getMyCart.invalidate();
+    },
+  });
   const updatePaymentStatusMutation = trpc.order.updatePaymentStatus.useMutation();
 
   const processPayment = async ({
