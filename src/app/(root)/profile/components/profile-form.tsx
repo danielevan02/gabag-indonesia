@@ -94,8 +94,9 @@ const ProfileItem = ({ label, value, editable, type = "text", userId }: ProfileI
           type={type}
           value={fieldValue}
           onChange={(e) => setFieldValue(e.target.value)}
-          pattern={isPhone ? "^08[0-9]{7,11}$" : undefined}
+          pattern={isPhone ? "^08[0-9]{9,11}$" : undefined}
           placeholder={isPhone ? "08**********" : ""}
+          maxLength={isPhone ? 13 : undefined}
         />
       ) : (
         <p className="text-sm lg:text-base">{fieldValue}</p>

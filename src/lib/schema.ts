@@ -10,7 +10,13 @@ export const signUpSchema = z
     email: z.string().email("Please input a valid email").min(1, "Email is required!"),
     fullName: z.string().min(1, "Please input your name"),
     password: z.string().min(5, "Password must be at least 6 characters"),
-    phone: z.string().min(1, "Please enter the phone number"),
+    phone: z
+      .string()
+      .min(11, "Phone number must be at least 11 digits")
+      .max(13, "Phone number must not exceed 13 digits")
+      .regex(/^08[0-9]{9,11}$/, {
+        message: "Phone number must start with 08 and consist of 11-13 digits total",
+      }),
     confirmPassword: z.string().min(1, "Please re-input the password"),
   })
   .refine((val) => val.confirmPassword === val.password, {
@@ -21,9 +27,10 @@ export const signUpSchema = z
 export const phoneSchema = z.object({
   phone: z
     .string()
-    .min(1, "Phone number is required")
-    .regex(/^08[0-9]{7,11}$/, {
-      message: "Phone number must start with 08 and consist of 9-13 digits total",
+    .min(11, "Phone number must be at least 11 digits")
+    .max(13, "Phone number must not exceed 13 digits")
+    .regex(/^08[0-9]{9,11}$/, {
+      message: "Phone number must start with 08 and consist of 11-13 digits total",
     }),
 });
 
@@ -45,7 +52,13 @@ export const orderSchema = z.object({
   district: z.string().min(1, "Please enter the district"),
   village: z.string().min(1, "Please enter the village"),
   postal_code: z.string().min(1, "Please enter the postal code"),
-  phone: z.string().min(1, "Please enter the phone number"),
+  phone: z
+    .string()
+    .min(11, "Phone number must be at least 11 digits")
+    .max(13, "Phone number must not exceed 13 digits")
+    .regex(/^08[0-9]{9,11}$/, {
+      message: "Phone number must start with 08 and consist of 11-13 digits total",
+    }),
   address: z.string().min(10, "Please enter a valid address. Min. 10 characters"),
   email: z.string().email("Please enter a valid email").min(1, "Please enter your email"),
 });
