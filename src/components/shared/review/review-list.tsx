@@ -58,17 +58,12 @@ export function ReviewList({ productId, showLoadMore = true }: ReviewListProps) 
     return <ReviewListSkeleton />;
   }
 
-  if (!data) {
-    return (
-      <div className="text-center py-12 bg-gray-50 rounded-lg">
-        <Star className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-        <p className="text-gray-500">Belum ada review untuk produk ini</p>
-        <p className="text-sm text-gray-400 mt-1">Jadilah yang pertama memberikan review!</p>
-      </div>
-    );
-  }
-
-  const { reviews, total, averageRating, ratingDistribution } = data;
+  const { reviews, total, averageRating, ratingDistribution } = data || {
+    reviews: [],
+    total: 0,
+    averageRating: 0,
+    ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+  };
 
   // Check if there are no reviews due to filters
   const isFiltered = searchQuery || (selectedRating && selectedRating !== "all");
@@ -182,24 +177,27 @@ export function ReviewList({ productId, showLoadMore = true }: ReviewListProps) 
             </div>
           ) : noResults ? (
             <div className="text-center py-8">
-              <Search className="w-8 h-8 mx-auto text-gray-300 mb-2" />
-              <p className="text-gray-500 text-sm">
-                {isFiltered
-                  ? "No reviews found matching your search"
-                  : "No reviews yet"}
-              </p>
-              {isFiltered && (
-                <Button
-                  variant="link"
-                  className="text-xs mt-2"
-                  onClick={() => {
-                    setSearchInput("");
-                    setSearchQuery("");
-                    setSelectedRating("");
-                  }}
-                >
-                  Clear filters
-                </Button>
+              {isFiltered ? (
+                <>
+                  <Search className="w-8 h-8 mx-auto text-gray-300 mb-2" />
+                  <p className="text-gray-500 text-sm">No reviews found matching your search</p>
+                  <Button
+                    variant="link"
+                    className="text-xs mt-2"
+                    onClick={() => {
+                      setSearchInput("");
+                      setSearchQuery("");
+                      setSelectedRating("");
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Star className="w-8 h-8 mx-auto text-gray-300 mb-2" />
+                  <p className="text-gray-500 text-sm">No reviews yet</p>
+                </>
               )}
             </div>
           ) : (

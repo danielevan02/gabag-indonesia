@@ -137,10 +137,10 @@ export const columns: ColumnDef<Campaign>[] = [
       const startDate = new Date(row.original.startDate);
       const endDate = row.original.endDate ? new Date(row.original.endDate) : null;
 
-      // Calculate real-time active status based on dates
+      // Calculate real-time active status based on dates only (ignore isActive field)
       const isActuallyActive = endDate
-        ? (startDate <= now && endDate >= now && row.original.isActive)
-        : (startDate <= now && row.original.isActive);
+        ? (startDate <= now && endDate >= now)
+        : (startDate <= now);
 
       return isActuallyActive ? (
         <Badge className="bg-green-600 hover:bg-green-700">Active</Badge>

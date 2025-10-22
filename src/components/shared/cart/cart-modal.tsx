@@ -75,7 +75,7 @@ const CartModal = ({ userId }: CartModalProps) => {
         </div>
         <ShoppingBag />
       </SheetTrigger>
-      <SheetContent className="bg-background/80 backdrop-blur-lg w-full px-5 pb-5 gap-0">
+      <SheetContent className="bg-background/80 backdrop-blur-lg w-full px-5 pb-5 gap-0" onOpenAutoFocus={(e) => e.preventDefault()}>
         <SheetHeader className="px-0 h-[10%]">
           <SheetTitle className="flex-1 flex items-center">Shopping Cart</SheetTitle>
         </SheetHeader>
@@ -115,6 +115,7 @@ const CartModal = ({ userId }: CartModalProps) => {
                   className="border-black resize-none"
                   placeholder="e.g: Please be carefull"
                   maxLength={150}
+                  autoFocus={false}
                 />
                 <p className="text-xs">{notes.length}/150</p>
               </div>

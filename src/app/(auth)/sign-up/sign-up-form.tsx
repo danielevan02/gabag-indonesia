@@ -66,6 +66,7 @@ const SignUpForm = () => {
             fieldType="phone"
             name="phone"
             placeholder="e.g: 0812 3456 7890"
+            maxLength={13}
           />
 
           <FormInput
