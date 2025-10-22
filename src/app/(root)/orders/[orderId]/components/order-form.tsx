@@ -360,6 +360,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                 label="Phone"
                 placeholder="enter your phone..."
                 className="flex-1"
+                maxLength={13}
               />
             </div>
             <FormInput

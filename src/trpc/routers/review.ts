@@ -44,7 +44,9 @@ export const reviewRouter = createTRPCRouter({
         whereClause.rating = rating;
       }
 
-      const [reviews, total] = await Promise.all([
+      // Execute queries in parallel for better performance
+      const [reviews, total, stats] = await Promise.all([
+        // Get paginated reviews with user data
         prisma.review.findMany({
           where: whereClause,
           include: {
@@ -61,27 +63,23 @@ export const reviewRouter = createTRPCRouter({
           take: limit,
           skip: offset,
         }),
+        // Count total reviews matching the filter
         prisma.review.count({
           where: whereClause,
         }),
+        // Get average rating and rating distribution in a single efficient query
+        prisma.$queryRaw<Array<{ rating: number; count: bigint; avg_rating: number }>>`
+          SELECT
+            rating,
+            COUNT(*) as count,
+            AVG(rating) OVER () as avg_rating
+          FROM "Review"
+          WHERE "productId" = ${productId}
+          GROUP BY rating
+        `,
       ]);
 
-      // Calculate average rating
-      const avgRating = await prisma.review.aggregate({
-        where: { productId },
-        _avg: {
-          rating: true,
-        },
-      });
-
-      // Calculate rating distribution
-      const allReviews = await prisma.review.findMany({
-        where: { productId },
-        select: {
-          rating: true,
-        },
-      });
-
+      // Build rating distribution from the query result
       const ratingDistribution: Record<number, number> = {
         1: 0,
         2: 0,
@@ -90,14 +88,22 @@ export const reviewRouter = createTRPCRouter({
         5: 0,
       };
 
-      allReviews.forEach((review) => {
-        ratingDistribution[review.rating]++;
-      });
+      let averageRating = 0;
+
+      if (stats.length > 0) {
+        // Get average from any row (it's the same across all rows due to OVER())
+        averageRating = Number(stats[0].avg_rating) || 0;
+
+        // Populate distribution
+        stats.forEach((stat) => {
+          ratingDistribution[stat.rating] = Number(stat.count);
+        });
+      }
 
       return {
         reviews,
         total,
-        averageRating: avgRating._avg.rating || 0,
+        averageRating,
         ratingDistribution,
       };
     }),
