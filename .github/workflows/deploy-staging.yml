@@ -21,23 +21,44 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            set -e  # Exit immediately if any command fails
+            set -o pipefail  # Catch errors in pipes
+
             cd /var/www/gabag-indonesia
+
+            # Save current commit for rollback
+            PREVIOUS_COMMIT=$(git rev-parse HEAD)
+            echo "📌 Current commit before deployment: $PREVIOUS_COMMIT"
 
             echo "🔄 Pulling latest code from GitHub..."
             git pull origin main
 
+            NEW_COMMIT=$(git rev-parse HEAD)
+            echo "📌 New commit after pull: $NEW_COMMIT"
+
+            # Function to rollback on failure
+            rollback() {
+              echo "❌ Deployment failed! Rolling back to $PREVIOUS_COMMIT..."
+              git reset --hard $PREVIOUS_COMMIT
+              pnpm install --frozen-lockfile || true
+              pnpm prisma generate || true
+              pm2 restart gabag-indonesia || true
+              exit 1
+            }
+
             echo "📦 Installing dependencies..."
-            pnpm install --frozen-lockfile
+            pnpm install --frozen-lockfile || rollback
 
             echo "🗄️  Running database migrations..."
-            pnpm prisma migrate deploy
-            pnpm prisma generate
+            pnpm prisma migrate deploy || rollback
+            pnpm prisma generate || rollback
 
             echo "🏗️  Building Next.js application..."
-            pnpm build
+            pnpm build || rollback
 
             echo "♻️  Restarting PM2 application..."
-            pm2 restart gabag-indonesia
+            pm2 restart gabag-indonesia || rollback
 
-            echo "✅ Staging deployment completed successfully!"
+            echo "✅ Deployment completed successfully!"
+            echo "📌 Deployed commit: $NEW_COMMIT"
             pm2 status
