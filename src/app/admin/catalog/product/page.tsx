@@ -6,6 +6,7 @@ import ProductDataTableWrapper from "./components/product-data-table-wrapper";
 type SearchParams = Promise<{
   page?: string;
   limit?: string;
+  search?: string;
 }>;
 
 export default async function AdminProductPage({
@@ -16,8 +17,9 @@ export default async function AdminProductPage({
   const params = await searchParams;
   const page = parseInt(params.page || "1");
   const limit = parseInt(params.limit || "15");
+  const search = params.search || "";
 
-  const productData = await trpc.product.getAll({ limit, page });
+  const productData = await trpc.product.getAll({ limit, page, search });
 
   return (
     <div className="form-page">
@@ -40,6 +42,7 @@ export default async function AdminProductPage({
           currentPage={page}
           totalPages={productData.totalPages}
           pageSize={limit}
+          searchValue={search}
         />
       </div>
     </div>
