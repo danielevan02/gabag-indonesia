@@ -379,9 +379,8 @@ model Campaign {
   startDate DateTime @db.Timestamp(6)
   endDate   DateTime? @db.Timestamp(6) // Optional: NULL = permanent campaign
 
-  // Stock limit untuk seluruh campaign (optional)
-  totalStockLimit Int? // Total items yang bisa terjual
-  totalSoldCount  Int  @default(0) // Counter total terjual
+  // Counter total terjual (across all campaign items)
+  totalSoldCount  Int  @default(0)
 
   // Priority - jika product ada di multiple campaigns
   priority Int @default(0) // Higher number = higher priority
