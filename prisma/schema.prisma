@@ -23,9 +23,9 @@ model User {
   accounts      Account[]
   carts         Cart[]
   orders        Order[]
-  sessions      Session[]
   redemptions   Redemption[]
   reviews       Review[]
+  sessions      Session[]
 }
 
 model Account {
@@ -65,194 +65,167 @@ model VerificationToken {
 }
 
 model SubCategory {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name       String
-  discount   Int?     @default(0)
-  createdAt  DateTime @default(now()) @db.Timestamp(6)
-  categoryId String   @db.Uuid
-
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  discount    Int?       @default(0)
+  createdAt   DateTime   @default(now()) @db.Timestamp(6)
+  categoryId  String     @db.Uuid
   mediaFileId String?
+  products    Product[]
+  category    Category   @relation(fields: [categoryId], references: [id])
   mediaFile   MediaFile? @relation(fields: [mediaFileId], references: [id])
-
-  products Product[]
-  category Category  @relation(fields: [categoryId], references: [id])
-  vouchers Voucher[] // Relasi untuk voucher yang spesifik untuk subcategory
+  vouchers    Voucher[]
 }
 
 model Category {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String
-  createdAt DateTime @default(now()) @db.Timestamp(6)
-
-  mediaFileId String
-  mediaFile   MediaFile @relation(fields: [mediaFileId], references: [id])
-
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  createdAt     DateTime      @default(now()) @db.Timestamp(6)
+  mediaFileId   String
+  mediaFile     MediaFile     @relation(fields: [mediaFileId], references: [id])
   subCategories SubCategory[]
-  vouchers      Voucher[] // Relasi untuk voucher yang spesifik untuk category
+  vouchers      Voucher[]
 }
 
-// Central Media Library untuk semua images
 model MediaFile {
-  id                String  @id @default(cuid())
+  id                String                 @id @default(cuid())
   thumbnail_url     String
-  public_id         String  @unique
-  secure_url        String  @db.VarChar(500)
+  public_id         String                 @unique
+  secure_url        String                 @db.VarChar(500)
   width             Int?
   height            Int?
-  format            String? @db.VarChar(10)
+  format            String?                @db.VarChar(10)
   bytes             Int?
-  resource_type     String  @default("image") @db.VarChar(20)
-  original_filename String? @db.VarChar(255)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  productImages    ProductMediaRelation[]
-  variants         Variant[]
-  subCategories    SubCategory[]
-  categories       Category[]
-  carouselsDesktop Carousel[]             @relation("CarouselDesktopImage")
-  carouselsMobile  Carousel[]             @relation("CarouselMobileImage")
+  resource_type     String                 @default("image") @db.VarChar(20)
+  original_filename String?                @db.VarChar(255)
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  categories        Category[]
+  productImages     ProductMediaRelation[]
+  subCategories     SubCategory[]
+  variants          Variant[]
+  carouselsDesktop  Carousel[]             @relation("CarouselDesktopImage")
+  carouselsMobile   Carousel[]             @relation("CarouselMobileImage")
 
   @@index([public_id])
   @@map("MediaFile")
 }
 
 model Product {
-  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id            String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name          String
-  slug          String      @unique(map: "product_slug_idx")
+  slug          String                 @unique(map: "product_slug_idx")
   description   String
-  stock         Int         @default(0)
+  stock         Int                    @default(0)
   discount      Int?
-  hasVariant    Boolean     @default(false)
+  hasVariant    Boolean                @default(false)
   height        Int
   length        Int
-  sku           String?     @unique(map: "product_sku")
+  sku           String?                @unique(map: "product_sku")
   weight        Int
   width         Int
-  createdAt     DateTime    @default(now()) @db.Timestamp(6)
-  subCategoryId String      @db.Uuid
-  regularPrice  BigInt      @default(0)
+  createdAt     DateTime               @default(now()) @db.Timestamp(6)
+  subCategoryId String                 @db.Uuid
+  regularPrice  BigInt                 @default(0)
+  campaignItems CampaignItem[]
   orderItems    OrderItem[]
-  subCategory   SubCategory @relation(fields: [subCategoryId], references: [id])
+  subCategory   SubCategory            @relation(fields: [subCategoryId], references: [id])
+  images        ProductMediaRelation[]
   reviews       Review[]
   variants      Variant[]
-  vouchers      Voucher[] // Relasi untuk voucher yang spesifik untuk produk tertentu
-
-  // Many-to-Many relation dengan MediaFile
-  images ProductMediaRelation[]
-
-  // Many-to-Many relation dengan Campaign (NEW - Campaign System)
-  campaignItems CampaignItem[]
+  vouchers      Voucher[]              @relation("ProductToVoucher")
 }
 
-// Junction table untuk Product <-> MediaFile relationship
 model ProductMediaRelation {
-  id          String @id @default(cuid())
-  productId   String @db.Uuid
+  id          String    @id @default(cuid())
+  productId   String    @db.Uuid
   mediaFileId String
+  orderIndex  Int       @default(0)
+  isPrimary   Boolean   @default(false)
+  altText     String?   @db.VarChar(255)
+  createdAt   DateTime  @default(now())
+  mediaFile   MediaFile @relation(fields: [mediaFileId], references: [id], onDelete: Cascade)
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  // Product-specific image settings
-  orderIndex Int     @default(0)
-  isPrimary  Boolean @default(false)
-  altText    String? @db.VarChar(255) // Override dari MediaFile.altText jika perlu
-
-  createdAt DateTime @default(now())
-
-  // Relations
-  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  mediaFile MediaFile @relation(fields: [mediaFileId], references: [id], onDelete: Cascade)
-
-  // Constraints
-  @@unique([productId, mediaFileId]) // Prevent duplicate assignment
+  @@unique([productId, mediaFileId])
   @@index([productId, orderIndex])
   @@index([productId, isPrimary])
   @@map("ProductMediaRelation")
 }
 
 model Variant {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name         String
-  discount     Int?
-  stock        Int      @default(0)
-  createdAt    DateTime @default(now()) @db.Timestamp(6)
-  sku          String?  @unique(map: "variant_sku")
-  productId    String   @db.Uuid
-  regularPrice BigInt   @default(0)
-
-  // One-to-One relation dengan MediaFile (1 variant = 1 image max)
-  mediaFileId String
-  mediaFile   MediaFile @relation(fields: [mediaFileId], references: [id])
-
-  orderItems OrderItem[]
-  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  vouchers      Voucher[]
-  campaignItems CampaignItem[] // Relation to campaign items
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  discount      Int?
+  stock         Int            @default(0)
+  createdAt     DateTime       @default(now()) @db.Timestamp(6)
+  sku           String?        @unique(map: "variant_sku")
+  productId     String         @db.Uuid
+  regularPrice  BigInt         @default(0)
+  mediaFileId   String
+  campaignItems CampaignItem[]
+  orderItems    OrderItem[]
+  mediaFile     MediaFile      @relation(fields: [mediaFileId], references: [id])
+  product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  vouchers      Voucher[]      @relation("VariantToVoucher")
 }
 
 model Voucher {
   id                  String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   code                String                 @unique
-  name                String? // Nama voucher untuk display
-  description         String? // Deskripsi voucher
-  value               Int // Nilai discount
-  type                VoucherType // FIXED atau PERCENT
-  applicationType     VoucherApplicationType // ALL_PRODUCTS, CATEGORY, SUBCATEGORY, EVENT, SPECIFIC_PRODUCTS
+  name                String?
+  description         String?
+  value               Int
+  type                VoucherType
+  applicationType     VoucherApplicationType
   startDate           DateTime               @db.Timestamp(6)
   expires             DateTime               @db.Timestamp(6)
   isActive            Boolean                @default(true)
   autoApply           Boolean                @default(false)
-  minPurchase         BigInt? // Minimal belanja (opsional)
-  maxDiscount         BigInt? // Maksimal discount untuk type PERCENT (opsional)
-  maxShippingDiscount BigInt? // Maksimal potongan biaya pengiriman (opsional)
-  totalLimit          Int? // Total kupon yang tersedia (opsional)
-  usedCount           Int                    @default(0) // Jumlah kupon yang sudah digunakan
-  limitPerUser        Int? // Berapa kali voucher bisa digunakan per user (opsional)
-  canCombine          Boolean                @default(false) // Apakah bisa digabung dengan voucher lain
+  minPurchase         BigInt?
+  maxDiscount         BigInt?
+  maxShippingDiscount BigInt?
+  totalLimit          Int?
+  usedCount           Int                    @default(0)
+  limitPerUser        Int?
+  canCombine          Boolean                @default(false)
   createdAt           DateTime               @default(now()) @db.Timestamp(6)
   updatedAt           DateTime               @updatedAt
-
-  // Relations untuk aplikasi voucher berdasarkan type
-  categoryId    String? @db.Uuid
-  subCategoryId String? @db.Uuid
-
-  // Relations
-  category    Category?    @relation(fields: [categoryId], references: [id])
-  subCategory SubCategory? @relation(fields: [subCategoryId], references: [id])
-  products    Product[] // Untuk SPECIFIC_PRODUCTS type
-  variants    Variant[] 
-  redemptions Redemption[]
-  orders      Order[]      @relation("OrderToVoucher")
+  categoryId          String?                @db.Uuid
+  subCategoryId       String?                @db.Uuid
+  redemptions         Redemption[]
+  category            Category?              @relation(fields: [categoryId], references: [id])
+  subCategory         SubCategory?           @relation(fields: [subCategoryId], references: [id])
+  orders              Order[]                @relation("OrderToVoucher")
+  products            Product[]              @relation("ProductToVoucher")
+  variants            Variant[]              @relation("VariantToVoucher")
 }
 
 model Redemption {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String?  @db.Uuid // Bisa null untuk guest users
+  userId    String?  @db.Uuid
   email     String
   createdAt DateTime @default(now())
   voucherId String   @db.Uuid
-  orderId   String // Track order yang menggunakan voucher ini
+  orderId   String
+  user      User?    @relation(fields: [userId], references: [id])
+  voucher   Voucher  @relation(fields: [voucherId], references: [id])
 
-  user    User?   @relation(fields: [userId], references: [id])
-  voucher Voucher @relation(fields: [voucherId], references: [id])
-
-  @@unique([email, voucherId, orderId]) // Satu voucher per order per user
+  @@unique([email, voucherId, orderId])
 }
 
 model Review {
   id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   rating             Int
   comment            String
-  isVerifiedPurchase Boolean  @default(false)
   createdAt          DateTime @default(now()) @db.Timestamp(6)
   productId          String   @db.Uuid
-  userId             String   @db.Uuid
+  isVerifiedPurchase Boolean  @default(false)
   orderId            String
+  userId             String   @db.Uuid
+  order              Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  order              Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@unique([orderId, productId])
   @@index([productId, createdAt], map: "idx_review_product_created")
@@ -282,7 +255,7 @@ model Order {
   trackingOrder    String?
   shippingPrice    BigInt
   taxPrice         BigInt      @default(0)
-  discountAmount   BigInt      @default(0) // Total discount dari voucher/event
+  discountAmount   BigInt      @default(0)
   isPaid           Boolean     @default(false)
   isDelivered      Boolean     @default(false)
   transactionToken String?     @unique
@@ -290,7 +263,7 @@ model Order {
   notes            String?
   paymentStatus    String?
   shippingInfo     Json?       @db.Json
-  voucherCodes     String[]    @default([]) // Array kode voucher yang digunakan
+  voucherCodes     String[]    @default([])
   deliveredAt      DateTime?   @db.Timestamp(6)
   paidAt           DateTime?   @db.Timestamp(6)
   createdAt        DateTime    @default(now()) @db.Timestamp(6)
@@ -298,60 +271,46 @@ model Order {
   cart             Cart?
   user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderItems       OrderItem[]
-  vouchers         Voucher[]   @relation("OrderToVoucher")
   reviews          Review[]
+  vouchers         Voucher[]   @relation("OrderToVoucher")
 
-  // Performance optimization indexes
   @@index([userId, isDelivered, paymentStatus], map: "idx_order_user_delivery_payment")
   @@index([userId, createdAt], map: "idx_order_user_created")
   @@index([isDelivered, paymentStatus], map: "idx_order_delivery_payment")
 }
 
 model OrderItem {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  qty       Int
-  price     BigInt
-  name      String
-  slug      String
-  image     String
-  variantId String?  @db.Uuid
-  weight    Int
-  width     Int
-  length    Int
-  height    Int
-  orderId   String   @default(uuid())
-  productId String   @db.Uuid
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  variant   Variant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  qty        Int
+  price      BigInt
+  name       String
+  slug       String
+  image      String
+  variantId  String?   @db.Uuid
+  weight     Int
+  width      Int
+  length     Int
+  height     Int
+  orderId    String    @default(uuid())
+  productId  String    @db.Uuid
+  campaignId String?   @db.Uuid
+  campaign   Campaign? @relation(fields: [campaignId], references: [id])
+  order      Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product    Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant    Variant?  @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
   @@unique([orderId, productId, variantId], map: "orderitems_orderId_productId_variantId_unique")
 }
 
-enum VoucherType {
-  FIXED
-  PERCENT
-}
-
-enum VoucherApplicationType {
-  ALL_PRODUCTS // Berlaku untuk semua produk
-  CATEGORY // Berlaku untuk produk dalam kategori tertentu
-  SUBCATEGORY // Berlaku untuk produk dalam subcategory tertentu
-  SPECIFIC_PRODUCTS // Berlaku untuk produk tertentu saja
-  SPECIFIC_VARIANTS // Berlaku untuk variant tertentu saja
-}
-
 model Carousel {
-  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String
-  linkUrl   String
-  altText   String?
-  isActive  Boolean   @default(true)
-  startDate DateTime? @db.Timestamp(6)
-  endDate   DateTime? @db.Timestamp(6)
-  createdAt DateTime  @default(now()) @db.Timestamp(6)
-
-  // Relations to MediaFile for responsive images
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  linkUrl        String
+  altText        String?
+  isActive       Boolean   @default(true)
+  startDate      DateTime? @db.Timestamp(6)
+  endDate        DateTime? @db.Timestamp(6)
+  createdAt      DateTime  @default(now()) @db.Timestamp(6)
   desktopImageId String
   mobileImageId  String
   desktopImage   MediaFile @relation("CarouselDesktopImage", fields: [desktopImageId], references: [id])
@@ -360,86 +319,69 @@ model Carousel {
   @@map("carousels")
 }
 
-// ============================================
-// CAMPAIGN SYSTEM (New - Hybrid Discount)
-// ============================================
-
 model Campaign {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String
-  description String?
-  type        CampaignType @default(FLASH_SALE)
-
-  // Default discount untuk semua produk di campaign
-  discountType    DiscountType @default(PERCENT)
-  defaultDiscount Int          @default(0) // Default discount value
-
-  // Auto scheduling
-  isActive  Boolean  @default(false) // Auto-managed by cron
-  startDate DateTime @db.Timestamp(6)
-  endDate   DateTime? @db.Timestamp(6) // Optional: NULL = permanent campaign
-
-  // Stock limit untuk seluruh campaign (optional)
-  totalStockLimit Int? // Total items yang bisa terjual
-  totalSoldCount  Int  @default(0) // Counter total terjual
-
-  // Priority - jika product ada di multiple campaigns
-  priority Int @default(0) // Higher number = higher priority
-
-  // Metadata
-  createdAt DateTime @default(now()) @db.Timestamp(6)
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  items CampaignItem[]
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  description     String?
+  type            CampaignType   @default(FLASH_SALE)
+  discountType    DiscountType   @default(PERCENT)
+  defaultDiscount Int            @default(0)
+  isActive        Boolean        @default(false)
+  startDate       DateTime       @db.Timestamp(6)
+  endDate         DateTime?      @db.Timestamp(6)
+  totalSoldCount  Int            @default(0)
+  priority        Int            @default(0)
+  createdAt       DateTime       @default(now()) @db.Timestamp(6)
+  updatedAt       DateTime       @updatedAt
+  items           CampaignItem[]
+  orderItems      OrderItem[]
 
   @@index([isActive, startDate, endDate])
   @@index([priority])
 }
 
-// Junction table - Campaign Items (Product OR Variant)
-// Supports both: products without variants AND individual variants
 model CampaignItem {
-  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                 String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaignId         String        @db.Uuid
+  productId          String        @db.Uuid
+  variantId          String?       @db.Uuid
+  customDiscount     Int?
+  customDiscountType DiscountType?
+  stockLimit         Int?
+  soldCount          Int           @default(0)
+  addedAt            DateTime      @default(now())
+  campaign           Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  product            Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant            Variant?      @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
-  campaignId String @db.Uuid
-  productId  String @db.Uuid
-  variantId  String? @db.Uuid // NULL = whole product, NOT NULL = specific variant
-
-  // CUSTOM DISCOUNT per item (priority feature!)
-  customDiscount     Int?          // Override campaign default
-  customDiscountType DiscountType? // Override discount type
-
-  // Stock limit per item in this campaign (priority feature!)
-  stockLimit Int? // Limit untuk item ini (product atau variant)
-  soldCount  Int  @default(0) // Counter terjual
-
-  // Metadata
-  addedAt DateTime @default(now())
-
-  // Relations
-  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  variant  Variant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
-
-  // Unique constraint: satu campaign tidak bisa punya item yang sama 2x
-  // Either: (campaign + product) OR (campaign + product + variant)
   @@unique([campaignId, productId, variantId])
   @@index([campaignId, productId])
   @@index([campaignId, variantId])
 }
 
-// Enums for Campaign System
+enum VoucherType {
+  FIXED
+  PERCENT
+}
+
+enum VoucherApplicationType {
+  ALL_PRODUCTS
+  CATEGORY
+  SUBCATEGORY
+  SPECIFIC_PRODUCTS
+  SPECIFIC_VARIANTS
+}
+
 enum CampaignType {
-  FLASH_SALE   // Flash sale dengan stock terbatas
-  DAILY_DEALS  // Promo harian
-  PAYDAY_SALE  // Promo tanggal gajian
-  SEASONAL     // Promo musiman (12.12, Harbolnas, dll)
-  CLEARANCE    // Obral/clearance sale
-  NEW_ARRIVAL  // Promo produk baru
+  FLASH_SALE
+  DAILY_DEALS
+  PAYDAY_SALE
+  SEASONAL
+  CLEARANCE
+  NEW_ARRIVAL
 }
 
 enum DiscountType {
-  PERCENT // Persentase (%)
-  FIXED   // Nominal tetap (Rupiah)
+  PERCENT
+  FIXED
 }
