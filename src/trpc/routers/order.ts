@@ -308,6 +308,7 @@ export const orderRouter = createTRPCRouter({
                 include: {
                   campaign: {
                     select: {
+                      id: true,
                       defaultDiscount: true,
                       discountType: true,
                       priority: true,
@@ -331,6 +332,7 @@ export const orderRouter = createTRPCRouter({
           }
 
           let validatedPrice = item.price;
+          let appliedCampaignItem: typeof product.campaignItems[0] | null = null;
 
           // Calculate correct price based on highest priority campaign
           if (item.variantId) {
@@ -349,6 +351,7 @@ export const orderRouter = createTRPCRouter({
             );
 
             if (variantCampaignItem) {
+              appliedCampaignItem = variantCampaignItem;
               const discount = variantCampaignItem.customDiscount || variantCampaignItem.campaign.defaultDiscount;
               const discountType = variantCampaignItem.customDiscountType || variantCampaignItem.campaign.discountType;
 
@@ -368,6 +371,7 @@ export const orderRouter = createTRPCRouter({
               // .find() returns first match = highest priority
               const productCampaignItem = product.campaignItems.find((ci) => !ci.variantId);
               if (productCampaignItem) {
+                appliedCampaignItem = productCampaignItem;
                 const discount = productCampaignItem.customDiscount || productCampaignItem.campaign.defaultDiscount;
                 const discountType = productCampaignItem.customDiscountType || productCampaignItem.campaign.discountType;
 
@@ -393,6 +397,7 @@ export const orderRouter = createTRPCRouter({
             const productCampaignItem = product.campaignItems.find((ci) => !ci.variantId);
 
             if (productCampaignItem) {
+              appliedCampaignItem = productCampaignItem;
               const discount = productCampaignItem.customDiscount || productCampaignItem.campaign.defaultDiscount;
               const discountType = productCampaignItem.customDiscountType || productCampaignItem.campaign.discountType;
 
@@ -413,6 +418,20 @@ export const orderRouter = createTRPCRouter({
             }
           }
 
+          // Validate campaign stock limits if campaign is applied
+          if (appliedCampaignItem) {
+            // Check item-level stock limit
+            if (appliedCampaignItem.stockLimit !== null) {
+              const availableStock = appliedCampaignItem.stockLimit - appliedCampaignItem.soldCount;
+              if (availableStock < item.qty) {
+                throw new TRPCError({
+                  code: "BAD_REQUEST",
+                  message: `Stock campaign untuk ${item.name} tidak mencukupi. Tersedia: ${availableStock}, diminta: ${item.qty}`,
+                });
+              }
+            }
+          }
+
           // Check if price changed (both prices already rounded)
           if (Math.abs(validatedPrice - item.price) > 1) {
             priceChanged = true;
@@ -421,7 +440,8 @@ export const orderRouter = createTRPCRouter({
           validatedCartItems.push({
             ...item,
             price: validatedPrice,
-          });
+            campaignId: appliedCampaignItem?.campaignId,
+          } as CartItem & { campaignId?: string });
         }
 
         // If price changed due to expired/changed campaign, inform user
@@ -431,6 +451,17 @@ export const orderRouter = createTRPCRouter({
             message: "Harga produk telah berubah karena perubahan campaign. Silakan refresh halaman untuk melihat harga terbaru.",
           });
         }
+
+        // Update cart with validated items including campaignId
+        await prisma.cart.updateMany({
+          where: {
+            orderId,
+            userId
+          },
+          data: {
+            items: validatedCartItems
+          }
+        });
 
         const item_details = validatedCartItems.map((item: CartItem) => ({
           id: item.variantId ? item.variantId : item.productId,
@@ -499,6 +530,10 @@ export const orderRouter = createTRPCRouter({
           token: "",
         };
       } catch (error) {
+        // Re-throw TRPCError so client can handle it properly
+        if (error instanceof TRPCError) {
+          throw error;
+        }
         return handleMutationError(error, "Make Payment");
       }
     }),
@@ -552,7 +587,7 @@ export const orderRouter = createTRPCRouter({
           const cart = await getCartHelper(userId);
 
           if (updatedOrder?.orderItems.length === 0) {
-            const orderItemsData = (cart?.items as CartItem[]).map((item) => ({
+            const orderItemsData = (cart?.items as (CartItem & { campaignId?: string })[]).map((item) => ({
               orderId,
               productId: item.productId,
               name: item.name,
@@ -565,6 +600,7 @@ export const orderRouter = createTRPCRouter({
               width: item.width || 0,
               length: item.length || 0,
               height: item.height || 0,
+              campaignId: item.campaignId || null,
             }));
 
             await tx.orderItem.createMany({
@@ -672,8 +708,43 @@ export const orderRouter = createTRPCRouter({
               })
             );
 
+            // Update campaign sold counts for items with campaigns
+            const campaignUpdates = order.orderItems
+              .filter((item) => item.campaignId)
+              .map((item) =>
+                tx.campaignItem.updateMany({
+                  where: {
+                    campaignId: item.campaignId as string,
+                    productId: item.productId,
+                    variantId: item.variantId || null,
+                  },
+                  data: {
+                    soldCount: {
+                      increment: item.qty,
+                    },
+                  },
+                })
+              );
+
+            // Update total campaign sold counts
+            const uniqueCampaignIds = [...new Set(order.orderItems.filter(item => item.campaignId).map(item => item.campaignId))];
+            const campaignTotalUpdates = uniqueCampaignIds.map((campaignId) => {
+              const totalQty = order.orderItems
+                .filter((item) => item.campaignId === campaignId)
+                .reduce((sum, item) => sum + item.qty, 0);
+
+              return tx.campaign.update({
+                where: { id: campaignId as string },
+                data: {
+                  totalSoldCount: {
+                    increment: totalQty,
+                  },
+                },
+              });
+            });
+
             // Execute all updates in parallel
-            await Promise.all([...variantPromises, ...productPromises]);
+            await Promise.all([...variantPromises, ...productPromises, ...campaignUpdates, ...campaignTotalUpdates]);
           }
         });
 
