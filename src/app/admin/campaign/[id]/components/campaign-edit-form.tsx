@@ -66,7 +66,6 @@ interface Campaign {
   defaultDiscount: number;
   startDate: Date;
   endDate?: Date | null;
-  totalStockLimit?: number;
   priority: number;
   items: Array<{
     productId: string;
@@ -109,7 +108,6 @@ export default function CampaignEditForm({ campaign, products }: CampaignEditFor
       defaultDiscount: campaign.defaultDiscount,
       startDate: new Date(campaign.startDate),
       endDate: campaign.endDate ? new Date(campaign.endDate) : undefined,
-      totalStockLimit: campaign.totalStockLimit || undefined,
       priority: campaign.priority,
       items: [],
     },
@@ -399,19 +397,9 @@ export default function CampaignEditForm({ campaign, products }: CampaignEditFor
           />
         </div>
 
-        {/* Stock & Priority */}
+        {/* Priority Settings */}
         <div className="space-y-4 border-b pb-6">
           <h3 className="text-base font-semibold">Settings</h3>
-
-          <FormInput
-            form={form}
-            fieldType="text"
-            label="Total Stock Limit (Optional)"
-            name="totalStockLimit"
-            type="number"
-            placeholder="Leave empty for unlimited"
-            disabled={isLoading}
-          />
 
           <FormInput
             form={form}
