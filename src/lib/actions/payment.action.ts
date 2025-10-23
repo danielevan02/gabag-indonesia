@@ -57,43 +57,8 @@ export async function updatePaymentStatus({ orderId, paymentStatus }: UpdatePaym
           })
         );
 
-        // Update campaign sold counts for items with campaigns
-        const campaignUpdates = order.orderItems
-          .filter((item) => item.campaignId)
-          .map((item) =>
-            tx.campaignItem.updateMany({
-              where: {
-                campaignId: item.campaignId as string,
-                productId: item.productId,
-                variantId: item.variantId || null,
-              },
-              data: {
-                soldCount: {
-                  increment: item.qty,
-                },
-              },
-            })
-          );
-
-        // Update total campaign sold counts
-        const uniqueCampaignIds = [...new Set(order.orderItems.filter(item => item.campaignId).map(item => item.campaignId))];
-        const campaignTotalUpdates = uniqueCampaignIds.map((campaignId) => {
-          const totalQty = order.orderItems
-            .filter((item) => item.campaignId === campaignId)
-            .reduce((sum, item) => sum + item.qty, 0);
-
-          return tx.campaign.update({
-            where: { id: campaignId as string },
-            data: {
-              totalSoldCount: {
-                increment: totalQty,
-              },
-            },
-          });
-        });
-
         // Execute all updates in parallel
-        await Promise.all([...variantPromises, ...productPromises, ...campaignUpdates, ...campaignTotalUpdates]);
+        await Promise.all([...variantPromises, ...productPromises]);
       }
     });
     revalidatePath("/orders");

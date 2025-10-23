@@ -340,9 +340,19 @@ export default function CampaignForm({ products }: CampaignFormProps) {
           </FormDescription>
         </div>
 
-        {/* Priority Settings */}
+        {/* Stock & Priority */}
         <div className="space-y-4 border-b pb-6">
           <h3 className="text-base font-semibold">Settings</h3>
+
+          <FormInput
+            form={form}
+            fieldType="text"
+            label="Total Stock Limit (Optional)"
+            name="totalStockLimit"
+            type="number"
+            placeholder="Leave empty for unlimited"
+            disabled={isLoading}
+          />
 
           <FormInput
             form={form}

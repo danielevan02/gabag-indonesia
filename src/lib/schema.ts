@@ -302,6 +302,7 @@ export const campaignSchema = z.object({
   defaultDiscount: z.coerce.number().min(0, "Discount must be positive"),
   startDate: z.date({ required_error: "Start date is required" }),
   endDate: z.date().optional(), // Optional: for permanent campaigns
+  totalStockLimit: z.coerce.number().optional(),
   priority: z.coerce.number().default(0),
   items: z.array(z.object({
     productId: z.string(),
@@ -344,6 +345,7 @@ export const campaignInputSchema = z.object({
   defaultDiscount: z.coerce.number().min(0, "Discount must be positive"),
   startDate: z.coerce.date(),
   endDate: z.coerce.date().optional(), // Optional: for permanent campaigns
+  totalStockLimit: z.coerce.number().optional(),
   priority: z.coerce.number().default(0),
   items: z.array(z.object({
     productId: z.string(),

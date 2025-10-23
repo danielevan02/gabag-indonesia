@@ -150,11 +150,16 @@ export const columns: ColumnDef<Campaign>[] = [
     },
   },
   {
-    header: "Total Sold",
+    header: "Stock",
     cell: ({ row }) => {
-      const { totalSoldCount } = row.original;
+      const { totalSoldCount, totalStockLimit } = row.original;
+      if (totalStockLimit === null) {
+        return <span className="text-xs text-muted-foreground">Unlimited</span>;
+      }
       return (
-        <span className="text-sm font-medium">{totalSoldCount}</span>
+        <span className="text-xs">
+          {totalSoldCount} / {totalStockLimit}
+        </span>
       );
     },
   },
