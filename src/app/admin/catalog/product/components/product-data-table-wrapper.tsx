@@ -12,6 +12,7 @@ interface ProductDataTableWrapperProps {
   currentPage: number;
   totalPages: number;
   pageSize: number;
+  searchValue: string;
 }
 
 export default function ProductDataTableWrapper({
@@ -19,7 +20,8 @@ export default function ProductDataTableWrapper({
   totalCount,
   currentPage,
   totalPages,
-  pageSize
+  pageSize,
+  searchValue
 }: ProductDataTableWrapperProps) {
 
   return (
@@ -32,6 +34,8 @@ export default function ProductDataTableWrapper({
       currentPage={currentPage}
       totalPages={totalPages}
       pageSize={pageSize}
+      serverSideSearch={true}
+      searchValue={searchValue}
     />
   );
 }

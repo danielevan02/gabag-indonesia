@@ -355,7 +355,6 @@ export const campaignRouter = createTRPCRouter({
           defaultDiscount,
           startDate,
           endDate,
-          totalStockLimit,
           priority,
           items,
         } = input;
@@ -372,7 +371,6 @@ export const campaignRouter = createTRPCRouter({
           discountType,
           defaultDiscount,
           startDate,
-          totalStockLimit,
           priority,
           isActive,
           items: {
@@ -433,7 +431,6 @@ export const campaignRouter = createTRPCRouter({
           defaultDiscount: z.coerce.number().min(0, "Discount must be positive").optional(),
           startDate: z.coerce.date().optional(),
           endDate: z.coerce.date().optional(),
-          totalStockLimit: z.coerce.number().optional(),
           priority: z.coerce.number().optional(),
           items: z.array(z.object({
             productId: z.string(),
@@ -475,7 +472,6 @@ export const campaignRouter = createTRPCRouter({
           defaultDiscount,
           startDate,
           endDate,
-          totalStockLimit,
           priority,
           items,
         } = data;
@@ -498,7 +494,6 @@ export const campaignRouter = createTRPCRouter({
         if (defaultDiscount !== undefined) updateData.defaultDiscount = defaultDiscount;
         if (startDate !== undefined) updateData.startDate = startDate;
         if (endDate !== undefined) updateData.endDate = endDate;
-        if (totalStockLimit !== undefined) updateData.totalStockLimit = totalStockLimit;
         if (priority !== undefined) updateData.priority = priority;
 
         // Keep isActive as true - let the query filter by dates

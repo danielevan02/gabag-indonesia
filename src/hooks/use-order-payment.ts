@@ -67,20 +67,54 @@ export const useOrderPayment = ({ orderId }: UseOrderPaymentProps) => {
         // Calculate final total with discount
         const finalTotal = totalPrice + shippingPrice - (discountAmount || 0);
 
-        const res = await makePaymentMutation.mutateAsync({
-          email,
-          name,
-          phone,
-          subTotal: finalTotal,
-          userId,
-          shippingPrice,
-          orderId,
-          taxPrice,
-          cartItem: cartItems,
-          discountAmount,
-          voucherCode,
-          voucherCodes,
-        });
+        let res;
+        let hasError = false;
+
+        try {
+          res = await makePaymentMutation.mutateAsync({
+            email,
+            name,
+            phone,
+            subTotal: finalTotal,
+            userId,
+            shippingPrice,
+            orderId,
+            taxPrice,
+            cartItem: cartItems,
+            discountAmount,
+            voucherCode,
+            voucherCodes,
+          });
+        } catch (mutationError: any) {
+          hasError = true;
+
+          // Extract error message from TRPC mutation error
+          const errorMessage = mutationError?.message || mutationError?.data?.message || mutationError?.shape?.message || "Payment failed. Please try again.";
+
+          // Check if error is about price change
+          if (errorMessage.includes("perubahan campaign")) {
+            toast.error("Harga produk telah berubah. Halaman akan di-refresh...", {
+              duration: 3000,
+            });
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
+          } else if (errorMessage.includes("Stock campaign") || errorMessage.includes("tidak mencukupi")) {
+            // Campaign stock limit error - show user-friendly message
+            toast.error("Sorry, the limit for this product have been exceeded. Try other product", {
+              duration: 5000,
+            });
+          } else {
+            // Generic error
+            toast.error(errorMessage);
+          }
+
+          // Stop execution here - don't continue to finalize
+          return;
+        }
+
+        // Only proceed if no error occurred
+        if (hasError) return;
 
         if (res?.success && "token" in res && res.token) {
           await finalizeOrderMutation.mutateAsync({
@@ -109,23 +143,12 @@ export const useOrderPayment = ({ orderId }: UseOrderPaymentProps) => {
         } else {
           toast.error("Payment failed, there is no token");
         }
-      } catch (error) {
+      } catch (error: any) {
+        // This catch block handles errors from finalize or updatePaymentStatus mutations
         console.error("Payment processing error:", error);
 
-        // Check if error is about price change
-        if (error instanceof Error && error.message.includes("perubahan campaign")) {
-          // Auto-reload page to get updated prices
-          toast.error(error.message + " Halaman akan di-refresh...", {
-            duration: 3000,
-          });
-
-          // Reload after 2 seconds
-          setTimeout(() => {
-            window.location.reload();
-          }, 2000);
-        } else {
-          toast.error("Payment failed. Please try again.");
-        }
+        const errorMessage = error?.message || error?.data?.message || "Payment processing failed. Please try again.";
+        toast.error(errorMessage);
       }
     });
   };
