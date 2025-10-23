@@ -44,6 +44,10 @@ export const columns: ColumnDef<Product>[] = [
     ),
   },
   {
+    header: "#",
+    cell: ({ row }) => row.index + 1,
+  },
+  {
     accessorKey: "name",
     header: "Name",
     cell: ({ row }) => <div className="text-wrap capitalize max-w-40">{row.getValue("name")}</div>,

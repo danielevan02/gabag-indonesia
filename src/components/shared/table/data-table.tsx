@@ -21,13 +21,13 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { IconSearch, IconTrash } from "@tabler/icons-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "../../ui/button";
 import { cn } from "@/lib/utils";
 import ModalContent from "./modal-content";
 import TablePagination from "./pagination";
 import { Loader, Truck } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 interface DeleteManyMutation {
   mutate: (params: { ids: string[] }) => void;
@@ -48,9 +48,6 @@ interface DataTableProps<TData, TValue> {
   currentPage?: number;
   totalPages?: number;
   pageSize?: number;
-  // Server-side search props (optional)
-  serverSideSearch?: boolean;
-  searchValue?: string;
 }
 
 export function   DataTable<TData, TValue>({
@@ -66,16 +63,11 @@ export function   DataTable<TData, TValue>({
   currentPage,
   totalPages,
   pageSize,
-  serverSideSearch = false,
-  searchValue = "",
 }: DataTableProps<TData, TValue>) {
   const [openModal, setOpenModal] = useState(false);
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
-  const [localSearchValue, setLocalSearchValue] = useState(searchValue);
-  const path = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const path = usePathname()
 
   // Check if using server-side pagination
   const isServerSide = totalCount !== undefined && currentPage !== undefined;
@@ -84,33 +76,6 @@ export function   DataTable<TData, TValue>({
     pageIndex: 0,
     pageSize: pageSize || 15,
   });
-
-  // Sync local search value with prop when it changes (e.g., from URL)
-  useEffect(() => {
-    setLocalSearchValue(searchValue);
-  }, [searchValue]);
-
-  // Debounced search for server-side search
-  useEffect(() => {
-    if (!serverSideSearch) return;
-
-    const timeoutId = setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString());
-
-      if (localSearchValue) {
-        params.set("search", localSearchValue);
-      } else {
-        params.delete("search");
-      }
-
-      // Reset to page 1 when searching
-      params.set("page", "1");
-
-      router.push(`?${params.toString()}`);
-    }, 500); // 500ms debounce
-
-    return () => clearTimeout(timeoutId);
-  }, [localSearchValue, serverSideSearch, router, searchParams]);
 
   const table = useReactTable({
     data,
@@ -174,13 +139,6 @@ export function   DataTable<TData, TValue>({
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
 
-    // If using server-side search, update local state only (debounce will handle URL update)
-    if (serverSideSearch) {
-      setLocalSearchValue(value);
-      return;
-    }
-
-    // Client-side search
     if (searchableColumn) {
       // Use specific column filter
       try {
@@ -196,12 +154,6 @@ export function   DataTable<TData, TValue>({
   };
 
   const getSearchValue = () => {
-    // If using server-side search, return local search value
-    if (serverSideSearch) {
-      return localSearchValue;
-    }
-
-    // Client-side search
     if (searchableColumn) {
       try {
         return (searchableColumn.getFilterValue() as string) || "";

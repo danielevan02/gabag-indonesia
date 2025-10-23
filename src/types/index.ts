@@ -73,7 +73,6 @@ export type CartItem = {
   height?: number
   length?: number
   width?: number
-  campaignId?: string
 }
 
 export type Cart = {
