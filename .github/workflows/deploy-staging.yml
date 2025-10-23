@@ -50,8 +50,17 @@ jobs:
             pnpm install --frozen-lockfile || rollback
 
             echo "🗄️  Running database migrations..."
+            echo "Checking for pending migrations..."
+            pnpm prisma migrate status || echo "⚠️ Migration status check completed"
+
+            echo "Applying migrations..."
             pnpm prisma migrate deploy || rollback
+
+            echo "Generating Prisma Client..."
             pnpm prisma generate || rollback
+
+            echo "Validating database schema..."
+            pnpm prisma validate || rollback
 
             echo "🏗️  Building Next.js application..."
             pnpm build || rollback
