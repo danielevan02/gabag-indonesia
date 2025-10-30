@@ -110,22 +110,51 @@ export const useOrderPayment = ({ orderId }: UseOrderPaymentProps) => {
           toast.error("Payment failed, there is no token");
         }
       } catch (error) {
-        console.error("Payment processing error:", error);
+        // Extract error message from tRPC error or regular Error
+        let errorMessage = "Payment failed. Please try again.";
 
-        // Check if error is about price change
-        if (error instanceof Error && error.message.includes("perubahan campaign")) {
-          // Auto-reload page to get updated prices
-          toast.error(error.message + " Halaman akan di-refresh...", {
-            duration: 3000,
-          });
+        // Handle tRPC error format (can be in error.message or error.shape.message)
+        if (error && typeof error === "object") {
+          // Try to extract message from different possible locations
+          const err = error as any;
 
-          // Reload after 2 seconds
-          setTimeout(() => {
-            window.location.reload();
-          }, 2000);
-        } else {
-          toast.error("Payment failed. Please try again.");
+          if ("message" in error && typeof err.message === "string") {
+            errorMessage = err.message;
+          } else if (err.shape && err.shape.message) {
+            errorMessage = err.shape.message;
+          } else if (err.data && err.data.message) {
+            errorMessage = err.data.message;
+          }
+
+          // Check if error is about price change
+          if (errorMessage.includes("perubahan campaign")) {
+            toast.error(errorMessage + " Halaman akan di-refresh...", {
+              duration: 3000,
+            });
+
+            // Reload after 2 seconds
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
+            return;
+          }
+
+          // Handle voucher-specific errors with user-friendly messages
+          if (errorMessage.includes("Voucher") || errorMessage.includes("voucher")) {
+            // Already has good message from backend
+            toast.error(errorMessage);
+            return;
+          }
+
+          // Handle limit exceeded errors
+          if (errorMessage.includes("limit") || errorMessage.includes("reached") || errorMessage.includes("exceeded")) {
+            toast.error(errorMessage);
+            return;
+          }
         }
+
+        // Generic error fallback
+        toast.error(errorMessage);
       }
     });
   };
