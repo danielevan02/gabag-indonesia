@@ -179,7 +179,7 @@ export const orderRouter = createTRPCRouter({
             price: Number(item.price),
           })),
         ]);
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to get order items",
@@ -281,8 +281,8 @@ export const orderRouter = createTRPCRouter({
       try {
         const { email, name, phone, subTotal, userId, orderId, cartItem, shippingPrice, taxPrice, discountAmount, voucherCode, voucherCodes } = input;
 
-        if (!userId) throw new Error("You're not authenticated!");
-        if (!email) throw new Error("You're not authenticated");
+        if (!userId) throw new Error("You are not authenticated!");
+        if (!email) throw new Error("Youa are not authenticated");
         if (!subTotal || subTotal <= 0) throw new Error("There is no product!");
         if (!phone) throw new Error("Please complete your identity (phone)");
         if (!name) throw new Error("Please complete your identity (name)");
