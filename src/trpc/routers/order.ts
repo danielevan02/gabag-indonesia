@@ -58,14 +58,6 @@ const updateOrderShipmentSchema = z.object({
   deliveredAt: z.date(),
 });
 
-const handleMutationError = (error: unknown, operation: string) => {
-  console.error(`${operation} error:`, error);
-  return {
-    success: false,
-    message: `Failed to ${operation}`,
-  };
-};
-
 const handleMutationSuccess = (message: string) => {
   return {
     success: true,
@@ -188,7 +180,6 @@ export const orderRouter = createTRPCRouter({
           })),
         ]);
       } catch (error) {
-        console.log(error)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to get order items",
@@ -265,7 +256,21 @@ export const orderRouter = createTRPCRouter({
           orderId: newOrderId,
         };
       } catch (error) {
-        return handleMutationError(error, "Create Order");
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        if (error instanceof Error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: error.message || "Failed to create order",
+          });
+        }
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create order",
+        });
       }
     }),
 
@@ -499,7 +504,21 @@ export const orderRouter = createTRPCRouter({
           token: "",
         };
       } catch (error) {
-        return handleMutationError(error, "Make Payment");
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        if (error instanceof Error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: error.message || "Failed to make payment",
+          });
+        }
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to make payment",
+        });
       }
     }),
 
@@ -520,7 +539,102 @@ export const orderRouter = createTRPCRouter({
         // Use voucherCodes if provided, fallback to single voucherCode for backward compatibility
         const activeVoucherCodes = voucherCodes && voucherCodes.length > 0 ? voucherCodes : (voucherCode ? [voucherCode] : []);
 
+        // FIX BUG #2, #3, #8: Re-validate and redeem vouchers atomically within transaction
+        // SECURITY FIX: Use Serializable isolation to prevent voucher over-redemption
         await prisma.$transaction(async (tx) => {
+          const session = await auth();
+          const userId = session?.user?.id;
+          const cart = await getCartHelper(userId);
+
+          // FIX BUG #3: Re-validate all vouchers within transaction before redemption
+          if (activeVoucherCodes.length > 0) {
+            const now = new Date();
+
+            for (const code of activeVoucherCodes) {
+              // FIX CRITICAL BUG: Use raw query with FOR UPDATE to lock the voucher row
+              // This prevents race conditions where multiple transactions read stale usedCount
+              const vouchers = await tx.$queryRaw<Array<{
+                id: string;
+                code: string;
+                isActive: boolean;
+                startDate: Date;
+                expires: Date;
+                totalLimit: number | null;
+                limitPerUser: number | null;
+                usedCount: number;
+              }>>`
+                SELECT id, code, "isActive", "startDate", expires, "totalLimit", "limitPerUser", "usedCount"
+                FROM "Voucher"
+                WHERE code = ${code.toUpperCase()}
+                FOR UPDATE
+              `;
+
+              const voucher = vouchers[0];
+
+              if (!voucher) {
+                throw new TRPCError({
+                  code: "BAD_REQUEST",
+                  message: `Voucher "${code}" not found`,
+                });
+              }
+
+              // Re-validate voucher status
+              if (!voucher.isActive) {
+                throw new TRPCError({
+                  code: "BAD_REQUEST",
+                  message: `Voucher "${code}" is not active`,
+                });
+              }
+
+              if (voucher.startDate > now) {
+                throw new TRPCError({
+                  code: "BAD_REQUEST",
+                  message: `Voucher "${code}" is not yet active`,
+                });
+              }
+
+              if (voucher.expires < now) {
+                throw new TRPCError({
+                  code: "BAD_REQUEST",
+                  message: `Voucher "${code}" has expired`,
+                });
+              }
+
+              // FIX BUG #2: Check total limit WITHIN transaction with LOCKED row data
+              // This ensures we read the most up-to-date usedCount value
+              if (voucher.totalLimit !== null && voucher.usedCount >= voucher.totalLimit) {
+                throw new TRPCError({
+                  code: "BAD_REQUEST",
+                  message: `Voucher "${code}" has reached its usage limit`,
+                });
+              }
+
+              // Check user-specific limit within transaction
+              if (voucher.limitPerUser !== null) {
+                const userEmail = cart?.items ?
+                  (await tx.user.findUnique({ where: { id: userId }, select: { email: true } }))?.email :
+                  "";
+
+                if (userEmail) {
+                  const userRedemptionCount = await tx.redemption.count({
+                    where: {
+                      voucherId: voucher.id,
+                      email: userEmail,
+                    },
+                  });
+
+                  if (userRedemptionCount >= voucher.limitPerUser) {
+                    throw new TRPCError({
+                      code: "BAD_REQUEST",
+                      message: `You have reached the usage limit for voucher "${code}"`,
+                    });
+                  }
+                }
+              }
+            }
+          }
+
+          // All vouchers validated, proceed with order update
           const updatedOrder = await tx.order.update({
             where: { id: orderId },
             data: {
@@ -547,10 +661,6 @@ export const orderRouter = createTRPCRouter({
 
           if (!updatedOrder) throw new Error("There is no order found");
 
-          const session = await auth();
-          const userId = session?.user?.id;
-          const cart = await getCartHelper(userId);
-
           if (updatedOrder?.orderItems.length === 0) {
             const orderItemsData = (cart?.items as CartItem[]).map((item) => ({
               orderId,
@@ -572,37 +682,85 @@ export const orderRouter = createTRPCRouter({
             });
           }
 
-          // Create voucher redemption for all vouchers used
+          // FIX BUG #8: Atomic voucher redemption with proper error handling
+          // If any voucher fails, entire transaction rolls back
           if (activeVoucherCodes.length > 0) {
+            const redemptionsToCreate = [];
+
             for (const code of activeVoucherCodes) {
-              const voucher = await tx.voucher.findUnique({
-                where: { code: code },
-              });
+              // FIX: Use FOR UPDATE lock again to prevent concurrent updates
+              const vouchers = await tx.$queryRaw<Array<{
+                id: string;
+                code: string;
+                totalLimit: number | null;
+                usedCount: number;
+              }>>`
+                SELECT id, code, "totalLimit", "usedCount"
+                FROM "Voucher"
+                WHERE code = ${code.toUpperCase()}
+                FOR UPDATE
+              `;
 
-              if (voucher) {
-                // Update voucher used count
-                await tx.voucher.update({
-                  where: { code: code },
-                  data: {
-                    usedCount: {
-                      increment: 1,
-                    },
-                  },
-                });
+              const voucher = vouchers[0];
 
-                // Create redemption record
-                await tx.redemption.create({
-                  data: {
-                    voucherId: voucher.id,
-                    userId: userId || null,
-                    email: updatedOrder.user?.email || "",
-                    orderId: orderId,
-                  },
+              if (!voucher) {
+                throw new TRPCError({
+                  code: "INTERNAL_SERVER_ERROR",
+                  message: `Failed to redeem voucher "${code}"`,
                 });
               }
+
+              // Double-check limit one more time right before increment
+              if (voucher.totalLimit !== null && voucher.usedCount >= voucher.totalLimit) {
+                throw new TRPCError({
+                  code: "BAD_REQUEST",
+                  message: `Voucher "${code}" usage limit exceeded. Please try again.`,
+                });
+              }
+
+              // Atomically increment usage count with strict limit check
+              const updateResult = await tx.voucher.updateMany({
+                where: {
+                  code: code.toUpperCase(),
+                  // CRITICAL: Ensure we only increment if current usedCount is valid
+                  OR: [
+                    { totalLimit: null },
+                    { usedCount: { lt: voucher.totalLimit || 999999 } }
+                  ]
+                },
+                data: {
+                  usedCount: {
+                    increment: 1,
+                  },
+                },
+              });
+
+              // If update affected 0 rows, it means limit was exceeded between validation and update
+              if (updateResult.count === 0) {
+                throw new TRPCError({
+                  code: "BAD_REQUEST",
+                  message: `Voucher "${code}" usage limit exceeded. Please try again.`,
+                });
+              }
+
+              // Prepare redemption record
+              redemptionsToCreate.push({
+                voucherId: voucher.id,
+                userId: userId || null,
+                email: updatedOrder.user?.email || "",
+                orderId: orderId,
+              });
+            }
+
+            // Create all redemption records
+            for (const redemption of redemptionsToCreate) {
+              await tx.redemption.create({
+                data: redemption,
+              });
             }
           }
 
+          // Clear cart
           await tx.cart.update({
             where: { id: cart?.id },
             data: {
@@ -614,11 +772,38 @@ export const orderRouter = createTRPCRouter({
               shippingPrice: 0,
             },
           });
+        }, {
+          isolationLevel: 'Serializable', // Prevent voucher over-redemption on high concurrency
+          maxWait: 5000, // 5 seconds max wait for transaction lock
+          timeout: 30000, // 30 seconds timeout
         });
 
         return handleMutationSuccess("Order Updated");
       } catch (error) {
-        return handleMutationError(error, "Finalize Order");
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        if (error instanceof Error) {
+          // Handle PostgreSQL serialization error (concurrent voucher usage)
+          if (error.message.includes("could not serialize access due to concurrent update") ||
+              error.message.includes("40001")) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: "Voucher sedang digunakan oleh pengguna lain. Silakan coba lagi.",
+            });
+          }
+
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: error.message || "Failed to finalize order",
+          });
+        }
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to finalize order",
+        });
       }
     }),
 
@@ -679,7 +864,21 @@ export const orderRouter = createTRPCRouter({
 
         return handleMutationSuccess("Payment Status Updated");
       } catch (error) {
-        return handleMutationError(error, "Update Payment Status");
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        if (error instanceof Error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: error.message || "Failed to update payment status",
+          });
+        }
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update payment status",
+        });
       }
     }),
 
@@ -702,7 +901,21 @@ export const orderRouter = createTRPCRouter({
 
         return handleMutationSuccess("Order Shipment Updated");
       } catch (error) {
-        return handleMutationError(error, "Update Order Shipment");
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        if (error instanceof Error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: error.message || "Failed to update order shipment",
+          });
+        }
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update order shipment",
+        });
       }
     }),
 
@@ -719,7 +932,21 @@ export const orderRouter = createTRPCRouter({
 
         return handleMutationSuccess("Order Deleted");
       } catch (error) {
-        return handleMutationError(error, "Delete Order");
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        if (error instanceof Error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: error.message || "Failed to delete order",
+          });
+        }
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete order",
+        });
       }
     }),
 
@@ -738,7 +965,21 @@ export const orderRouter = createTRPCRouter({
 
         return handleMutationSuccess("Orders Deleted");
       } catch (error) {
-        return handleMutationError(error, "Delete Orders");
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        if (error instanceof Error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: error.message || "Failed to delete orders",
+          });
+        }
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete orders",
+        });
       }
     }),
 });

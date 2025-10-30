@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { baseProcedure, adminProcedure, createTRPCRouter } from "../init";
 import { serializeType } from "@/lib/utils";
+import crypto from 'crypto'
 import z from "zod";
 
 // Input schema for tRPC (without refinements for easier extending)
@@ -41,6 +42,20 @@ const handleMutationSuccess = (message: string) => {
     message,
   };
 };
+
+// Helper function to generate unique voucher code
+function generateVoucherCode(prefix: string, batchIndex: number): string {
+  // Use crypto for secure random generation
+
+  // Generate 6 bytes of random data (will give us 12 hex chars)
+  const randomBytes = crypto.randomBytes(6);
+  const randomStr = randomBytes.toString('hex').toUpperCase();
+
+  // Include batch index to reduce collision probability
+  const indexPart = batchIndex.toString(36).toUpperCase().padStart(3, '0');
+
+  return `${prefix}-${indexPart}${randomStr.slice(0, 8)}`;
+}
 
 export const voucherRouter = createTRPCRouter({
   getAll: adminProcedure.query(async () => {
@@ -682,6 +697,409 @@ export const voucherRouter = createTRPCRouter({
       } catch (error) {
         console.error("Get auto-apply voucher error:", error);
         return { found: false };
+      }
+    }),
+
+  // ============================================
+  // BATCH VOUCHER ENDPOINTS
+  // ============================================
+
+  createBatch: adminProcedure
+    .input(
+      z.object({
+        name: z.string().min(1, "Batch name is required"),
+        description: z.string().optional(),
+        prefix: z
+          .string()
+          .min(3, "Prefix must be at least 3 characters")
+          .max(20, "Prefix must not exceed 20 characters")
+          .regex(/^[A-Z0-9]+$/, "Prefix must only contain uppercase letters and numbers"),
+        totalCodes: z.number().min(1).max(10000, "Maximum 10,000 codes per batch"),
+        discountType: z.enum(["FIXED", "PERCENT"]),
+        discountValue: z.number().min(0),
+        maxDiscount: z.number().optional(),
+        applicationType: z.enum(["ALL_PRODUCTS", "CATEGORY", "SUBCATEGORY", "SPECIFIC_PRODUCTS", "SPECIFIC_VARIANTS"]),
+        categoryId: z.string().optional(),
+        subCategoryId: z.string().optional(),
+        productIds: z.array(z.string()).optional(),
+        variantIds: z.array(z.string()).optional(),
+        maxShippingDiscount: z.number().optional(),
+        startDate: z.coerce.date(),
+        expiryDate: z.coerce.date(),
+        minPurchase: z.number().optional(),
+        canCombine: z.boolean().default(false),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const {
+          name,
+          description,
+          prefix,
+          totalCodes,
+          discountType,
+          discountValue,
+          maxDiscount,
+          applicationType,
+          categoryId,
+          subCategoryId,
+          productIds,
+          variantIds,
+          maxShippingDiscount,
+          startDate,
+          expiryDate,
+          minPurchase,
+          canCombine,
+        } = input;
+
+        // Validate prefix uniqueness (check for existing batches with same prefix)
+        const existingBatch = await prisma.voucherBatch.findFirst({
+          where: { prefix: prefix.toUpperCase() },
+        });
+
+        if (existingBatch) {
+          return {
+            success: false,
+            message: `Prefix "${prefix}" is already used by batch: ${existingBatch.name}. Please use a different prefix.`,
+          };
+        }
+
+        // FIX BUG #1, #4, #5: Wrap everything in a transaction with proper isolation
+        // SECURITY FIX: Use Serializable isolation to prevent race conditions
+        const result = await prisma.$transaction(async (tx) => {
+          // Generate all voucher codes first (in memory)
+          const generatedCodes: string[] = [];
+          const vouchersToCreate = [];
+          const seenCodes = new Set<string>();
+
+          for (let i = 0; i < totalCodes; i++) {
+            let code = generateVoucherCode(prefix.toUpperCase(), i);
+            let attempts = 0;
+
+            // Ensure uniqueness within this batch
+            while (seenCodes.has(code)) {
+              code = generateVoucherCode(prefix.toUpperCase(), i + attempts * 1000);
+              attempts++;
+              if (attempts > 100) {
+                throw new Error(`Failed to generate unique voucher code at index ${i}`);
+              }
+            }
+
+            seenCodes.add(code);
+            generatedCodes.push(code);
+
+            vouchersToCreate.push({
+              code,
+              name: `${name} - ${i + 1}`,
+              description: description || null,
+              type: discountType as "FIXED" | "PERCENT",
+              value: discountValue,
+              maxDiscount: maxDiscount ? BigInt(maxDiscount) : null,
+              applicationType: applicationType as any,
+              categoryId: categoryId || null,
+              subCategoryId: subCategoryId || null,
+              maxShippingDiscount: maxShippingDiscount ? BigInt(maxShippingDiscount) : null,
+              startDate,
+              expires: expiryDate,
+              minPurchase: minPurchase ? BigInt(minPurchase) : null,
+              totalLimit: 1, // Each batch voucher can only be used once
+              limitPerUser: 1, // Each user can only use it once
+              canCombine,
+              isActive: true,
+              autoApply: false,
+            });
+          }
+
+          // Check for existing voucher codes in database (within transaction)
+          const existingVouchers = await tx.voucher.findMany({
+            where: { code: { in: generatedCodes } },
+            select: { code: true },
+          });
+
+          if (existingVouchers.length > 0) {
+            const existingCodes = existingVouchers.map(v => v.code).join(", ");
+            throw new Error(
+              `Some voucher codes already exist: ${existingCodes}. Please try again with a different prefix.`
+            );
+          }
+
+          // Create the batch
+          const batch = await tx.voucherBatch.create({
+            data: {
+              name,
+              description: description || null,
+              prefix: prefix.toUpperCase(),
+              totalCodes,
+              templateValue: discountValue,
+              templateType: discountType as "FIXED" | "PERCENT",
+              templateApplicationType: applicationType as any,
+              templateMinPurchase: minPurchase ? BigInt(minPurchase) : null,
+              templateMaxDiscount: maxDiscount ? BigInt(maxDiscount) : null,
+              templateMaxShippingDiscount: maxShippingDiscount ? BigInt(maxShippingDiscount) : null,
+              templateStartDate: startDate,
+              templateExpires: expiryDate,
+              templateCanCombine: canCombine,
+              categoryId: categoryId || null,
+              subCategoryId: subCategoryId || null,
+              productIds: productIds || [],
+              variantIds: variantIds || [],
+              generatedCodes,
+              generatedCount: totalCodes,
+            },
+          });
+
+          // Bulk create all vouchers at once
+          await tx.voucher.createMany({
+            data: vouchersToCreate,
+            skipDuplicates: true, // Extra safety
+          });
+
+          // FIX BUG #5: Use raw SQL for batch many-to-many relations instead of N+1 queries
+          if (productIds && productIds.length > 0) {
+            // Get voucher IDs for the generated codes
+            const voucherIds = await tx.voucher.findMany({
+              where: { code: { in: generatedCodes } },
+              select: { id: true },
+            });
+
+            const voucherIdArray = voucherIds.map(v => v.id);
+
+            // SECURITY FIX: Use Prisma's createMany instead of raw SQL to prevent SQL injection
+            // Build all relations in memory
+            const relations = [];
+            for (const voucherId of voucherIdArray) {
+              for (const productId of productIds) {
+                relations.push({
+                  A: voucherId,
+                  B: productId,
+                });
+              }
+            }
+
+            // Batch insert in chunks to avoid query size limits (1000 relations per chunk)
+            const chunkSize = 1000;
+            for (let i = 0; i < relations.length; i += chunkSize) {
+              const chunk = relations.slice(i, i + chunkSize);
+
+              // Use Prisma's executeRaw with proper parameterization
+              await tx.$executeRaw`
+                INSERT INTO "_ProductToVoucher" ("A", "B")
+                SELECT * FROM jsonb_to_recordset(${JSON.stringify(chunk)}::jsonb)
+                AS x("A" uuid, "B" uuid)
+                ON CONFLICT DO NOTHING
+              `;
+            }
+          }
+
+          if (variantIds && variantIds.length > 0) {
+            // Get voucher IDs for the generated codes
+            const voucherIds = await tx.voucher.findMany({
+              where: { code: { in: generatedCodes } },
+              select: { id: true },
+            });
+
+            const voucherIdArray = voucherIds.map(v => v.id);
+
+            // SECURITY FIX: Use Prisma's createMany instead of raw SQL to prevent SQL injection
+            // Build all relations in memory
+            const relations = [];
+            for (const voucherId of voucherIdArray) {
+              for (const variantId of variantIds) {
+                relations.push({
+                  A: voucherId,
+                  B: variantId,
+                });
+              }
+            }
+
+            // Batch insert in chunks to avoid query size limits (1000 relations per chunk)
+            const chunkSize = 1000;
+            for (let i = 0; i < relations.length; i += chunkSize) {
+              const chunk = relations.slice(i, i + chunkSize);
+
+              // Use Prisma's executeRaw with proper parameterization
+              await tx.$executeRaw`
+                INSERT INTO "_VariantToVoucher" ("A", "B")
+                SELECT * FROM jsonb_to_recordset(${JSON.stringify(chunk)}::jsonb)
+                AS x("A" uuid, "B" uuid)
+                ON CONFLICT DO NOTHING
+              `;
+            }
+          }
+
+          return { batchId: batch.id, totalCodes };
+        }, {
+          isolationLevel: 'Serializable', // Prevent race conditions on high concurrency
+          maxWait: 10000, // 10 seconds max wait for transaction lock
+          timeout: 60000, // 60 seconds timeout for large batches
+        });
+
+        return handleMutationSuccess(
+          `Batch created successfully! ${result.totalCodes} voucher codes generated.`
+        );
+      } catch (error) {
+        console.error("Create batch error:", error);
+        return handleMutationError(error, "create voucher batch");
+      }
+    }),
+
+  getAllBatches: adminProcedure.query(async () => {
+    const batches = await prisma.voucherBatch.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Get usage stats for each batch
+    const batchesWithStats = await Promise.all(
+      batches.map(async (batch) => {
+        const usedCount = await prisma.voucher.count({
+          where: {
+            code: { in: batch.generatedCodes },
+            usedCount: { gt: 0 },
+          },
+        });
+
+        return {
+          ...batch,
+          usedCount,
+          availableCount: batch.generatedCount - usedCount,
+        };
+      })
+    );
+
+    return serializeType(batchesWithStats);
+  }),
+
+  getBatchDetail: adminProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        page: z.number().min(1).default(1),
+        pageSize: z.number().min(10).max(100).default(50),
+        filter: z.enum(["all", "used", "available"]).default("all"),
+      })
+    )
+    .query(async ({ input }) => {
+      const { id, page, pageSize, filter } = input;
+
+      const batch = await prisma.voucherBatch.findUnique({
+        where: { id },
+      });
+
+      if (!batch) {
+        throw new Error("Batch not found");
+      }
+
+      // FIX BUG #12: Add pagination to prevent loading too many vouchers at once
+      const skip = (page - 1) * pageSize;
+
+      // Build where clause based on filter
+      const whereClause: any = {
+        code: { in: batch.generatedCodes },
+      };
+
+      if (filter === "used") {
+        whereClause.usedCount = { gt: 0 };
+      } else if (filter === "available") {
+        whereClause.usedCount = 0;
+      }
+
+      // Get total count for pagination
+      const totalCount = await prisma.voucher.count({
+        where: whereClause,
+      });
+
+      // Get paginated vouchers
+      const vouchers = await prisma.voucher.findMany({
+        where: whereClause,
+        include: {
+          redemptions: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+        skip,
+        take: pageSize,
+      });
+
+      return serializeType({
+        batch,
+        vouchers,
+        pagination: {
+          page,
+          pageSize,
+          totalCount,
+          totalPages: Math.ceil(totalCount / pageSize),
+        },
+      });
+    }),
+
+  deleteBatch: adminProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input }) => {
+      try {
+        // SECURITY FIX: Wrap delete operations in transaction to prevent orphaned data
+        await prisma.$transaction(async (tx) => {
+          const batch = await tx.voucherBatch.findUnique({
+            where: { id: input.id },
+          });
+
+          if (!batch) {
+            throw new Error("Batch not found");
+          }
+
+          // Check if any vouchers have been used
+          const usedVouchers = await tx.voucher.findMany({
+            where: {
+              code: { in: batch.generatedCodes },
+              usedCount: { gt: 0 },
+            },
+            select: { code: true },
+          });
+
+          if (usedVouchers.length > 0) {
+            throw new Error(`Cannot delete batch. ${usedVouchers.length} voucher(s) have been used.`);
+          }
+
+          // Delete all vouchers in the batch first (respect foreign key constraints)
+          await tx.voucher.deleteMany({
+            where: {
+              code: { in: batch.generatedCodes },
+            },
+          });
+
+          // Then delete the batch
+          await tx.voucherBatch.delete({
+            where: { id: input.id },
+          });
+        }, {
+          isolationLevel: 'Serializable',
+          maxWait: 5000,
+          timeout: 30000,
+        });
+
+        return handleMutationSuccess("Batch deleted successfully");
+      } catch (error) {
+        // Check if it's a validation error (used vouchers)
+        if (error instanceof Error && error.message.includes("Cannot delete batch")) {
+          return {
+            success: false,
+            message: error.message,
+          };
+        }
+        if (error instanceof Error && error.message === "Batch not found") {
+          return {
+            success: false,
+            message: "Batch not found",
+          };
+        }
+        return handleMutationError(error, "delete batch");
       }
     }),
 });

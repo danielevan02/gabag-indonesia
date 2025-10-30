@@ -1,23 +1,43 @@
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { trpc } from "@/trpc/server";
-import VoucherDataTableWrapper from "./voucher-data-table-wrapper";
-
+import VoucherTabs from "./voucher-tabs";
+import prisma from "@/lib/prisma";
 
 export default async function VoucherPage() {
-  const vouchers = await trpc.voucher.getAll();
+  const [vouchers, batches, categories, subCategories, products, variants] = await Promise.all([
+    trpc.voucher.getAll(),
+    trpc.voucher.getAllBatches(),
+    prisma.category.findMany({
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.subCategory.findMany({
+      select: { id: true, name: true, categoryId: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.product.findMany({
+      select: { id: true, name: true, subCategoryId: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.variant.findMany({
+      select: { id: true, name: true, productId: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+
   return (
     <div className="form-page">
-      <div className="flex justify-between items-center">
-        <h1 className="font-medium text-2xl">Voucher List</h1>
-        <Button>
-          <Link href='/admin/voucher/add'>Add Voucher</Link>
-        </Button>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="font-medium text-2xl">Voucher Management</h1>
       </div>
 
-      <div className='overflow-hidden flex flex-col flex-1'>
-        <VoucherDataTableWrapper vouchers={vouchers}/> 
-      </div>
+      <VoucherTabs
+        vouchers={vouchers}
+        batches={batches}
+        categories={categories}
+        subCategories={subCategories}
+        products={products}
+        variants={variants}
+      />
     </div>
   );
 }
