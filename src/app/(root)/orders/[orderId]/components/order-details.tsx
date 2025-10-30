@@ -168,12 +168,10 @@ const OrderDetails = ({ order }: { order: RouterOutputs['order']['getById'] }) =
                 <p className="text-sm font-medium text-green-700">Voucher Applied</p>
                 <p className="text-xs text-green-600">
                   {order.voucherCodes.map((code, index) => (
-                    <>
-                      <span key={code}>{code}</span>
-                      {order.voucherCodes.length-1 !== index &&(
-                        <span>, </span>
-                      )}
-                    </>
+                    <span key={code}>
+                      {code}
+                      {order.voucherCodes.length-1 !== index && ", "}
+                    </span>
                   ))}
                 </p>
               </div>

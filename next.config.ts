@@ -7,11 +7,6 @@ const nextConfig: NextConfig = {
       {protocol: 'https', hostname: 'res.cloudinary.com'},
     ]
   },
-  // productionBrowserSourceMaps: false,
-  // webpack: (config) => {
-  //   config.optimization.minimize = false;
-  //   return config;
-  // },
 };
 
 export default nextConfig;

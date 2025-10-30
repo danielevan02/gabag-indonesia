@@ -33,6 +33,17 @@ const t = initTRPC.context<Context>().create({
    * @see https://trpc.io/docs/server/data-transformers
    */
   transformer: superjson,
+  /**
+   * @see https://trpc.io/docs/server/error-formatting
+   */
+  errorFormatter({ shape }) {
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+      },
+    };
+  },
 });
 
 // Base router and procedure helpers
