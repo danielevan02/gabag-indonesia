@@ -12,6 +12,7 @@ import { galleryRouter } from './gallery';
 import { carouselRouter } from './carousel';
 import { campaignRouter } from './campaign';
 import { reviewRouter } from './review';
+import { dashboardRouter } from './dashboard';
 
 export const appRouter = createTRPCRouter({
   product: productRouter,
@@ -26,6 +27,7 @@ export const appRouter = createTRPCRouter({
   carousel: carouselRouter,
   campaign: campaignRouter,
   review: reviewRouter,
+  dashboard: dashboardRouter,
 });
 // export type definition of API
 export type AppRouter = typeof appRouter;
