@@ -1,6 +1,7 @@
 import {
   BookImage,
   Calendar,
+  ChartArea,
   Images,
   ScrollText,
   SquareTerminal,
@@ -140,6 +141,11 @@ export const REQUIRED_ORDER_FIELDS = [
 
 export const navLink = {
     navMain: [
+      {
+        title: "Dashboard",
+        url: "/admin/dashboard",
+        icon: ChartArea,
+      },
       {
         title: "Catalog",
         url: "/admin/catalog",
