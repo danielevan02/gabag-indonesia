@@ -95,7 +95,7 @@ export const authRouter = createTRPCRouter({
       });
 
       if (existUser?.emailVerified) {
-        throw "This email is already in used, please use another email";
+        throw "An account with these credentials already exists. Please sign in or use different credentials.";
       }
 
       const existPhone = await prisma.user.findFirst({
@@ -103,7 +103,7 @@ export const authRouter = createTRPCRouter({
       });
 
       if (existPhone?.emailVerified) {
-        throw "This phone number is already used, please use another number";
+        throw "An account with these credentials already exists. Please sign in or use different credentials.";
       }
 
       const email = input.email.toLowerCase();

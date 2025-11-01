@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { baseProcedure, adminProcedure, protectedProcedure, createTRPCRouter } from "../init";
+import { baseProcedure, adminProcedure, protectedProcedure, systemProcedure, createTRPCRouter } from "../init";
 import prisma from "@/lib/prisma";
 import { serializeType } from "@/lib/utils";
 import { TRPCError } from "@trpc/server";
@@ -807,8 +807,8 @@ export const orderRouter = createTRPCRouter({
       }
     }),
 
-  // Update payment status
-  updatePaymentStatus: baseProcedure
+  // Update payment status (System/Webhook only - protected at API route level)
+  updatePaymentStatus: systemProcedure
     .input(updatePaymentStatusSchema)
     .mutation(async ({ input }) => {
       try {
