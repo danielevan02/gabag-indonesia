@@ -21,13 +21,13 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { IconSearch, IconTrash } from "@tabler/icons-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../../ui/button";
 import { cn } from "@/lib/utils";
 import ModalContent from "./modal-content";
 import TablePagination from "./pagination";
 import { Loader, Truck } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 interface DeleteManyMutation {
   mutate: (params: { ids: string[] }) => void;
@@ -64,13 +64,23 @@ export function   DataTable<TData, TValue>({
   totalPages,
   pageSize,
 }: DataTableProps<TData, TValue>) {
+  const path = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [openModal, setOpenModal] = useState(false);
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
-  const path = usePathname()
+  const [searchInput, setSearchInput] = useState("");
 
   // Check if using server-side pagination
   const isServerSide = totalCount !== undefined && currentPage !== undefined;
+
+  // Initialize search input from URL on mount and when searchParams changes
+  useEffect(() => {
+    const searchFromUrl = searchParams?.get("search") || "";
+    setSearchInput(searchFromUrl);
+  }, [searchParams]);
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -136,24 +146,54 @@ export function   DataTable<TData, TValue>({
     setOpenModal(false);
   };
 
+  // Debounced search effect for server-side
+  useEffect(() => {
+    if (!isServerSide) return;
+
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(searchParams?.toString());
+
+      if (searchInput.trim()) {
+        params.set("search", searchInput.trim());
+      } else {
+        params.delete("search");
+      }
+
+      // Reset to page 1 when searching
+      params.set("page", "1");
+
+      router.push(`?${params.toString()}`);
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchInput, isServerSide, router, searchParams]);
+
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
 
-    if (searchableColumn) {
-      // Use specific column filter
-      try {
-        searchableColumn.setFilterValue(value);
-      } catch (error) {
-        console.warn("Error setting column filter, falling back to global filter:", error);
+    if (isServerSide) {
+      // Server-side search - just update local state, debounce will handle URL update
+      setSearchInput(value);
+    } else {
+      // Client-side search - use table filtering
+      if (searchableColumn) {
+        try {
+          searchableColumn.setFilterValue(value);
+        } catch (error) {
+          console.warn("Error setting column filter, falling back to global filter:", error);
+          setGlobalFilter(value);
+        }
+      } else {
         setGlobalFilter(value);
       }
-    } else {
-      // Fallback to global filter
-      setGlobalFilter(value);
     }
   };
 
   const getSearchValue = () => {
+    if (isServerSide) {
+      return searchInput;
+    }
+
     if (searchableColumn) {
       try {
         return (searchableColumn.getFilterValue() as string) || "";
