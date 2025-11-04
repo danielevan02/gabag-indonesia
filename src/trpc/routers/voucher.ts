@@ -948,23 +948,33 @@ export const voucherRouter = createTRPCRouter({
       orderBy: { createdAt: "desc" },
     });
 
-    // Get usage stats for each batch
-    const batchesWithStats = await Promise.all(
-      batches.map(async (batch) => {
-        const usedCount = await prisma.voucher.count({
-          where: {
-            code: { in: batch.generatedCodes },
-            usedCount: { gt: 0 },
-          },
-        });
+    // Optimize: Get all voucher usage stats in a single query
+    const allCodes = batches.flatMap((batch) => batch.generatedCodes);
+    const usedVouchers = await prisma.voucher.findMany({
+      where: {
+        code: { in: allCodes },
+        usedCount: { gt: 0 },
+      },
+      select: {
+        code: true,
+      },
+    });
 
-        return {
-          ...batch,
-          usedCount,
-          availableCount: batch.generatedCount - usedCount,
-        };
-      })
-    );
+    // Create a Set for O(1) lookups
+    const usedCodesSet = new Set(usedVouchers.map((v) => v.code));
+
+    // Calculate stats for each batch
+    const batchesWithStats = batches.map((batch) => {
+      const usedCount = batch.generatedCodes.filter((code) =>
+        usedCodesSet.has(code)
+      ).length;
+
+      return {
+        ...batch,
+        usedCount,
+        availableCount: batch.generatedCount - usedCount,
+      };
+    });
 
     return serializeType(batchesWithStats);
   }),

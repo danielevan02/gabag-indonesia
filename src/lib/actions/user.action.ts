@@ -70,15 +70,15 @@ export async function registerUser(data: SignUpType) {
       }
     })
 
-    if(existUser&&existUser.emailVerified) throw 'This email is already in used, please use another email'
-    
+    if(existUser&&existUser.emailVerified) throw 'An account with these credentials already exists. Please sign in or use different credentials.'
+
     const existPhone = await prisma.user.findFirst({
       where: {
         phone: data.phone
       }
     })
 
-    if(existPhone&&existPhone.emailVerified) throw "This phone number is already used, please use another number"
+    if(existPhone&&existPhone.emailVerified) throw "An account with these credentials already exists. Please sign in or use different credentials."
     
     const email = data.email.toLowerCase()
 
