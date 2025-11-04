@@ -7,6 +7,7 @@ import { CartItem, ShippingInfo, ItemDetail } from "@/types";
 import { auth } from "../../auth";
 import { createTransaction } from "@/lib/midtrans/transaction";
 import { getCartHelper } from "./cart";
+import { invalidateCache } from "@/lib/cache";
 
 // Helper function to round price consistently (same as cart.ts)
 const roundPrice = (price: number): number => {
@@ -861,6 +862,9 @@ export const orderRouter = createTRPCRouter({
             await Promise.all([...variantPromises, ...productPromises]);
           }
         });
+
+        // Invalidate dashboard cache when payment status changes
+        invalidateCache.dashboard();
 
         return handleMutationSuccess("Payment Status Updated");
       } catch (error) {
