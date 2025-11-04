@@ -91,3 +91,19 @@ export const adminProcedure = t.procedure.use(async ({ ctx, next }) => {
     },
   });
 });
+
+// System procedure - for internal/webhook calls only
+// Should only be called from server-side API routes with proper authentication
+// NOT for direct client calls
+export const systemProcedure = t.procedure.use(async ({ ctx, next }) => {
+  // System procedures should only be called from trusted server-side code
+  // They bypass session checks but should be protected at the API route level
+  // This is used for webhooks and internal system operations
+
+  return next({
+    ctx: {
+      ...ctx,
+      isSystemCall: true,
+    },
+  });
+});

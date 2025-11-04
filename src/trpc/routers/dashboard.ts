@@ -1,10 +1,12 @@
 import { baseProcedure, createTRPCRouter } from "../init";
 import prisma from "@/lib/prisma";
 import { serializeType } from "@/lib/utils";
+import { withCache, CacheKeys, CacheTTL } from "@/lib/cache";
 
 export const dashboardRouter = createTRPCRouter({
-  // Get dashboard statistics
+  // Get dashboard statistics (cached for 5 minutes)
   getStats: baseProcedure.query(async () => {
+    return withCache(CacheKeys.dashboard.stats(), CacheTTL.SHORT, async () => {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -49,57 +51,35 @@ export const dashboardRouter = createTRPCRouter({
       ? ((ordersThisMonth - ordersLastMonth) / ordersLastMonth) * 100
       : 0;
 
-    // Get total revenue (paid orders only)
-    const paidOrders = await prisma.order.findMany({
+    // Get all revenue data in a single query - optimized!
+    const allPaidOrders = await prisma.order.findMany({
       where: {
         isPaid: true,
       },
       select: {
         totalPrice: true,
+        paidAt: true,
       },
     });
 
-    const totalRevenue = paidOrders.reduce(
-      (sum, order) => sum + Number(order.totalPrice),
-      0
-    );
+    // Calculate revenue metrics from single query result
+    let totalRevenue = 0;
+    let revenueThisMonth = 0;
+    let revenueLastMonth = 0;
 
-    // Get revenue this month
-    const paidOrdersThisMonth = await prisma.order.findMany({
-      where: {
-        isPaid: true,
-        paidAt: {
-          gte: startOfMonth,
-        },
-      },
-      select: {
-        totalPrice: true,
-      },
+    allPaidOrders.forEach((order) => {
+      const price = Number(order.totalPrice);
+      totalRevenue += price;
+
+      if (order.paidAt) {
+        const paidDate = new Date(order.paidAt);
+        if (paidDate >= startOfMonth) {
+          revenueThisMonth += price;
+        } else if (paidDate >= startOfLastMonth && paidDate <= endOfLastMonth) {
+          revenueLastMonth += price;
+        }
+      }
     });
-
-    const revenueThisMonth = paidOrdersThisMonth.reduce(
-      (sum, order) => sum + Number(order.totalPrice),
-      0
-    );
-
-    // Get revenue last month
-    const paidOrdersLastMonth = await prisma.order.findMany({
-      where: {
-        isPaid: true,
-        paidAt: {
-          gte: startOfLastMonth,
-          lte: endOfLastMonth,
-        },
-      },
-      select: {
-        totalPrice: true,
-      },
-    });
-
-    const revenueLastMonth = paidOrdersLastMonth.reduce(
-      (sum, order) => sum + Number(order.totalPrice),
-      0
-    );
 
     // Calculate revenue growth percentage
     const revenueGrowth = revenueLastMonth > 0
@@ -184,10 +164,12 @@ export const dashboardRouter = createTRPCRouter({
       recentOrders,
       lowStockProducts,
     });
+    });
   }),
 
-  // Get revenue chart data (last 7 days)
+  // Get revenue chart data (last 7 days) (cached for 5 minutes)
   getRevenueChart: baseProcedure.query(async () => {
+    return withCache(CacheKeys.dashboard.revenueChart(), CacheTTL.SHORT, async () => {
     const now = new Date();
     const last7Days = new Date(now);
     last7Days.setDate(now.getDate() - 7);
@@ -232,10 +214,12 @@ export const dashboardRouter = createTRPCRouter({
     }));
 
     return serializeType(chartData);
+    });
   }),
 
-  // Get orders chart data (last 7 days)
+  // Get orders chart data (last 7 days) (cached for 5 minutes)
   getOrdersChart: baseProcedure.query(async () => {
+    return withCache(CacheKeys.dashboard.ordersChart(), CacheTTL.SHORT, async () => {
     const now = new Date();
     const last7Days = new Date(now);
     last7Days.setDate(now.getDate() - 7);
@@ -287,5 +271,6 @@ export const dashboardRouter = createTRPCRouter({
     }));
 
     return serializeType(chartData);
+    });
   }),
 });
