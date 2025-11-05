@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { baseProcedure, adminProcedure, createTRPCRouter } from "../init";
 import { serializeType } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 import crypto from 'crypto'
 import z from "zod";
 
@@ -29,7 +30,7 @@ const voucherInputSchema = z.object({
 });
 
 const handleMutationError = (error: unknown, operation: string) => {
-  console.error(`${operation} error:`, error);
+  logger.error(`Voucher ${operation} failed`, error);
   return {
     success: false,
     message: `Failed to ${operation}`,
@@ -531,7 +532,7 @@ export const voucherRouter = createTRPCRouter({
           canCombine: voucher.canCombine,
         };
       } catch (error) {
-        console.error("Validate voucher error:", error);
+        logger.error("Voucher validation failed", error);
         return { valid: false, message: "Failed to validate voucher" };
       }
     }),
@@ -695,7 +696,7 @@ export const voucherRouter = createTRPCRouter({
 
         return { found: false };
       } catch (error) {
-        console.error("Get auto-apply voucher error:", error);
+        logger.error("Auto-apply voucher retrieval failed", error);
         return { found: false };
       }
     }),
@@ -938,7 +939,7 @@ export const voucherRouter = createTRPCRouter({
           `Batch created successfully! ${result.totalCodes} voucher codes generated.`
         );
       } catch (error) {
-        console.error("Create batch error:", error);
+        logger.error("Voucher batch creation failed", error);
         return handleMutationError(error, "create voucher batch");
       }
     }),
