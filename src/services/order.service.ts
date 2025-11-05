@@ -3,8 +3,7 @@
  */
 
 import prisma from "@/lib/prisma";
-import { CartItem, ShippingInfo } from "@/types";
-import { TRPCError } from "@trpc/server";
+import { CartItem } from "@/types";
 import { calculateCartItemsPrices, validateCartPrices } from "./pricing.service";
 
 /**
@@ -106,8 +105,7 @@ export async function decrementOrderItemsStock(
 export async function validateOrderPricing(
   items: CartItem[],
   expectedSubTotal: number,
-  expectedTaxPrice: number,
-  expectedTotal: number
+  expectedTaxPrice: number
 ): Promise<{ valid: boolean; errors: string[] }> {
   const errors: string[] = [];
 

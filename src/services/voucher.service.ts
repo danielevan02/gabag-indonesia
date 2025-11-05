@@ -3,7 +3,6 @@
  */
 
 import prisma from "@/lib/prisma";
-import { TRPCError } from "@trpc/server";
 
 export interface VoucherValidationResult {
   valid: boolean;

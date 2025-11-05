@@ -6,7 +6,7 @@ import { TRPCError } from "@trpc/server";
 import { auth } from "../../auth"
 import { CartItem } from "@/types";
 import { cartItemSchema } from "@/lib/schema";
-import { calculateCartItemsPrices, roundPrice, calculateTax } from "@/services/pricing.service";
+import { roundPrice, calculateTax } from "@/services/pricing.service";
 
 // Helper function to calculate cart prices (legacy - kept for backward compatibility)
 const calcPrice = (items: CartItem[]) => {
