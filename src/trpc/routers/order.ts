@@ -8,11 +8,7 @@ import { auth } from "../../auth";
 import { createTransaction } from "@/lib/midtrans/transaction";
 import { getCartHelper } from "./cart";
 import { invalidateCache } from "@/lib/cache";
-
-// Helper function to round price consistently (same as cart.ts)
-const roundPrice = (price: number): number => {
-  return Math.round(price);
-};
+import { roundPrice } from "@/services/pricing.service";
 
 // Order schemas
 const createOrderSchema = z.object({
