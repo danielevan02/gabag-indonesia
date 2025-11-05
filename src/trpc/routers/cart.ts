@@ -6,16 +6,12 @@ import { TRPCError } from "@trpc/server";
 import { auth } from "../../auth"
 import { CartItem } from "@/types";
 import { cartItemSchema } from "@/lib/schema";
+import { calculateCartItemsPrices, roundPrice, calculateTax } from "@/services/pricing.service";
 
-// Helper function to round price consistently
-const roundPrice = (price: number): number => {
-  return Math.round(price);
-};
-
-// Helper function to calculate cart prices
+// Helper function to calculate cart prices (legacy - kept for backward compatibility)
 const calcPrice = (items: CartItem[]) => {
   const itemsPrice = items.reduce((acc, item) => acc + Number(item.price) * item.qty, 0);
-  const taxPrice = Math.round(0.01 * itemsPrice);
+  const taxPrice = calculateTax(itemsPrice);
   const totalPrice = itemsPrice + taxPrice;
 
   return {
