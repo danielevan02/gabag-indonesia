@@ -55,6 +55,11 @@ const updateOrderShipmentSchema = z.object({
   deliveredAt: z.date(),
 });
 
+const exportOrdersSchema = z.object({
+  startDate: z.string(),
+  endDate: z.string(),
+});
+
 const handleMutationSuccess = (message: string) => {
   return {
     success: true,
@@ -915,6 +920,78 @@ export const orderRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to update order shipment",
+        });
+      }
+    }),
+
+  // Get orders for export by date range (Admin only)
+  getForExport: adminProcedure
+    .input(exportOrdersSchema)
+    .query(async ({ input }) => {
+      try {
+        const { startDate, endDate } = input;
+
+        // Parse dates - use simple string comparison in database query
+        // This avoids timezone conversion issues
+        const startDateTime = `${startDate}T00:00:00.000Z`;
+        const endDateTime = `${endDate}T23:59:59.999Z`;
+
+        const orders = await prisma.order.findMany({
+          where: {
+            createdAt: {
+              gte: new Date(startDateTime),
+              lte: new Date(endDateTime),
+            },
+            paymentStatus: "settlement",
+          },
+          include: {
+            user: {
+              select: {
+                name: true,
+              },
+            },
+            orderItems: {
+              select: {
+                id: true,
+                name: true,
+                qty: true,
+                price: true,
+                productId: true,
+                variantId: true,
+                product: {
+                  select: {
+                    sku: true,
+                  },
+                },
+                variant: {
+                  select: {
+                    sku: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
+
+        return serializeType(orders);
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        if (error instanceof Error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: error.message || "Failed to fetch orders for export",
+          });
+        }
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch orders for export",
         });
       }
     }),
