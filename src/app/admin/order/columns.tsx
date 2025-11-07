@@ -60,6 +60,11 @@ export const columns: ColumnDef<Order>[] = [
     cell: ({ row }) => <p className="uppercase">{row.original.courier}</p>,
   },
   {
+    accessorKey: "createdAt",
+    header: "Created At",
+    cell: ({ row }) => <p>{format(row.original.createdAt, "dd/MM/yyyy")}</p>,
+  },
+  {
     accessorKey: "paidAt",
     header: "Paid At",
     cell: ({row}) => 
@@ -148,11 +153,6 @@ export const columns: ColumnDef<Order>[] = [
       ) : (
         <p className="italic text-foreground/40">Not Delivered</p>
       ),
-  },
-  {
-    accessorKey: "createdAt",
-    header: "Created At",
-    cell: ({ row }) => <p>{format(row.original.createdAt, "dd/MM/yyyy")}</p>,
   },
   {
     id: "actions",
