@@ -2,6 +2,7 @@
 
 import { trpc } from "@/trpc/client";
 import OrderDataTableWrapper from "./order-data-table-wrapper";
+import { ExportOrdersDialog } from "./export-orders-dialog";
 import { Loader } from "lucide-react";
 
 export default function OrderPage() {
@@ -21,6 +22,7 @@ export default function OrderPage() {
     <div className="form-page">
       <div className="flex justify-between items-center">
         <h1 className="font-medium text-2xl">Order List</h1>
+        <ExportOrdersDialog />
       </div>
 
       <div className='overflow-hidden flex flex-col flex-1'>
